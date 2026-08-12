@@ -9,13 +9,13 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. Inject Custom CSS Perfeksionis (Micro-Interactions, Glow Effects, & Glassmorphism)
+# 2. Inject Custom CSS Perfeksionis (Micro-Interactions, Hover Glow, & Badge Styling)
 custom_css = """
 <style>
-    /* Google Font Import */
+    /* Import Google Font */
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
 
-    /* Reset & Base Theme */
+    /* Theme Base Reset */
     .stApp {
         background-color: #0b1120;
         color: #f8fafc;
@@ -24,7 +24,7 @@ custom_css = """
 
     /* Container Header Luxury Glassmorphism */
     .header-box {
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
         border: 1px solid rgba(234, 179, 8, 0.35);
         border-radius: 20px;
         padding: 28px 36px;
@@ -66,7 +66,7 @@ custom_css = """
         margin-top: 6px;
     }
 
-    /* Metric Cards Custom Glow */
+    /* Metric Cards Glow */
     div[data-testid="stMetric"] {
         background: rgba(30, 41, 59, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.08);
@@ -91,12 +91,12 @@ custom_css = """
         font-weight: 600 !important;
     }
 
-    /* MICRO-INTERACTION: Radio Button Interaktif (Tab Menyala Saat Hover/Disentuh Kursor) */
+    /* MICRO-INTERACTION: Radio Option Buttons (Menyala & Terangkat Saat Disentuh Kursor) */
     div[data-testid="stRadioButton"] label {
         background: rgba(30, 41, 59, 0.6) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
         border-radius: 12px !important;
-        padding: 10px 20px !important;
+        padding: 10px 22px !important;
         color: #cbd5e1 !important;
         font-weight: 600 !important;
         transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -104,31 +104,31 @@ custom_css = """
         margin-right: 8px !important;
     }
 
-    /* Hover State (Efek Kursor Disentuhkan - Menyala Hidup) */
+    /* Hover State (Efek Menyala Emas) */
     div[data-testid="stRadioButton"] label:hover {
-        background: rgba(234, 179, 8, 0.15) !important;
+        background: rgba(234, 179, 8, 0.18) !important;
         border-color: #eab308 !important;
         color: #fef08a !important;
-        box-shadow: 0 0 15px rgba(234, 179, 8, 0.4) !important;
+        box-shadow: 0 0 16px rgba(234, 179, 8, 0.45) !important;
         transform: translateY(-2px) !important;
     }
 
-    /* Checked State (Tab Terpilih Active) */
+    /* Active State (Tombol Terpilih) */
     div[data-testid="stRadioButton"] label[data-checked="true"] {
         background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%) !important;
         color: #0f172a !important;
         font-weight: 800 !important;
         border-color: #fef08a !important;
-        box-shadow: 0 4px 18px rgba(234, 179, 8, 0.45) !important;
+        box-shadow: 0 4px 20px rgba(234, 179, 8, 0.5) !important;
     }
 
-    /* Streamlit DataFrame Custom Styling */
+    /* Streamlit DataFrame Custom Container */
     div[data-testid="stDataFrame"] {
         background-color: #1e293b;
         border-radius: 16px;
         border: 1px solid #334155;
         padding: 12px;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
     }
 
     /* Download Button Premium Hover */
@@ -145,7 +145,7 @@ custom_css = """
 
     .stDownloadButton > button:hover {
         transform: translateY(-2px) !important;
-        box-shadow: 0 6px 25px rgba(234, 179, 8, 0.55) !important;
+        box-shadow: 0 6px 25px rgba(234, 179, 8, 0.6) !important;
         background: linear-gradient(135deg, #facc15 0%, #eab308 100%) !important;
     }
 </style>
