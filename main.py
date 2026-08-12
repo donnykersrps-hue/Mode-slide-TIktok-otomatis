@@ -19,16 +19,10 @@ if "tiktok_data" not in st.session_state:
 api_key = st.secrets.get("RAPIDAPI_KEY", "")
 tiktok_user = st.secrets.get("TIKTOK_USERNAME", "ruangteduh.id88")
 
-# 2. Fungsi Penarik Analytics TikTok dengan Cache Session
-def fetch_tiktok_data(username, key):
+# 2. Fungsi Penarik Analytics TikTok Realtime (Parsing JSON Sesuai RapidAPI)
+def fetch_tiktok_data_realtime(username, key):
     if not key:
-        return {
-            "avatar": "https://p16-va.tiktokcdn.com/tos-maliva-avt-0068/default-avatar.jpeg",
-            "followers": 12450,
-            "likes": 85300,
-            "videos": 142,
-            "views": "125.4K"
-        }
+        return None
     
     url = f"https://tiktok-data-api.p.rapidapi.com/user/info?username={username}"
     headers = {
@@ -36,32 +30,37 @@ def fetch_tiktok_data(username, key):
         "x-rapidapi-host": "tiktok-data-api.p.rapidapi.com"
     }
     try:
-        response = requests.get(url, headers=headers, timeout=5)
+        response = requests.get(url, headers=headers, timeout=8)
         if response.status_code == 200:
             res = response.json()
-            user_info = res.get("userInfo", {})
-            user_meta = user_info.get("user", {})
-            stats = user_info.get("stats", {})
+            
+            # Coba ekstrak data dari beberapa kemungkinan skema JSON RapidAPI
+            user_info = res.get("userInfo", res.get("data", {}))
+            user_meta = user_info.get("user", user_info.get("user_info", {}))
+            stats = user_info.get("stats", user_info.get("user_stats", {}))
+            
+            avatar_url = user_meta.get("avatarMedium") or user_meta.get("avatarLarger") or user_meta.get("avatarThumb") or "https://p16-va.tiktokcdn.com/tos-maliva-avt-0068/default-avatar.jpeg"
+            
+            followers_count = stats.get("followerCount", stats.get("followers", 0))
+            likes_count = stats.get("heartCount", stats.get("hearts", stats.get("likes", 0)))
+            videos_count = stats.get("videoCount", stats.get("videos", 0))
+            
+            # Perhitungan estimasi views jika tidak disediakan langsung oleh API
+            views_est = stats.get("playCount", stats.get("views", likes_count * 3 if likes_count else 0))
             
             return {
-                "avatar": user_meta.get("avatarMedium", "https://p16-va.tiktokcdn.com/tos-maliva-avt-0068/default-avatar.jpeg"),
-                "followers": stats.get("followerCount", 0),
-                "likes": stats.get("heartCount", 0),
-                "videos": stats.get("videoCount", 0),
-                "views": f"{stats.get('heartCount', 0) // 3:,}"
+                "avatar": avatar_url,
+                "followers": followers_count,
+                "likes": likes_count,
+                "videos": videos_count,
+                "views": f"{views_est:,}" if isinstance(views_est, int) else str(views_est)
             }
-    except Exception:
-        pass
+    except Exception as e:
+        st.error(f"Error menarik data TikTok Realtime: {e}")
         
-    return {
-        "avatar": "https://p16-va.tiktokcdn.com/tos-maliva-avt-0068/default-avatar.jpeg",
-        "followers": 12450,
-        "likes": 85300,
-        "videos": 142,
-        "views": "125.4K"
-    }
+    return None
 
-# 3. Custom CSS Sticky Floating Bar & Styling UI
+# 3. Custom CSS UI & Sticky Top Bar
 custom_css = """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;800&display=swap');
@@ -108,12 +107,12 @@ custom_css = """
         margin-top: 6px;
     }
 
-    /* Analytics Card Box di Lingkaran Hijau */
+    /* Analytics Card Box (Area Hijau) */
     .analytics-card-container {
-        background: rgba(30, 41, 59, 0.9);
-        border: 1px solid rgba(234, 179, 8, 0.35);
+        background: rgba(30, 41, 59, 0.95);
+        border: 1px solid rgba(234, 179, 8, 0.4);
         border-radius: 14px;
-        padding: 10px 18px;
+        padding: 8px 16px;
         display: flex;
         align-items: center;
         gap: 16px;
@@ -121,8 +120,8 @@ custom_css = """
     }
 
     .avatar-img {
-        width: 44px;
-        height: 44px;
+        width: 42px;
+        height: 42px;
         border-radius: 50%;
         border: 2px solid #eab308;
         object-fit: cover;
@@ -134,9 +133,11 @@ custom_css = """
     }
 
     .stat-label {
-        font-size: 11px;
+        font-size: 10px;
         color: #94a3b8;
         font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     .stat-value {
@@ -158,7 +159,6 @@ custom_css = """
         height: 100% !important;
     }
 
-    /* Cards for Content Parts */
     .part-card {
         background: #1e293b;
         border: 1px solid rgba(234, 179, 8, 0.25);
@@ -221,7 +221,7 @@ custom_css = """
 """
 st.markdown(custom_css, unsafe_allow_html=True)
 
-# 4. COMPONENT STICKY TOP BAR (Jam Digital + Running Text Tanpa Tabrakan Teks)
+# 4. COMPONENT STICKY TOP BAR (Jam Digital + Running Text Rapi)
 sticky_top_html = f"""
 <!DOCTYPE html>
 <html>
@@ -283,7 +283,6 @@ sticky_top_html = f"""
             display: flex;
             align-items: center;
         }}
-        /* FIX LINGKARAN KUNING: BADGE SOLID TIDAK TERTIMPA TEKS */
         .ticker-label {{
             position: absolute;
             left: 0;
@@ -304,7 +303,7 @@ sticky_top_html = f"""
         .ticker-track {{
             width: 100%;
             overflow: hidden;
-            padding-left: 175px; /* Offset Jarak Aman Dari Badge */
+            padding-left: 175px;
         }}
         .ticker-content {{
             display: inline-block;
@@ -361,19 +360,22 @@ sticky_top_html = f"""
 </html>
 """
 
-# Render Component Floating Top Bar
+# Render Floating Bar
 components.html(sticky_top_html, height=58)
 
-# 5. BARIS UTAMA DUA ELEMEN (Lingkaran Hijau + Tombol Update Analisis)
+# 5. KARTU ANALYTICS & TOMBOL UPDATE (AREA HIJAU)
 col_card, col_btn = st.columns([3, 1])
 
 with col_btn:
     if st.button("🔄 Update Analisis Terbaru", use_container_width=True):
-        st.session_state["tiktok_data"] = fetch_tiktok_data(tiktok_user, api_key)
+        data_realtime = fetch_tiktok_data_realtime(tiktok_user, api_key)
+        if data_realtime:
+            st.session_state["tiktok_data"] = data_realtime
+        else:
+            st.warning("Gagal menarik data realtime, pastikan RAPIDAPI_KEY di Streamlit Secrets aktif.")
         st.rerun()
 
 with col_card:
-    # Render Kartu Analytics jika data sudah ada di cache
     if st.session_state["tiktok_data"]:
         data = st.session_state["tiktok_data"]
         st.markdown(f"""
@@ -404,7 +406,7 @@ with col_card:
     else:
         st.markdown(f"""
         <div class="analytics-card-container" style="justify-content: center; color: #94a3b8; font-size: 13px;">
-            💡 Tekan tombol <b>"🔄 Update Analisis Terbaru"</b> di sebelah kanan untuk menampilkan data statistik @{tiktok_user}
+            💡 Tekan tombol <b>"🔄 Update Analisis Terbaru"</b> di sebelah kanan untuk menarik data statistik realtime @{tiktok_user}
         </div>
         """, unsafe_allow_html=True)
 
@@ -433,7 +435,7 @@ else:
 
 btn_generate = st.button("🚀 Racik Auto 5 Part Konten Sekarang!")
 
-# 8. Output Generation Generator
+# 8. Output Generator
 def generate_5part_content(topic_name):
     clean_topic = topic_name.strip()
     
@@ -499,7 +501,7 @@ def generate_5part_content(topic_name):
             "title": f"Part 5 - Puncak Keridhoan & Pintu Surga (Puncak)",
             "slot": "Malam (20.00 WIB)",
             "playlist": clean_topic,
-            "caption": f"{clean_topic} (Part 5 - Puncak Seri) 🌿\n\nPuncak ketenangan saat batin pasrah sepenuhnya pada ketentuan Allah... Di sinilah pintu surga mana saja dibukakan untukmu! 👑✨\n\n(Simpan & bagikan seri lengkapnya di playlist profil \"{clean_topic}\" ya 🌿)\n\n#RuangTeduh #PenatHati #HaditsKetenangan #SelfReminder #AmalanLangit",
+            "caption": f"{clean_topic} (Part 5 - Puncak Seri) 🌿\n\nPuncak ketenangan saat batin pasrah sepenuhnya pada ketentuan Allah... Di sinilah pintu surga mana saja dibukakan untukmu! 👑✨\n\n(Simkan & bagikan seri lengkapnya di playlist profil \"{clean_topic}\" ya 🌿)\n\n#RuangTeduh #PenatHati #HaditsKetenangan #SelfReminder #AmalanLangit",
             "slides": [
                 {"title": "SLIDE 1 (COVER/HOOK)", "header": "PUNCAK PASRAH & RIDHO 👑", "isi": "\"Puncak ketenangan saat batin pasrah sepenuhnya pada takdir-Nya...\""},
                 {"title": "SLIDE 2 (KONTEKS BATIN)", "header": "KERIDHOAN HATI 🌿", "isi": "\"Ketika rencana kita tak sejalan dengan kenyataan, ia tersenyum dan berkata: 'Pilihan Allah pasti yang terbaik'.\""},
