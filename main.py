@@ -1,6 +1,6 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
-import json
 
 # 1. Konfigurasi Halaman Streamlit
 st.set_page_config(
@@ -10,107 +10,21 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. Inject Custom CSS & JS (Sticky Clock Bar + Dark Theme)
+# 2. Inject Custom CSS Utama (Tema Dark Slate & Emas Mewah)
 custom_css = """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;800&display=swap');
 
-    /* Theme Base */
     .stApp {
         background-color: #0f172a !important;
         color: #f8fafc !important;
         font-family: 'Plus Jakarta Sans', sans-serif !important;
-        padding-top: 70px !important; /* Space untuk Sticky Clock */
     }
 
-    /* STICKY HEADER FIXED TOP BAR */
-    .sticky-top-bar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        z-index: 99999;
-        background: rgba(15, 23, 42, 0.92);
-        backdrop-filter: blur(12px);
-        border-bottom: 1px solid rgba(234, 179, 8, 0.35);
-        box-shadow: 0 4px 25px rgba(0, 0, 0, 0.6);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 10px 24px;
-        box-sizing: border-box;
-    }
-
-    /* Modern Digital Clock */
-    .clock-container {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        background: rgba(30, 41, 59, 0.8);
-        border: 1px solid rgba(234, 179, 8, 0.4);
-        border-radius: 12px;
-        padding: 6px 16px;
-        box-shadow: 0 0 15px rgba(234, 179, 8, 0.15);
-    }
-
-    .clock-time {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 18px;
-        font-weight: 800;
-        color: #fef08a;
-        letter-spacing: 1px;
-    }
-
-    .clock-date {
-        font-size: 12px;
-        color: #94a3b8;
-        font-weight: 600;
-        border-left: 1px solid rgba(255, 255, 255, 0.15);
-        padding-left: 10px;
-    }
-
-    /* Running Text Ticker Banner */
-    .ticker-wrapper {
-        flex: 1;
-        margin: 0 20px;
-        overflow: hidden;
-        background: rgba(30, 41, 59, 0.5);
-        border-radius: 20px;
-        padding: 6px 14px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        display: flex;
-        align-items: center;
-    }
-
-    .ticker-label {
-        background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
-        color: #0f172a;
-        font-size: 11px;
-        font-weight: 800;
-        padding: 3px 10px;
-        border-radius: 12px;
-        white-space: nowrap;
-        margin-right: 12px;
-    }
-
-    .ticker-content {
-        display: inline-block;
-        white-space: nowrap;
-        animation: marquee 28s linear infinite;
-        color: #e2e8f0;
-        font-size: 13px;
-        font-weight: 600;
-    }
-
-    @keyframes marquee {
-        0% { transform: translateX(100%); }
-        100% { transform: translateX(-100%); }
-    }
-
-    /* Header Banner Container */
+    /* Container Header */
     .header-box {
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-        border: 1px solid rgba(234, 179, 8, 0.3);
+        border: 1px solid rgba(234, 179, 8, 0.35);
         border-radius: 20px;
         padding: 28px 32px;
         margin-top: 10px;
@@ -157,10 +71,7 @@ custom_css = """
         color: #fef08a;
         font-size: 20px;
         font-weight: 700;
-        margin-bottom: 8px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
+        margin-bottom: 12px;
     }
 
     .slot-badge {
@@ -171,6 +82,8 @@ custom_css = """
         font-family: 'JetBrains Mono', monospace;
         font-size: 13px;
         font-weight: 600;
+        display: inline-block;
+        margin-right: 8px;
     }
 
     .playlist-badge {
@@ -181,6 +94,7 @@ custom_css = """
         font-size: 13px;
         font-weight: 600;
         border: 1px solid rgba(168, 85, 247, 0.3);
+        display: inline-block;
     }
 
     /* Slide Card */
@@ -214,47 +128,136 @@ custom_css = """
         box-shadow: 0 4px 15px rgba(234, 179, 8, 0.3) !important;
     }
 </style>
-
-<!-- STICKY BAR CONTAINER HTML & JS -->
-<div class="sticky-top-bar">
-    <div class="clock-container">
-        <span class="clock-time" id="digital-clock">00:00:00 WIB</span>
-        <span class="clock-date" id="digital-date">Rabu, 12 Agu 2026</span>
-    </div>
-    
-    <div class="ticker-wrapper">
-        <span class="ticker-label">🔥 HIGHLIGHT TIKTOK RELIGI</span>
-        <div class="ticker-content">
-            🌿 <b>Jadwal Optimal Upload:</b> Siang (13.00 WIB) • Sore (16.30 WIB) • Malam (19.00 & 20.00 WIB) &nbsp;&nbsp;✨&nbsp;&nbsp; 📌 <b>Gebrakan Emas 5 Part Serial:</b> Naikkan Watch-Time & Playlist Retention @ruangteduh.id88 &nbsp;&nbsp;✨&nbsp;&nbsp; 💡 <b>Tips Slide 5:</b> Gunakan Tautan Sambungan ke Part Selanjutnya agar audiens betah menelusuri profil!
-        </div>
-    </div>
-</div>
-
-<script>
-    function updateClock() {
-        const now = new Date();
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const seconds = String(now.getSeconds()).padStart(2, '0');
-        
-        const clockElem = document.getElementById('digital-clock');
-        if (clockElem) {
-            clockElem.textContent = hours + ':' + minutes + ':' + seconds + ' WIB';
-        }
-        
-        const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
-        const dateElem = document.getElementById('digital-date');
-        if (dateElem) {
-            dateElem.textContent = now.toLocaleDateString('id-ID', options);
-        }
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
-</script>
 """
 st.markdown(custom_css, unsafe_allow_html=True)
 
-# 3. Fungsi Generator Otomatis Racikan 5 Part
+# 3. COMPONENT KUSTOM: Jam Digital Realtime + Running Text
+sticky_top_html = """
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: #0f172a;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow: hidden;
+        }
+        .top-bar {
+            width: 100%;
+            height: 52px;
+            background: rgba(15, 23, 42, 0.95);
+            border-bottom: 1px solid rgba(234, 179, 8, 0.35);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 16px;
+        }
+        .clock-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(30, 41, 59, 0.85);
+            border: 1px solid rgba(234, 179, 8, 0.4);
+            border-radius: 10px;
+            padding: 5px 14px;
+            box-shadow: 0 0 12px rgba(234, 179, 8, 0.2);
+            white-space: nowrap;
+        }
+        .clock-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            font-weight: 800;
+            color: #fef08a;
+            letter-spacing: 0.5px;
+        }
+        .clock-date {
+            font-size: 11px;
+            color: #94a3b8;
+            font-weight: 600;
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
+            padding-left: 8px;
+        }
+        .ticker-wrapper {
+            flex: 1;
+            margin-left: 15px;
+            overflow: hidden;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 20px;
+            padding: 5px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+        }
+        .ticker-label {
+            background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+            color: #0f172a;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 10px;
+            white-space: nowrap;
+            margin-right: 10px;
+        }
+        .ticker-content {
+            display: inline-block;
+            white-space: nowrap;
+            animation: marquee 25s linear infinite;
+            color: #e2e8f0;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <div class="clock-card">
+            <span class="clock-time" id="digital-clock">00:00:00 WIB</span>
+            <span class="clock-date" id="digital-date">Loading...</span>
+        </div>
+        <div class="ticker-wrapper">
+            <span class="ticker-label">🔥 HIGHLIGHT TIKTOK RELIGI</span>
+            <div class="ticker-content">
+                🌿 <b>Jadwal Optimal Upload:</b> Siang (13.00 WIB) • Sore (16.30 WIB) • Malam (19.00 & 20.00 WIB) &nbsp;&nbsp;✨&nbsp;&nbsp; 📌 <b>Gebrakan Emas 5 Part Serial:</b> Naikkan Watch-Time & Playlist Retention @ruangteduh.id88 &nbsp;&nbsp;✨&nbsp;&nbsp; 💡 <b>Tips Slide 5:</b> Gunakan Tautan Sambungan ke Part Selanjutnya agar audiens betah menelusuri profil!
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            const clockElem = document.getElementById('digital-clock');
+            if (clockElem) {
+                clockElem.textContent = hours + ':' + minutes + ':' + seconds + ' WIB';
+            }
+            
+            const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+            const dateElem = document.getElementById('digital-date');
+            if (dateElem) {
+                dateElem.textContent = now.toLocaleDateString('id-ID', options);
+            }
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+</body>
+</html>
+"""
+
+# Tampilkan Component Top Bar
+components.html(sticky_top_html, height=60)
+
+# 4. Fungsi Generator Otomatis Racikan 5 Part
 def generate_5part_content(topic_name):
     clean_topic = topic_name.strip()
     
@@ -337,7 +340,7 @@ def generate_5part_content(topic_name):
     ]
     return parts_data
 
-# 4. Header UI
+# 5. Header UI
 st.markdown("""
 <div class="header-box">
     <span class="brand-badge">🤖 Ruang Teduh AI Auto-Generator</span>
@@ -346,7 +349,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# 5. Form Input Topik
+# 6. Form Input Topik
 col_input, col_preset = st.columns([2, 1])
 
 with col_input:
@@ -362,7 +365,7 @@ else:
 
 btn_generate = st.button("🚀 Racik Auto 5 Part Konten Sekarang!")
 
-# 6. Output Generation
+# 7. Output Generation
 if btn_generate or selected_topic:
     st.markdown("---")
     st.markdown(f"### 🌿 HASIL RACIKAN AUTOMATIS: `{selected_topic}` (5 PART)")
@@ -378,11 +381,10 @@ if btn_generate or selected_topic:
                 <div class="part-header">
                     📌 PART {part['part_num']}/5: {part['title']}
                 </div>
-                <div style="margin-bottom: 15px; display: flex; gap: 10px;">
+                <div style="margin-bottom: 15px;">
                     <span class="slot-badge">⏰ Slot Jadwal: {part['slot']}</span>
                     <span class="playlist-badge">📂 Target Playlist: {part['playlist']}</span>
                 </div>
-                
                 <p style="margin-bottom: 4px; font-weight: 700; color: #fef08a;">📝 Caption (Copy-Paste):</p>
             """, unsafe_allow_html=True)
             
@@ -391,8 +393,8 @@ if btn_generate or selected_topic:
             st.markdown("<p style='margin-top: 15px; margin-bottom: 10px; font-weight: 700; color: #fef08a;'>🎨 Isian 5 Slide (Copy-Paste ke Canva / Editor):</p>", unsafe_allow_html=True)
             
             for s in part['slides']:
-                riwayat_text = f"\nRiwayat: {s['riwayat']}" if 'riwayat' in s else ""
-                cta_text = f"\nCTA Keranjang Kuning: {s['cta']}" if 'cta' in s else ""
+                riwayat_text = f"<br><b>Riwayat:</b> {s['riwayat']}" if 'riwayat' in s else ""
+                cta_text = f"<br><b>CTA Keranjang Kuning:</b> {s['cta']}" if 'cta' in s else ""
                 
                 st.markdown(f"""
                 <div class="slide-item">
@@ -429,9 +431,9 @@ if btn_generate or selected_topic:
             for s in p['slides']:
                 all_text += f"- {s['title']}:\n  Header: {s['header']}\n  Isi: {s['isi']}\n"
                 if 'riwayat' in s:
-                  all_text += f"  Riwayat: {s['riwayat']}\n"
+                    all_text += f"  Riwayat: {s['riwayat']}\n"
                 if 'cta' in s:
-                  all_text += f"  CTA: {s['cta']}\n"
+                    all_text += f"  CTA: {s['cta']}\n"
             all_text += "\n" + "-"*40 + "\n\n"
             
         st.text_area("Seluruh Text Mentah (Gampang Tinggal Copy All):", value=all_text, height=400)
