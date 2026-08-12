@@ -187,25 +187,3 @@ st.caption("✨ *Tips: Gunakan pencarian built-in di pojok kanan atas tabel Stre
 
 ---
 
-### 🚀 Cara Menjalankan Script Ini di HP / Laptop:
-
-1. **Install Library Streamlit & Pandas:**
-   Buka Terminal / Command Prompt / Termux (HP), lalu jalankan:
-   ```bash
-   pip install streamlit pandas
-   ```
-
-2. **Jalankan App Streamlit:**
-   Simpan file di atas dengan nama `app.py`, lalu jalankan perintah:
-   ```bash
-   streamlit run app.py
-   ```
-
-3. **Hasil:**
-   Streamlit akan otomatis membuka browser dengan tampilan **Dark Gold Theme (Slate + Emas)**, lengkap dengan:
-   * **KPI Cards** di bagian atas.
-   * **Filter Tab Radio Button** untuk memilah jadwal hari Rabu, Kamis, atau Jumat.
-   * **Tabel Interaktif Streamlit** yang bisa di-search, di-sort, dan di-resize kolomnya.
-   * **Tombol Download CSV** otomatis yang bisa langsung mengekspor data ke Microsoft Excel.
-
-Gimana Kak Donny, simpel banget kan meracik tampilan profesional di Streamlit? 🚀🌿
