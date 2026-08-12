@@ -7,26 +7,113 @@ st.set_page_config(
     page_title="Ruang Teduh - Auto Content Generator",
     page_icon="🌿",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
-# 2. Styling CSS Kustom (Dark Slate + Gold Theme)
+# 2. Inject Custom CSS & JS (Sticky Clock Bar + Dark Theme)
 custom_css = """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;800&display=swap');
 
+    /* Theme Base */
     .stApp {
         background-color: #0f172a !important;
         color: #f8fafc !important;
         font-family: 'Plus Jakarta Sans', sans-serif !important;
+        padding-top: 70px !important; /* Space untuk Sticky Clock */
     }
 
-    /* Header Banner */
+    /* STICKY HEADER FIXED TOP BAR */
+    .sticky-top-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 99999;
+        background: rgba(15, 23, 42, 0.92);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(234, 179, 8, 0.35);
+        box-shadow: 0 4px 25px rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 24px;
+        box-sizing: border-box;
+    }
+
+    /* Modern Digital Clock */
+    .clock-container {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: rgba(30, 41, 59, 0.8);
+        border: 1px solid rgba(234, 179, 8, 0.4);
+        border-radius: 12px;
+        padding: 6px 16px;
+        box-shadow: 0 0 15px rgba(234, 179, 8, 0.15);
+    }
+
+    .clock-time {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 18px;
+        font-weight: 800;
+        color: #fef08a;
+        letter-spacing: 1px;
+    }
+
+    .clock-date {
+        font-size: 12px;
+        color: #94a3b8;
+        font-weight: 600;
+        border-left: 1px solid rgba(255, 255, 255, 0.15);
+        padding-left: 10px;
+    }
+
+    /* Running Text Ticker Banner */
+    .ticker-wrapper {
+        flex: 1;
+        margin: 0 20px;
+        overflow: hidden;
+        background: rgba(30, 41, 59, 0.5);
+        border-radius: 20px;
+        padding: 6px 14px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        align-items: center;
+    }
+
+    .ticker-label {
+        background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+        color: #0f172a;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 3px 10px;
+        border-radius: 12px;
+        white-space: nowrap;
+        margin-right: 12px;
+    }
+
+    .ticker-content {
+        display: inline-block;
+        white-space: nowrap;
+        animation: marquee 28s linear infinite;
+        color: #e2e8f0;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    @keyframes marquee {
+        0% { transform: translateX(100%); }
+        100% { transform: translateX(-100%); }
+    }
+
+    /* Header Banner Container */
     .header-box {
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         border: 1px solid rgba(234, 179, 8, 0.3);
         border-radius: 20px;
         padding: 28px 32px;
+        margin-top: 10px;
         margin-bottom: 25px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
     }
@@ -96,19 +183,6 @@ custom_css = """
         border: 1px solid rgba(168, 85, 247, 0.3);
     }
 
-    /* Copyable Text Box Area */
-    .copy-box {
-        background: #0f172a;
-        border: 1px solid #334155;
-        border-radius: 12px;
-        padding: 16px;
-        color: #cbd5e1;
-        font-size: 14px;
-        line-height: 1.6;
-        margin-top: 10px;
-        margin-bottom: 15px;
-    }
-
     /* Slide Card */
     .slide-item {
         background: rgba(15, 23, 42, 0.6);
@@ -140,12 +214,48 @@ custom_css = """
         box-shadow: 0 4px 15px rgba(234, 179, 8, 0.3) !important;
     }
 </style>
+
+<!-- STICKY BAR CONTAINER HTML & JS -->
+<div class="sticky-top-bar">
+    <div class="clock-container">
+        <span class="clock-time" id="digital-clock">00:00:00 WIB</span>
+        <span class="clock-date" id="digital-date">Rabu, 12 Agu 2026</span>
+    </div>
+    
+    <div class="ticker-wrapper">
+        <span class="ticker-label">🔥 HIGHLIGHT TIKTOK RELIGI</span>
+        <div class="ticker-content">
+            🌿 <b>Jadwal Optimal Upload:</b> Siang (13.00 WIB) • Sore (16.30 WIB) • Malam (19.00 & 20.00 WIB) &nbsp;&nbsp;✨&nbsp;&nbsp; 📌 <b>Gebrakan Emas 5 Part Serial:</b> Naikkan Watch-Time & Playlist Retention @ruangteduh.id88 &nbsp;&nbsp;✨&nbsp;&nbsp; 💡 <b>Tips Slide 5:</b> Gunakan Tautan Sambungan ke Part Selanjutnya agar audiens betah menelusuri profil!
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateClock() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        
+        const clockElem = document.getElementById('digital-clock');
+        if (clockElem) {
+            clockElem.textContent = hours + ':' + minutes + ':' + seconds + ' WIB';
+        }
+        
+        const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+        const dateElem = document.getElementById('digital-date');
+        if (dateElem) {
+            dateElem.textContent = now.toLocaleDateString('id-ID', options);
+        }
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+</script>
 """
 st.markdown(custom_css, unsafe_allow_html=True)
 
 # 3. Fungsi Generator Otomatis Racikan 5 Part
 def generate_5part_content(topic_name):
-    # Template generator dinamis berdasarkan topik
     clean_topic = topic_name.strip()
     
     parts_data = [
@@ -240,7 +350,7 @@ st.markdown("""
 col_input, col_preset = st.columns([2, 1])
 
 with col_input:
-    topic_input = st.text_input("💡 Masukkan Topik Konten Utama:", value="Ciri-ciri Wanita Ahli Surga", placeholder="Contoh: Rahasia Sedekah Subuh, Syarat Pintu Taubat, dll.")
+    topic_input = st.text_input("💡 Masukkan Topik Konten Utama:", value="Syarat utama pintu taubat", placeholder="Contoh: Rahasia Sedekah Subuh, Syarat Pintu Taubat, dll.")
 
 with col_preset:
     preset_choice = st.selectbox("Atau Pilih Preset Topik:", ["Custom Input", "Ciri-ciri Wanita Ahli Surga", "3 Syarat Utama Pintu Taubat", "Keutamaan Sedekah Subuh", "Seri Hati Seorang Wanita"])
