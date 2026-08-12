@@ -9,78 +9,144 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. Inject Custom CSS (Dark Theme #0f172a & Accent Gold #eab308)
+# 2. Inject Custom CSS Perfeksionis (Micro-Interactions, Glow Effects, & Glassmorphism)
 custom_css = """
 <style>
-    /* Background Utama */
+    /* Google Font Import */
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+
+    /* Reset & Base Theme */
     .stApp {
-        background-color: #0f172a;
+        background-color: #0b1120;
         color: #f8fafc;
         font-family: 'Plus Jakarta Sans', sans-serif;
     }
 
-    /* Container Header */
+    /* Container Header Luxury Glassmorphism */
     .header-box {
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-        border: 1px solid rgba(234, 179, 8, 0.3);
-        border-radius: 16px;
-        padding: 24px 30px;
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+        border: 1px solid rgba(234, 179, 8, 0.35);
+        border-radius: 20px;
+        padding: 28px 36px;
         margin-bottom: 25px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(12px);
+        transition: all 0.3s ease;
+    }
+    
+    .header-box:hover {
+        border-color: rgba(234, 179, 8, 0.6);
+        box-shadow: 0 15px 40px rgba(234, 179, 8, 0.15);
     }
 
     .brand-badge {
         display: inline-block;
-        background: rgba(234, 179, 8, 0.15);
+        background: linear-gradient(90deg, rgba(234, 179, 8, 0.2) 0%, rgba(202, 138, 4, 0.1) 100%);
         color: #fef08a;
-        padding: 6px 14px;
-        border-radius: 20px;
+        padding: 6px 16px;
+        border-radius: 30px;
         font-size: 13px;
         font-weight: 700;
-        border: 1px solid rgba(234, 179, 8, 0.3);
-        margin-bottom: 10px;
+        border: 1px solid rgba(234, 179, 8, 0.4);
+        margin-bottom: 12px;
+        letter-spacing: 0.5px;
     }
 
     .header-title {
         color: #ffffff;
-        font-size: 28px;
+        font-size: 32px;
         font-weight: 800;
         margin: 0;
+        letter-spacing: -0.5px;
     }
 
     .header-subtitle {
         color: #94a3b8;
-        font-size: 14px;
-        margin-top: 4px;
+        font-size: 15px;
+        margin-top: 6px;
     }
 
-    /* Streamlit DataFrame Styling Override */
-    div[data-testid="stDataFrame"] {
-        background-color: #1e293b;
-        border-radius: 12px;
-        border: 1px solid #334155;
-        padding: 10px;
+    /* Metric Cards Custom Glow */
+    div[data-testid="stMetric"] {
+        background: rgba(30, 41, 59, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 15px 20px;
+        transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    
+    div[data-testid="stMetric"]:hover {
+        transform: translateY(-3px);
+        border-color: rgba(234, 179, 8, 0.4);
     }
 
-    /* Metric Cards */
     div[data-testid="stMetricValue"] {
         color: #fef08a !important;
         font-weight: 800 !important;
+        font-size: 26px !important;
     }
 
     div[data-testid="stMetricLabel"] {
         color: #94a3b8 !important;
+        font-weight: 600 !important;
     }
 
-    /* Custom Button */
+    /* MICRO-INTERACTION: Radio Button Interaktif (Tab Menyala Saat Hover/Disentuh Kursor) */
+    div[data-testid="stRadioButton"] label {
+        background: rgba(30, 41, 59, 0.6) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 12px !important;
+        padding: 10px 20px !important;
+        color: #cbd5e1 !important;
+        font-weight: 600 !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        cursor: pointer !important;
+        margin-right: 8px !important;
+    }
+
+    /* Hover State (Efek Kursor Disentuhkan - Menyala Hidup) */
+    div[data-testid="stRadioButton"] label:hover {
+        background: rgba(234, 179, 8, 0.15) !important;
+        border-color: #eab308 !important;
+        color: #fef08a !important;
+        box-shadow: 0 0 15px rgba(234, 179, 8, 0.4) !important;
+        transform: translateY(-2px) !important;
+    }
+
+    /* Checked State (Tab Terpilih Active) */
+    div[data-testid="stRadioButton"] label[data-checked="true"] {
+        background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%) !important;
+        color: #0f172a !important;
+        font-weight: 800 !important;
+        border-color: #fef08a !important;
+        box-shadow: 0 4px 18px rgba(234, 179, 8, 0.45) !important;
+    }
+
+    /* Streamlit DataFrame Custom Styling */
+    div[data-testid="stDataFrame"] {
+        background-color: #1e293b;
+        border-radius: 16px;
+        border: 1px solid #334155;
+        padding: 12px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Download Button Premium Hover */
     .stDownloadButton > button {
         background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%) !important;
         color: #0f172a !important;
-        font-weight: 700 !important;
+        font-weight: 800 !important;
         border: none !important;
-        border-radius: 10px !important;
-        padding: 10px 20px !important;
-        box-shadow: 0 4px 15px rgba(234, 179, 8, 0.3) !important;
+        border-radius: 12px !important;
+        padding: 12px 24px !important;
+        box-shadow: 0 4px 20px rgba(234, 179, 8, 0.35) !important;
+        transition: all 0.25s ease !important;
+    }
+
+    .stDownloadButton > button:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 25px rgba(234, 179, 8, 0.55) !important;
+        background: linear-gradient(135deg, #facc15 0%, #eab308 100%) !important;
     }
 </style>
 """
