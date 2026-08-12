@@ -1,6 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
+import requests
 
 # 1. Konfigurasi Halaman Streamlit
 st.set_page_config(
@@ -10,7 +11,38 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. Inject Custom CSS Utama (Tema Dark Slate & Emas Mewah)
+# 2. Fungsi Penarik Analytics TikTok (Dengan Caching 1 Jam)
+@st.cache_data(ttl=3600, show_spinner=False)
+def fetch_tiktok_analytics(username, api_key):
+    if not api_key:
+        return f"🌿 <b>Jadwal Optimal Upload:</b> Siang (13.00 WIB) • Sore (16.30 WIB) • Malam (19.00 & 20.00 WIB) &nbsp;&nbsp;✨&nbsp;&nbsp; 📌 <b>Gebrakan Emas 5 Part Serial:</b> Naikkan Watch-Time & Playlist Retention @{username}"
+    
+    url = f"https://tiktok-data-api.p.rapidapi.com/user/info?username={username}"
+    headers = {
+        "x-rapidapi-key": api_key,
+        "x-rapidapi-host": "tiktok-data-api.p.rapidapi.com"
+    }
+    try:
+        response = requests.get(url, headers=headers, timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            stats = data.get("userInfo", {}).get("stats", {})
+            followers = stats.get("followerCount", 0)
+            likes = stats.get("heartCount", 0)
+            videos = stats.get("videoCount", 0)
+            return f"📊 <b>ANALYTICS REALTIME @{username}:</b> 👥 Followers: <b>{followers:,}</b> • ❤️ Total Likes: <b>{likes:,}</b> • 🎬 Total Video: <b>{videos}</b> &nbsp;&nbsp;✨&nbsp;&nbsp; ⏰ <b>Siang (13.00 WIB) • Sore (16.30 WIB) • Malam (19.00 & 20.00 WIB)</b>"
+        else:
+            return f"📊 <b>ANALYTICS @{username}:</b> Live Monitoring Active • ⏰ Optimal Upload: Siang (13.00 WIB), Sore (16.30 WIB), Malam (19.00 WIB)"
+    except Exception:
+        return f"📊 <b>ANALYTICS @{username}:</b> Live Monitoring Active • ⏰ Optimal Upload: Siang (13.00 WIB), Sore (16.30 WIB), Malam (19.00 WIB)"
+
+# Ambil Key dari Secrets Streamlit Cloud
+api_key = st.secrets.get("RAPIDAPI_KEY", "")
+tiktok_user = st.secrets.get("TIKTOK_USERNAME", "ruangteduh.id88")
+
+ticker_text_data = fetch_tiktok_analytics(tiktok_user, api_key)
+
+# 3. Inject Custom CSS Utama (Tema Dark Slate & Emas Mewah)
 custom_css = """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;800&display=swap');
@@ -131,20 +163,20 @@ custom_css = """
 """
 st.markdown(custom_css, unsafe_allow_html=True)
 
-# 3. COMPONENT KUSTOM: Jam Digital Realtime + Running Text
-sticky_top_html = """
+# 4. COMPONENT KUSTOM: Jam Digital Realtime + Running Text Dynamic
+sticky_top_html = f"""
 <!DOCTYPE html>
 <html>
 <head>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
+        * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+        body {{
             background-color: #0f172a;
             font-family: 'Plus Jakarta Sans', sans-serif;
             overflow: hidden;
-        }
-        .top-bar {
+        }}
+        .top-bar {{
             width: 100%;
             height: 52px;
             background: rgba(15, 23, 42, 0.95);
@@ -154,8 +186,8 @@ sticky_top_html = """
             align-items: center;
             justify-content: space-between;
             padding: 6px 16px;
-        }
-        .clock-card {
+        }}
+        .clock-card {{
             display: flex;
             align-items: center;
             gap: 10px;
@@ -165,22 +197,22 @@ sticky_top_html = """
             padding: 5px 14px;
             box-shadow: 0 0 12px rgba(234, 179, 8, 0.2);
             white-space: nowrap;
-        }
-        .clock-time {
+        }}
+        .clock-time {{
             font-family: 'JetBrains Mono', monospace;
             font-size: 16px;
             font-weight: 800;
             color: #fef08a;
             letter-spacing: 0.5px;
-        }
-        .clock-date {
+        }}
+        .clock-date {{
             font-size: 11px;
             color: #94a3b8;
             font-weight: 600;
             border-left: 1px solid rgba(255, 255, 255, 0.15);
             padding-left: 8px;
-        }
-        .ticker-wrapper {
+        }}
+        .ticker-wrapper {{
             flex: 1;
             margin-left: 15px;
             overflow: hidden;
@@ -190,8 +222,8 @@ sticky_top_html = """
             border: 1px solid rgba(255, 255, 255, 0.08);
             display: flex;
             align-items: center;
-        }
-        .ticker-label {
+        }}
+        .ticker-label {{
             background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
             color: #0f172a;
             font-size: 10px;
@@ -200,19 +232,19 @@ sticky_top_html = """
             border-radius: 10px;
             white-space: nowrap;
             margin-right: 10px;
-        }
-        .ticker-content {
+        }}
+        .ticker-content {{
             display: inline-block;
             white-space: nowrap;
             animation: marquee 25s linear infinite;
             color: #e2e8f0;
             font-size: 12px;
             font-weight: 600;
-        }
-        @keyframes marquee {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
-        }
+        }}
+        @keyframes marquee {{
+            0% {{ transform: translateX(100%); }}
+            100% {{ transform: translateX(-100%); }}
+        }}
     </style>
 </head>
 <body>
@@ -222,31 +254,31 @@ sticky_top_html = """
             <span class="clock-date" id="digital-date">Loading...</span>
         </div>
         <div class="ticker-wrapper">
-            <span class="ticker-label">🔥 HIGHLIGHT TIKTOK RELIGI</span>
+            <span class="ticker-label">🔥 TIKTOK LIVE STATS</span>
             <div class="ticker-content">
-                🌿 <b>Jadwal Optimal Upload:</b> Siang (13.00 WIB) • Sore (16.30 WIB) • Malam (19.00 & 20.00 WIB) &nbsp;&nbsp;✨&nbsp;&nbsp; 📌 <b>Gebrakan Emas 5 Part Serial:</b> Naikkan Watch-Time & Playlist Retention @ruangteduh.id88 &nbsp;&nbsp;✨&nbsp;&nbsp; 💡 <b>Tips Slide 5:</b> Gunakan Tautan Sambungan ke Part Selanjutnya agar audiens betah menelusuri profil!
+                {ticker_text_data}
             </div>
         </div>
     </div>
 
     <script>
-        function updateClock() {
+        function updateClock() {{
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
             
             const clockElem = document.getElementById('digital-clock');
-            if (clockElem) {
+            if (clockElem) {{
                 clockElem.textContent = hours + ':' + minutes + ':' + seconds + ' WIB';
-            }
+            }}
             
-            const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+            const options = {{ weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' }};
             const dateElem = document.getElementById('digital-date');
-            if (dateElem) {
+            if (dateElem) {{
                 dateElem.textContent = now.toLocaleDateString('id-ID', options);
-            }
-        }
+            }}
+        }}
         setInterval(updateClock, 1000);
         updateClock();
     </script>
@@ -257,7 +289,15 @@ sticky_top_html = """
 # Tampilkan Component Top Bar
 components.html(sticky_top_html, height=60)
 
-# 4. Fungsi Generator Otomatis Racikan 5 Part
+# 5. Header Bar & Refresh Control Button
+col_title, col_btn = st.columns([3, 1])
+
+with col_btn:
+    if st.button("🔄 Update Analisis Terbaru", use_container_width=True):
+        st.cache_data.clear()
+        st.rerun()
+
+# 6. Fungsi Generator Otomatis Racikan 5 Part
 def generate_5part_content(topic_name):
     clean_topic = topic_name.strip()
     
@@ -340,7 +380,7 @@ def generate_5part_content(topic_name):
     ]
     return parts_data
 
-# 5. Header UI
+# 7. Header UI
 st.markdown("""
 <div class="header-box">
     <span class="brand-badge">🤖 Ruang Teduh AI Auto-Generator</span>
@@ -349,7 +389,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# 6. Form Input Topik
+# 8. Form Input Topik
 col_input, col_preset = st.columns([2, 1])
 
 with col_input:
@@ -365,7 +405,7 @@ else:
 
 btn_generate = st.button("🚀 Racik Auto 5 Part Konten Sekarang!")
 
-# 7. Output Generation
+# 9. Output Generation
 if btn_generate or selected_topic:
     st.markdown("---")
     st.markdown(f"### 🌿 HASIL RACIKAN AUTOMATIS: `{selected_topic}` (5 PART)")
