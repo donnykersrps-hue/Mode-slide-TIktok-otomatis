@@ -1,406 +1,327 @@
 import streamlit as st
-import streamlit.components.v1 as components
+import pandas as pd
+import json
 
-# Config Halaman Streamlit
+# 1. Konfigurasi Halaman Streamlit
 st.set_page_config(
-    page_title="Ruang Teduh - Schedule Matrix",
+    page_title="Ruang Teduh - Auto Content Generator",
     page_icon="🌿",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
-# Sembunyikan Header & Footer Bawaan Streamlit
+# 2. Styling CSS Kustom (Dark Slate + Gold Theme)
+custom_css = """
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    .stApp {
+        background-color: #0f172a !important;
+        color: #f8fafc !important;
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+    }
+
+    /* Header Banner */
+    .header-box {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border: 1px solid rgba(234, 179, 8, 0.3);
+        border-radius: 20px;
+        padding: 28px 32px;
+        margin-bottom: 25px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .brand-badge {
+        display: inline-block;
+        background: rgba(234, 179, 8, 0.15);
+        color: #fef08a;
+        padding: 6px 16px;
+        border-radius: 30px;
+        font-size: 13px;
+        font-weight: 700;
+        border: 1px solid rgba(234, 179, 8, 0.3);
+        margin-bottom: 12px;
+    }
+
+    .header-title {
+        color: #ffffff;
+        font-size: 28px;
+        font-weight: 800;
+        margin: 0;
+    }
+
+    .header-subtitle {
+        color: #94a3b8;
+        font-size: 14px;
+        margin-top: 6px;
+    }
+
+    /* Card Box for Content Parts */
+    .part-card {
+        background: #1e293b;
+        border: 1px solid rgba(234, 179, 8, 0.25);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+
+    .part-header {
+        color: #fef08a;
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .slot-badge {
+        background: #334155;
+        color: #38bdf8;
+        padding: 4px 12px;
+        border-radius: 8px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .playlist-badge {
+        background: rgba(168, 85, 247, 0.2);
+        color: #c084fc;
+        padding: 4px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    /* Copyable Text Box Area */
+    .copy-box {
+        background: #0f172a;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 16px;
+        color: #cbd5e1;
+        font-size: 14px;
+        line-height: 1.6;
+        margin-top: 10px;
+        margin-bottom: 15px;
+    }
+
+    /* Slide Card */
+    .slide-item {
+        background: rgba(15, 23, 42, 0.6);
+        border-left: 4px solid #eab308;
+        border-radius: 0 10px 10px 0;
+        padding: 12px 16px;
+        margin-bottom: 10px;
+    }
+
+    .slide-title {
+        color: #fef08a;
+        font-weight: 700;
+        font-size: 14px;
+        margin-bottom: 4px;
+    }
+
+    .slide-body {
+        color: #f8fafc;
+        font-size: 14px;
+    }
+
+    .stButton>button {
+        background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%) !important;
+        color: #0f172a !important;
+        font-weight: 800 !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 12px 24px !important;
+        box-shadow: 0 4px 15px rgba(234, 179, 8, 0.3) !important;
+    }
+</style>
+"""
+st.markdown(custom_css, unsafe_allow_html=True)
+
+# 3. Fungsi Generator Otomatis Racikan 5 Part
+def generate_5part_content(topic_name):
+    # Template generator dinamis berdasarkan topik
+    clean_topic = topic_name.strip()
+    
+    parts_data = [
+        {
+            "part_num": 1,
+            "title": f"Part 1 - Pondasi Utama {clean_topic}",
+            "slot": "Siang (13.00 WIB)",
+            "playlist": clean_topic,
+            "hook": f"Untukmu yang sedang lelah, ini rahasia {clean_topic.lower()} yang paling menenangkan batin... 💔",
+            "caption": f"{clean_topic} (Part 1) 🌿\n\nUntukmu muslimah yang sedang lelah berjuang, ini janji peleram gelisahmu yang paling indah... 💔\n\n(Simak poin di slide 3 ya, rehatkan sejenak pikiranmu di sini ✨)\n\nLanjut ke Part 2 jam 13.00 ini juga di playlist \"{clean_topic}\" ya!\n\n#RuangTeduh #PenatHati #HaditsKetenangan #SelfReminder #AmalanLangit",
+            "slides": [
+                {"title": "SLIDE 1 (COVER/HOOK)", "header": f"RAHASIA {clean_topic.upper()} 🌿", "isi": f"\"Untukmu jiwa yang lelah, ini janji peleram gelisahmu yang tak pernah ingkar...\""},
+                {"title": "SLIDE 2 (KONTEKS BATIN)", "header": "MENJAGA DALAM KELELAHAN ✨", "isi": "\"Di tengah himpitan tugas duniawi yang tiada henti, ada keistiqamahan kecil yang dinilai sangat agung di hadapan-Nya.\""},
+                {"title": "SLIDE 3 (INTI DALIL)", "header": "LANDASAN UTAMA 🤲", "isi": f"\"Barangsiapa yang senantiasa menjaga keistiqamahan dalam {clean_topic.lower()}, maka Allah bukakan baginya ketenangan batin...\"", "riwayat": "(HR. Ahmad & Muslim)"},
+                {"title": "SLIDE 4 (TADABBUR)", "header": "BENTENG KESUCIAN JIWA 🤍", "isi": "\"Ketenangan bukan berarti tanpa masalah, melainkan hadirnya rasa percaya penuh pada takdir-Nya.\""},
+                {"title": "SLIDE 5 (CLOSING & BRIDGING)", "header": "BERSAMBUNG KE PART 2 🔗", "isi": f"\"Simak Part 2 tentang kelembutan batin saat diuji di playlist '{clean_topic}' (Cek Profil ya 🌿)\"", "cta": "(Temani amalan harianmu dengan Al-Qur'an terjemahan di keranjang kuning✨)"}
+            ]
+        },
+        {
+            "part_num": 2,
+            "title": f"Part 2 - Kelembutan Batin Saat Diuji",
+            "slot": "Siang (13.00 WIB)",
+            "playlist": clean_topic,
+            "hook": f"Sifat kecil dari {clean_topic.lower()} yang membuat pintu rahmat terbuka lebar...",
+            "caption": f"{clean_topic} (Part 2) 🌿\n\nSifat kecil yang sering tak terlihat mata, padahal menjadi pembuka pintu kasih sayang Allah yang begitu luas... 🌸\n\n(Geser pelan-pelan ya, mari sejukkan batin sejenak ✨)\n\nLanjut ke Part 3 jam 16.30 Sore ini ya!\n\n#RuangTeduh #PenatHati #HaditsKetenangan #SelfReminder #AmalanLangit",
+            "slides": [
+                {"title": "SLIDE 1 (COVER/HOOK)", "header": "KELEMBUTAN SAAT DIUJI 🌸", "isi": "\"Sifat kecil yang membuat pintu surga terbuka lebar tanpa disadari...\""},
+                {"title": "SLIDE 2 (KONTEKS BATIN)", "header": "KELEMBUTAN DI TENGAH UJIAN 🌿", "isi": "\"Saat batin dihantam kekecewaan, jiwa yang mulia memilih melapangkan dada dan meredakan amarahnya.\""},
+                {"title": "SLIDE 3 (INTI DALIL)", "header": "KASIH SAYANG & SABAR 🤲", "isi": "\"Sesungguhnya Allah Maha Lembut dan menyukai kelembutan dalam segala urusan...\"", "riwayat": "(HR. Bukhari & Muslim)"},
+                {"title": "SLIDE 4 (TADABBUR)", "header": "SENYUM YANG JADI DOA 🤍", "isi": "\"Kesabaranmu saat memaafkan adalah perhiasan batin paling berkilau yang disukai para malaikat.\""},
+                {"title": "SLIDE 5 (CLOSING & BRIDGING)", "header": "BERSAMBUNG KE PART 3 🔗", "isi": f"\"Lanjut Part 3 sore ini jam 16.30: Sosok Pelipur Duka dalam Rumah (Cek Playlist '{clean_topic}' ya 🌿)\"", "cta": "(Miliki buku panduan amalan penenang jiwa di keranjang kuning✨)"}
+            ]
+        },
+        {
+            "part_num": 3,
+            "title": f"Part 3 - Penenang Gelisah Keluarga",
+            "slot": "Sore (16.30 WIB)",
+            "playlist": clean_topic,
+            "hook": f"Saat sekitarmu lelah, hadirnya {clean_topic.lower()} jadi tempat mereka pulang...",
+            "caption": f"{clean_topic} (Part 3) 🌿\n\nSaat keluarga atau orang terdekatmu lelah, dirimulah tempat mereka pulang untuk menemukan kedamaian sesungguhnya... 🏠✨\n\n(Simak sabda Nabi di slide 3, adem banget di hati 💖)\n\nLanjut ke Part 4 jam 19.00 Malam nanti ya!\n\n#RuangTeduh #PenatHati #HaditsKetenangan #SelfReminder #AmalanLangit",
+            "slides": [
+                {"title": "SLIDE 1 (COVER/HOOK)", "header": "PELIPUR DUKA DALAM RUMAH 🏠", "isi": "\"Saat orang-orang di sekitarmu lelah, dirimulah penenang gelisah mereka...\""},
+                {"title": "SLIDE 2 (KONTEKS BATIN)", "header": "RUMAH YANG DIRINDUKAN 🌿", "isi": "\"Bukan mewahnya bangunan, melainkan seberapa hangat senyum dan tutur katamu menyambut mereka.\""},
+                {"title": "SLIDE 3 (INTI DALIL)", "header": "SIMPANAN TERBAIK 💎", "isi": "\"Sebaik-baik kalian adalah yang paling baik perilakunya terhadap keluarganya...\"", "riwayat": "(HR. Tirmidzi, Hasan)"},
+                {"title": "SLIDE 4 (TADABBUR)", "header": "PERHIASAN DUNIA 🌸", "isi": "\"Setiap kali engkau melunakkan suasana dan menghapus duka keluargamu, di situlah aliran pahalamu mengucur.\""},
+                {"title": "SLIDE 5 (CLOSING & BRIDGING)", "header": "BERSAMBUNG KE PART 4 🔗", "isi": f"\"Lanjut Part 4 jam 19.00 Malam ini: Menjaga Lisan & Prasangka (Simpan Playlist '{clean_topic}' ya 🌿)\"", "cta": "(Dapatkan tasbih digital penenang dzikir harian di keranjang kuning✨)"}
+            ]
+        },
+        {
+            "part_num": 4,
+            "title": f"Part 4 - Menjaga Lisan & Kesucian Hati",
+            "slot": "Malam (19.00 WIB)",
+            "playlist": clean_topic,
+            "hook": f"Lisan yang teduh adalah mahkota kesucian jiwa dari {clean_topic.lower()}...",
+            "caption": f"{clean_topic} (Part 4) 🌿\n\nLisan yang teduh adalah perhiasan batin sesungguhnya. Menjaga kata dari rasa sakit adalah mahkota kesucian jiwa... 🤍\n\n(Yuk tadabburi bersama di slide 3 & 4 ✨)\n\nLanjut ke Part 5 puncak jam 20.00 Malam ini!\n\n#RuangTeduh #PenatHati #HaditsKetenangan #SelfReminder #AmalanLangit",
+            "slides": [
+                {"title": "SLIDE 1 (COVER/HOOK)", "header": "LISAN YANG TEDUH 🤍", "isi": "\"Lisan yang teduh adalah perhiasan batin sesungguhnya...\""},
+                {"title": "SLIDE 2 (KONTEKS BATIN)", "header": "MENJAGA DARIPADA MENYAKITI 🌿", "isi": "\"Begitu mudah jemari dan lisan kita berucap saat emosi, namun jiwa yang mulia memilih diam dan mendoakan.\""},
+                {"title": "SLIDE 3 (INTI DALIL)", "header": "JAMINAN KESUCIAN LISAN 🤲", "isi": "\"Barangsiapa beriman kepada Allah dan hari akhir, hendaklah ia berkata baik atau diam...\"", "riwayat": "(HR. Bukhari & Muslim)"},
+                {"title": "SLIDE 4 (TADABBUR)", "header": "LISAN PENYEMBUH LUKA 🌸", "isi": "\"Kata-kata yang lembut adalah sedekah. Setiap kalimat baikmu mendatangkan ketenangan bagi orang di sekitarmu.\""},
+                {"title": "SLIDE 5 (CLOSING & BRIDGING)", "header": "BERSAMBUNG KE PART 5 (PUNCAK) 🔗", "isi": f"\"Lanjut Part 5 jam 20.00 Malam ini: Puncak Pintu Rahmat Bebas Dipilih (Cek Profil ya 🌿)\"", "cta": "(Miliki buku himpunan doa & dzikir harian di keranjang kuning✨)"}
+            ]
+        },
+        {
+            "part_num": 5,
+            "title": f"Part 5 - Puncak Keridhoan & Pintu Surga (Puncak)",
+            "slot": "Malam (20.00 WIB)",
+            "playlist": clean_topic,
+            "hook": f"Puncak ketenangan dari {clean_topic.lower()} saat batin pasrah sepenuhnya pada ketentuan Allah...",
+            "caption": f"{clean_topic} (Part 5 - Puncak Seri) 🌿\n\nPuncak ketenangan saat batin pasrah sepenuhnya pada ketentuan Allah... Di sinilah pintu surga mana saja dibukakan untukmu! 👑✨\n\n(Simpan & bagikan seri lengkapnya di playlist profil \"{clean_topic}\" ya 🌿)\n\n#RuangTeduh #PenatHati #HaditsKetenangan #SelfReminder #AmalanLangit",
+            "slides": [
+                {"title": "SLIDE 1 (COVER/HOOK)", "header": "PUNCAK PASRAH & RIDHO 👑", "isi": "\"Puncak ketenangan saat batin pasrah sepenuhnya pada takdir-Nya...\""},
+                {"title": "SLIDE 2 (KONTEKS BATIN)", "header": "KERIDHOAN HATI 🌿", "isi": "\"Ketika rencana kita tak sejalan dengan kenyataan, ia tersenyum dan berkata: 'Pilihan Allah pasti yang terbaik'.\""},
+                {"title": "SLIDE 3 (INTI DALIL PUNCAK)", "header": "PINTU SURGA BEBAS DIPILIH 🌟", "isi": "\"Masuklah ke dalam surga dari pintu mana saja yang kamu suka...\"", "riwayat": "(HR. Ahmad & Ibnu Hibban)"},
+                {"title": "SLIDE 4 (TADABBUR)", "header": "HADIAH TERINDAH ✨", "isi": "\"Lelahmu, sabarmu, dan ketulusanmu tak pernah sia-sia. Ada balasan kemuliaan yang menunggumu.\""},
+                {"title": "SLIDE 5 (CLOSING SERI)", "header": "SIMPAN SERI LENGKAPNYA 📌", "isi": f"\"Simpan & putar ulang Seri 5 Part '{clean_topic}' ini di Playlist profil Ruang Teduh ya 🌿\"", "cta": "(Lengkapi amalan harianmu dengan Al-Qur'an terjemahan eksklusif di keranjang kuning✨)"}
+            ]
+        }
+    ]
+    return parts_data
+
+# 4. Header UI
 st.markdown("""
-    <style>
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
-        header {visibility: hidden;}
-        .block-container {padding-top: 1rem; padding-bottom: 1rem;}
-    </style>
+<div class="header-box">
+    <span class="brand-badge">🤖 Ruang Teduh AI Auto-Generator</span>
+    <h1 class="header-title">Generator Konten Serial 5 Part (Gebrakan Emas)</h1>
+    <p class="header-subtitle">Masukkan 1 Topik Utama -> Script Otomatis Memecah & Meracik Jadwal, Caption, dan 5 Slide Lengkap</p>
+</div>
 """, unsafe_allow_html=True)
 
-# HTML + CSS + JS Murni untuk Tampilan Mewah
-html_code = """
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ruang Teduh - Schedule Matrix</title>
-    <style>
-        :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --gold-primary: #f59e0b;
-            --gold-light: #fbbf24;
-            --text-white: #f8fafc;
-            --text-muted: #94a3b8;
-            --border-color: #334155;
-            --blue-badge: #1e3a8a;
-            --blue-text: #60a5fa;
-        }
+# 5. Form Input Topik
+col_input, col_preset = st.columns([2, 1])
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-white);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 15px;
-        }
+with col_input:
+    topic_input = st.text_input("💡 Masukkan Topik Konten Utama:", value="Ciri-ciri Wanita Ahli Surga", placeholder="Contoh: Rahasia Sedekah Subuh, Syarat Pintu Taubat, dll.")
 
-        .header-card {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            border: 1px solid #334155;
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-        }
+with col_preset:
+    preset_choice = st.selectbox("Atau Pilih Preset Topik:", ["Custom Input", "Ciri-ciri Wanita Ahli Surga", "3 Syarat Utama Pintu Taubat", "Keutamaan Sedekah Subuh", "Seri Hati Seorang Wanita"])
 
-        .pill-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(245, 158, 11, 0.15);
-            border: 1px solid rgba(245, 158, 11, 0.3);
-            color: var(--gold-light);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 12px;
-        }
+if preset_choice != "Custom Input":
+    selected_topic = preset_choice
+else:
+    selected_topic = topic_input
 
-        .title {
-            font-size: 26px;
-            font-weight: 800;
-            color: var(--text-white);
-            margin: 0 0 8px 0;
-            line-height: 1.2;
-        }
+btn_generate = st.button("🚀 Racik Auto 5 Part Konten Sekarang!")
 
-        .subtitle {
-            font-size: 14px;
-            color: var(--text-muted);
-            margin: 0 0 20px 0;
-        }
-
-        .btn-download {
-            background: linear-gradient(135deg, var(--gold-primary), #d97706);
-            color: #000;
-            font-weight: 700;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 10px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
-            transition: all 0.2s ease;
-            text-decoration: none;
-        }
-
-        .btn-download:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.6);
-        }
-
-        /* Filter Tabs */
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            overflow-x: auto;
-            padding-bottom: 5px;
-        }
-
-        .tab-btn {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-muted);
-            padding: 10px 18px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 13px;
-            white-space: nowrap;
-        }
-
-        .tab-btn.active {
-            background: rgba(245, 158, 11, 0.15);
-            border-color: var(--gold-primary);
-            color: var(--gold-light);
-        }
-
-        /* Table Styling */
-        .table-container {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            overflow-x: auto;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            font-size: 13px;
-        }
-
-        th {
-            background: #0f172a;
-            color: var(--gold-light);
-            font-weight: 700;
-            text-transform: uppercase;
-            padding: 14px 16px;
-            border-bottom: 1px solid var(--border-color);
-            letter-spacing: 0.5px;
-        }
-
-        td {
-            padding: 14px 16px;
-            border-bottom: 1px solid var(--border-color);
-            color: #e2e8f0;
-            vertical-align: middle;
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        .time-badge {
-            background: rgba(30, 58, 138, 0.6);
-            color: var(--blue-text);
-            border: 1px solid rgba(96, 165, 250, 0.3);
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-weight: 700;
-            display: inline-block;
-        }
-
-        .playlist-badge {
-            background: rgba(245, 158, 11, 0.1);
-            color: var(--gold-light);
-            border: 1px solid rgba(245, 158, 11, 0.3);
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .hashtag {
-            color: var(--gold-light);
-            font-size: 11px;
-            opacity: 0.8;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="header-card">
-        <div class="pill-tag">🌿 Ruang Teduh – Schedule Matrix</div>
-        <h1 class="title">Spreadsheet Gebrakan Emas (3 Hari)</h1>
-        <p class="subtitle">Jadwal posting terstruktur Siang, Sore & Malam | 15 Konten Serial TikTok Mode Slide</p>
-        <button class="btn-download" onclick="downloadCSV()">📄 Download Excel (.csv)</button>
-    </div>
-
-    <div class="tabs">
-        <button class="tab-btn active" onclick="filterTable('all', this)">Semua Hari (15 Postingan)</button>
-        <button class="tab-btn" onclick="filterTable('rabu', this)">Rabu (Ciri Wanita Ahli Surga)</button>
-        <button class="tab-btn" onclick="filterTable('kamis', this)">Kamis (Seri: Hati Seorang Wanita)</button>
-        <button class="tab-btn" onclick="filterTable('jumat', this)">Jumat (Seri: Baiti Jannati)</button>
-    </div>
-
-    <div class="table-container">
-        <table id="scheduleTable">
-            <thead>
-                <tr>
-                    <th>Hari & Tanggal</th>
-                    <th>Jam Upload</th>
-                    <th>Group List / Playlist</th>
-                    <th>Part</th>
-                    <th>Hook Cover (Slide 1)</th>
-                    <th>Hashtag Booster</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Rabu -->
-                <tr class="row-rabu">
-                    <td><b>Rabu, 12 Agu 2026</b></td>
-                    <td><span class="time-badge">13.00 WIB</span></td>
-                    <td><span class="playlist-badge">Ciri Wanita Ahli Surga</span></td>
-                    <td>Part 1/5</td>
-                    <td>Untukmu wanita yang lelah, ini janji peleram gelisahmu...</td>
-                    <td class="hashtag">#WanitaSholehah #PenatHati #AmalanLangit</td>
-                </tr>
-                <tr class="row-rabu">
-                    <td><b>Rabu, 12 Agu 2026</b></td>
-                    <td><span class="time-badge">13.00 WIB</span></td>
-                    <td><span class="playlist-badge">Ciri Wanita Ahli Surga</span></td>
-                    <td>Part 2/5</td>
-                    <td>Sifat kecil yang membuat pintu surga terbuka lebar...</td>
-                    <td class="hashtag">#WanitaSholehah #PenatHati #AmalanLangit</td>
-                </tr>
-                <tr class="row-rabu">
-                    <td><b>Rabu, 12 Agu 2026</b></td>
-                    <td><span class="time-badge">16.30 WIB</span></td>
-                    <td><span class="playlist-badge">Ciri Wanita Ahli Surga</span></td>
-                    <td>Part 3/5</td>
-                    <td>Saat suami/keluarga lelah, dirimu jadi penenangnya...</td>
-                    <td class="hashtag">#WanitaSholehah #PenatHati #AmalanLangit</td>
-                </tr>
-                <tr class="row-rabu">
-                    <td><b>Rabu, 12 Agu 2026</b></td>
-                    <td><span class="time-badge">19.00 WIB</span></td>
-                    <td><span class="playlist-badge">Ciri Wanita Ahli Surga</span></td>
-                    <td>Part 4/5</td>
-                    <td>Lisan yang teduh adalah perhiasan batin sesungguhnya...</td>
-                    <td class="hashtag">#WanitaSholehah #PenatHati #AmalanLangit</td>
-                </tr>
-                <tr class="row-rabu">
-                    <td><b>Rabu, 12 Agu 2026</b></td>
-                    <td><span class="time-badge">20.00 WIB</span></td>
-                    <td><span class="playlist-badge">Ciri Wanita Ahli Surga</span></td>
-                    <td>Part 5/5</td>
-                    <td>Puncak ketenangan saat batin pasrah fully...</td>
-                    <td class="hashtag">#WanitaSholehah #PenatHati #AmalanLangit</td>
-                </tr>
-
-                <!-- Kamis -->
-                <tr class="row-kamis">
-                    <td><b>Kamis, 13 Agu 2026</b></td>
-                    <td><span class="time-badge">13.00 WIB</span></td>
-                    <td><span class="playlist-badge">Seri: Hati Seorang Wanita</span></td>
-                    <td>Part 1/5</td>
-                    <td>Untuk kamu yang hatinya sering merasa sangat lelah...</td>
-                    <td class="hashtag">#RuangJiwa #PenatHati #AmalanLangit</td>
-                </tr>
-                <tr class="row-kamis">
-                    <td><b>Kamis, 13 Agu 2026</b></td>
-                    <td><span class="time-badge">13.00 WIB</span></td>
-                    <td><span class="playlist-badge">Seri: Hati Seorang Wanita</span></td>
-                    <td>Part 2/5</td>
-                    <td>Simak nomor 2... Rahasia sabar yang tak terlihat mata.</td>
-                    <td class="hashtag">#RuangJiwa #PenatHati #AmalanLangit</td>
-                </tr>
-                <tr class="row-kamis">
-                    <td><b>Kamis, 13 Agu 2026</b></td>
-                    <td><span class="time-badge">16.30 WIB</span></td>
-                    <td><span class="playlist-badge">Seri: Hati Seorang Wanita</span></td>
-                    <td>Part 3/5</td>
-                    <td>Bukan lemah, tapi caramu mengadu pada-Nya...</td>
-                    <td class="hashtag">#RuangJiwa #PenatHati #AmalanLangit</td>
-                </tr>
-                <tr class="row-kamis">
-                    <td><b>Kamis, 13 Agu 2026</b></td>
-                    <td><span class="time-badge">19.00 WIB</span></td>
-                    <td><span class="playlist-badge">Seri: Hati Seorang Wanita</span></td>
-                    <td>Part 4/5</td>
-                    <td>Melepaskan beban dendam demi kedamaian jiwa...</td>
-                    <td class="hashtag">#RuangJiwa #PenatHati #AmalanLangit</td>
-                </tr>
-                <tr class="row-kamis">
-                    <td><b>Kamis, 13 Agu 2026</b></td>
-                    <td><span class="time-badge">20.00 WIB</span></td>
-                    <td><span class="playlist-badge">Seri: Hati Seorang Wanita</span></td>
-                    <td>Part 5/5</td>
-                    <td>Kesabaranmu hari ini adalah mahkotamu kelak...</td>
-                    <td class="hashtag">#RuangJiwa #PenatHati #AmalanLangit</td>
-                </tr>
-
-                <!-- Jumat -->
-                <tr class="row-jumat">
-                    <td><b>Jumat, 14 Agu 2026</b></td>
-                    <td><span class="time-badge">13.00 WIB</span></td>
-                    <td><span class="playlist-badge">Seri: Baiti Jannati</span></td>
-                    <td>Part 1/5</td>
-                    <td>Bukan tentang mewahnya, tapi indahnya kedamaian...</td>
-                    <td class="hashtag">#RumahTeduh #PenatHati #AmalanLangit</td>
-                </tr>
-                <tr class="row-jumat">
-                    <td><b>Jumat, 14 Agu 2026</b></td>
-                    <td><span class="time-badge">13.00 WIB</span></td>
-                    <td><span class="playlist-badge">Seri: Baiti Jannati</span></td>
-                    <td>Part 2/5</td>
-                    <td>Doamu adalah benteng penyelamat keluarga...</td>
-                    <td class="hashtag">#RumahTeduh #PenatHati #AmalanLangit</td>
-                </tr>
-                <tr class="row-jumat">
-                    <td><b>Jumat, 14 Agu 2026</b></td>
-                    <td><span class="time-badge">16.30 WIB</span></td>
-                    <td><span class="playlist-badge">Seri: Baiti Jannati</span></td>
-                    <td>Part 3/5</td>
-                    <td>Saat pintu rumah dibuka, hilangkan semua penat...</td>
-                    <td class="hashtag">#RumahTeduh #PenatHati #AmalanLangit</td>
-                </tr>
-                <tr class="row-jumat">
-                    <td><b>Jumat, 14 Agu 2026</b></td>
-                    <td><span class="time-badge">19.00 WIB</span></td>
-                    <td><span class="playlist-badge">Seri: Baiti Jannati</span></td>
-                    <td>Part 4/5</td>
-                    <td>Trik kecil Rasulullah menjaga kehangatan rumah...</td>
-                    <td class="hashtag">#RumahTeduh #PenatHati #AmalanLangit</td>
-                </tr>
-                <tr class="row-jumat">
-                    <td><b>Jumat, 14 Agu 2026</b></td>
-                    <td><span class="time-badge">20.00 WIB</span></td>
-                    <td><span class="playlist-badge">Seri: Baiti Jannati</span></td>
-                    <td>Part 5/5</td>
-                    <td>Semoga rumah kita menjadi kumpulannya kelak di surga...</td>
-                    <td class="hashtag">#RumahTeduh #PenatHati #AmalanLangit</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <script>
-        function filterTable(day, btn) {
-            let rows = document.querySelectorAll('#scheduleTable tbody tr');
-            let tabs = document.querySelectorAll('.tab-btn');
+# 6. Output Generation
+if btn_generate or selected_topic:
+    st.markdown("---")
+    st.markdown(f"### 🌿 HASIL RACIKAN AUTOMATIS: `{selected_topic}` (5 PART)")
+    
+    parts_data = generate_5part_content(selected_topic)
+    
+    tab1, tab2, tab3 = st.tabs(["📌 Rincian 5 Part Konten", "📊 Matrix Jadwal Table", "📄 Text Mentah All-in-One"])
+    
+    with tab1:
+        for part in parts_data:
+            st.markdown(f"""
+            <div class="part-card">
+                <div class="part-header">
+                    📌 PART {part['part_num']}/5: {part['title']}
+                </div>
+                <div style="margin-bottom: 15px; display: flex; gap: 10px;">
+                    <span class="slot-badge">⏰ Slot Jadwal: {part['slot']}</span>
+                    <span class="playlist-badge">📂 Target Playlist: {part['playlist']}</span>
+                </div>
+                
+                <p style="margin-bottom: 4px; font-weight: 700; color: #fef08a;">📝 Caption (Copy-Paste):</p>
+            """, unsafe_allow_html=True)
             
-            tabs.forEach(t => t.classList.remove('active'));
-            btn.classList.add('active');
-
-            rows.forEach(row => {
-                if (day === 'all') {
-                    row.style.display = '';
-                } else {
-                    if (row.classList.contains('row-' + day)) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                    }
-                }
-            });
-        }
-
-        function downloadCSV() {
-            let csv = 'Hari & Tanggal,Jam Upload,Group List,Part,Hook,Hashtags\\n';
-            let rows = document.querySelectorAll('#scheduleTable tbody tr');
+            st.code(part['caption'], language="text")
             
-            rows.forEach(row => {
-                let cols = row.querySelectorAll('td');
-                let rowData = [];
-                cols.forEach(col => {
-                    rowData.push('"' + col.innerText.replace(/\\n/g, ' ') + '"');
-                });
-                csv += rowData.join(',') + '\\n';
-            });
-
-            let blob = new Blob([csv], { type: 'text/csv' });
-            let url = window.URL.createObjectURL(blob);
-            let a = document.createElement('a');
-            a.setAttribute('href', url);
-            a.setAttribute('download', 'Jadwal_Gebrakan_Emas_RuangTeduh.csv');
-            a.click();
-        }
-    </script>
-</body>
-</html>
-"""
-
-# Render HTML di Streamlit
-components.html(html_code, height=850, scrolling=True)
+            st.markdown("<p style='margin-top: 15px; margin-bottom: 10px; font-weight: 700; color: #fef08a;'>🎨 Isian 5 Slide (Copy-Paste ke Canva / Editor):</p>", unsafe_allow_html=True)
+            
+            for s in part['slides']:
+                riwayat_text = f"\nRiwayat: {s['riwayat']}" if 'riwayat' in s else ""
+                cta_text = f"\nCTA Keranjang Kuning: {s['cta']}" if 'cta' in s else ""
+                
+                st.markdown(f"""
+                <div class="slide-item">
+                    <div class="slide-title">{s['title']}</div>
+                    <div class="slide-body"><b>Header:</b> {s['header']}</div>
+                    <div class="slide-body"><b>Isi:</b> {s['isi']}{riwayat_text}{cta_text}</div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+    with tab2:
+        table_rows = []
+        for p in parts_data:
+            table_rows.append({
+                "Part": f"Part {p['part_num']}/5",
+                "Jam Upload": p['slot'],
+                "Group List / Playlist": p['playlist'],
+                "Hook Slide 1": p['slides'][0]['isi'],
+                "Isi Dalil Slide 3": p['slides'][2]['isi']
+            })
+        df_matrix = pd.DataFrame(table_rows)
+        st.table(df_matrix)
+        
+    with tab3:
+        all_text = f"🌿 KONTEN GEBRAKAN EMAS: {selected_topic} (5 PART)\n" + "="*50 + "\n\n"
+        for p in parts_data:
+            all_text += f"📌 PART {p['part_num']}/5: {p['title']}\n"
+            all_text += f"Slot Jadwal: {p['slot']}\n"
+            all_text += f"Target Playlist: {p['playlist']}\n\n"
+            all_text += "📝 Caption (Copy-Paste):\n"
+            all_text += p['caption'] + "\n\n"
+            all_text += "🎨 Isian 5 Slide:\n"
+            for s in p['slides']:
+                all_text += f"- {s['title']}:\n  Header: {s['header']}\n  Isi: {s['isi']}\n"
+                if 'riwayat' in s:
+                  all_text += f"  Riwayat: {s['riwayat']}\n"
+                if 'cta' in s:
+                  all_text += f"  CTA: {s['cta']}\n"
+            all_text += "\n" + "-"*40 + "\n\n"
+            
+        st.text_area("Seluruh Text Mentah (Gampang Tinggal Copy All):", value=all_text, height=400)
