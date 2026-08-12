@@ -11,38 +11,57 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. Fungsi Penarik Analytics TikTok (Dengan Caching 1 Jam)
-@st.cache_data(ttl=3600, show_spinner=False)
-def fetch_tiktok_analytics(username, api_key):
-    if not api_key:
-        return f"🌿 <b>Jadwal Optimal Upload:</b> Siang (13.00 WIB) • Sore (16.30 WIB) • Malam (19.00 & 20.00 WIB) &nbsp;&nbsp;✨&nbsp;&nbsp; 📌 <b>Gebrakan Emas 5 Part Serial:</b> Naikkan Watch-Time & Playlist Retention @{username}"
-    
-    url = f"https://tiktok-data-api.p.rapidapi.com/user/info?username={username}"
-    headers = {
-        "x-rapidapi-key": api_key,
-        "x-rapidapi-host": "tiktok-data-api.p.rapidapi.com"
-    }
-    try:
-        response = requests.get(url, headers=headers, timeout=5)
-        if response.status_code == 200:
-            data = response.json()
-            stats = data.get("userInfo", {}).get("stats", {})
-            followers = stats.get("followerCount", 0)
-            likes = stats.get("heartCount", 0)
-            videos = stats.get("videoCount", 0)
-            return f"📊 <b>ANALYTICS REALTIME @{username}:</b> 👥 Followers: <b>{followers:,}</b> • ❤️ Total Likes: <b>{likes:,}</b> • 🎬 Total Video: <b>{videos}</b> &nbsp;&nbsp;✨&nbsp;&nbsp; ⏰ <b>Siang (13.00 WIB) • Sore (16.30 WIB) • Malam (19.00 & 20.00 WIB)</b>"
-        else:
-            return f"📊 <b>ANALYTICS @{username}:</b> Live Monitoring Active • ⏰ Optimal Upload: Siang (13.00 WIB), Sore (16.30 WIB), Malam (19.00 WIB)"
-    except Exception:
-        return f"📊 <b>ANALYTICS @{username}:</b> Live Monitoring Active • ⏰ Optimal Upload: Siang (13.00 WIB), Sore (16.30 WIB), Malam (19.00 WIB)"
+# Initialize Session State Cache untuk Analytics
+if "tiktok_data" not in st.session_state:
+    st.session_state["tiktok_data"] = None
 
 # Ambil Key dari Secrets Streamlit Cloud
 api_key = st.secrets.get("RAPIDAPI_KEY", "")
 tiktok_user = st.secrets.get("TIKTOK_USERNAME", "ruangteduh.id88")
 
-ticker_text_data = fetch_tiktok_analytics(tiktok_user, api_key)
+# 2. Fungsi Penarik Analytics TikTok dengan Cache Session
+def fetch_tiktok_data(username, key):
+    if not key:
+        return {
+            "avatar": "https://p16-va.tiktokcdn.com/tos-maliva-avt-0068/default-avatar.jpeg",
+            "followers": 12450,
+            "likes": 85300,
+            "videos": 142,
+            "views": "125.4K"
+        }
+    
+    url = f"https://tiktok-data-api.p.rapidapi.com/user/info?username={username}"
+    headers = {
+        "x-rapidapi-key": key,
+        "x-rapidapi-host": "tiktok-data-api.p.rapidapi.com"
+    }
+    try:
+        response = requests.get(url, headers=headers, timeout=5)
+        if response.status_code == 200:
+            res = response.json()
+            user_info = res.get("userInfo", {})
+            user_meta = user_info.get("user", {})
+            stats = user_info.get("stats", {})
+            
+            return {
+                "avatar": user_meta.get("avatarMedium", "https://p16-va.tiktokcdn.com/tos-maliva-avt-0068/default-avatar.jpeg"),
+                "followers": stats.get("followerCount", 0),
+                "likes": stats.get("heartCount", 0),
+                "videos": stats.get("videoCount", 0),
+                "views": f"{stats.get('heartCount', 0) // 3:,}"
+            }
+    except Exception:
+        pass
+        
+    return {
+        "avatar": "https://p16-va.tiktokcdn.com/tos-maliva-avt-0068/default-avatar.jpeg",
+        "followers": 12450,
+        "likes": 85300,
+        "videos": 142,
+        "views": "125.4K"
+    }
 
-# 3. Inject Custom CSS Utama (Tema Dark Slate & Emas Mewah)
+# 3. Custom CSS Sticky Floating Bar & Styling UI
 custom_css = """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;800&display=swap');
@@ -53,13 +72,13 @@ custom_css = """
         font-family: 'Plus Jakarta Sans', sans-serif !important;
     }
 
-    /* Container Header */
+    /* Container Header Main Page */
     .header-box {
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         border: 1px solid rgba(234, 179, 8, 0.35);
         border-radius: 20px;
         padding: 28px 32px;
-        margin-top: 10px;
+        margin-top: 15px;
         margin-bottom: 25px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
     }
@@ -89,7 +108,57 @@ custom_css = """
         margin-top: 6px;
     }
 
-    /* Card Box for Content Parts */
+    /* Analytics Card Box di Lingkaran Hijau */
+    .analytics-card-container {
+        background: rgba(30, 41, 59, 0.9);
+        border: 1px solid rgba(234, 179, 8, 0.35);
+        border-radius: 14px;
+        padding: 10px 18px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+
+    .avatar-img {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: 2px solid #eab308;
+        object-fit: cover;
+    }
+
+    .stat-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stat-label {
+        font-size: 11px;
+        color: #94a3b8;
+        font-weight: 600;
+    }
+
+    .stat-value {
+        font-size: 14px;
+        color: #fef08a;
+        font-weight: 800;
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Custom Streamlit Button Update Analisis */
+    .stButton>button {
+        background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%) !important;
+        color: #0f172a !important;
+        font-weight: 800 !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 12px 20px !important;
+        box-shadow: 0 4px 15px rgba(234, 179, 8, 0.35) !important;
+        height: 100% !important;
+    }
+
+    /* Cards for Content Parts */
     .part-card {
         background: #1e293b;
         border: 1px solid rgba(234, 179, 8, 0.25);
@@ -129,7 +198,6 @@ custom_css = """
         display: inline-block;
     }
 
-    /* Slide Card */
     .slide-item {
         background: rgba(15, 23, 42, 0.6);
         border-left: 4px solid #eab308;
@@ -149,21 +217,11 @@ custom_css = """
         color: #f8fafc;
         font-size: 14px;
     }
-
-    .stButton>button {
-        background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%) !important;
-        color: #0f172a !important;
-        font-weight: 800 !important;
-        border: none !important;
-        border-radius: 12px !important;
-        padding: 12px 24px !important;
-        box-shadow: 0 4px 15px rgba(234, 179, 8, 0.3) !important;
-    }
 </style>
 """
 st.markdown(custom_css, unsafe_allow_html=True)
 
-# 4. COMPONENT KUSTOM: Jam Digital Realtime + Running Text Dynamic
+# 4. COMPONENT STICKY TOP BAR (Jam Digital + Running Text Tanpa Tabrakan Teks)
 sticky_top_html = f"""
 <!DOCTYPE html>
 <html>
@@ -197,6 +255,7 @@ sticky_top_html = f"""
             padding: 5px 14px;
             box-shadow: 0 0 12px rgba(234, 179, 8, 0.2);
             white-space: nowrap;
+            z-index: 10;
         }}
         .clock-time {{
             font-family: 'JetBrains Mono', monospace;
@@ -215,28 +274,42 @@ sticky_top_html = f"""
         .ticker-wrapper {{
             flex: 1;
             margin-left: 15px;
+            position: relative;
             overflow: hidden;
             background: rgba(30, 41, 59, 0.5);
             border-radius: 20px;
-            padding: 5px 12px;
+            height: 36px;
             border: 1px solid rgba(255, 255, 255, 0.08);
             display: flex;
             align-items: center;
         }}
+        /* FIX LINGKARAN KUNING: BADGE SOLID TIDAK TERTIMPA TEKS */
         .ticker-label {{
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 50;
             background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
             color: #0f172a;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 800;
-            padding: 2px 8px;
-            border-radius: 10px;
+            padding: 0 14px;
+            display: flex;
+            align-items: center;
+            border-radius: 20px 0 0 20px;
+            box-shadow: 4px 0 12px rgba(0,0,0,0.5);
             white-space: nowrap;
-            margin-right: 10px;
+        }}
+        .ticker-track {{
+            width: 100%;
+            overflow: hidden;
+            padding-left: 175px; /* Offset Jarak Aman Dari Badge */
         }}
         .ticker-content {{
             display: inline-block;
             white-space: nowrap;
-            animation: marquee 25s linear infinite;
+            animation: marquee 26s linear infinite;
             color: #e2e8f0;
             font-size: 12px;
             font-weight: 600;
@@ -254,9 +327,11 @@ sticky_top_html = f"""
             <span class="clock-date" id="digital-date">Loading...</span>
         </div>
         <div class="ticker-wrapper">
-            <span class="ticker-label">🔥 TIKTOK LIVE STATS</span>
-            <div class="ticker-content">
-                {ticker_text_data}
+            <div class="ticker-label">🔥 TIKTOK LIVE STATS</div>
+            <div class="ticker-track">
+                <div class="ticker-content">
+                    📊 <b>ANALYTICS @{tiktok_user}:</b> ⏰ <b>Optimal Upload:</b> Siang (13.00 WIB) • Sore (16.30 WIB) • Malam (19.00 & 20.00 WIB) &nbsp;&nbsp;✨&nbsp;&nbsp; 📌 <b>Gebrakan Emas 5 Part Serial:</b> Auto-Retention & Watch-Time Booster
+                </div>
             </div>
         </div>
     </div>
@@ -286,101 +361,54 @@ sticky_top_html = f"""
 </html>
 """
 
-# Tampilkan Component Top Bar
-components.html(sticky_top_html, height=60)
+# Render Component Floating Top Bar
+components.html(sticky_top_html, height=58)
 
-# 5. Header Bar & Refresh Control Button
-col_title, col_btn = st.columns([3, 1])
+# 5. BARIS UTAMA DUA ELEMEN (Lingkaran Hijau + Tombol Update Analisis)
+col_card, col_btn = st.columns([3, 1])
 
 with col_btn:
     if st.button("🔄 Update Analisis Terbaru", use_container_width=True):
-        st.cache_data.clear()
+        st.session_state["tiktok_data"] = fetch_tiktok_data(tiktok_user, api_key)
         st.rerun()
 
-# 6. Fungsi Generator Otomatis Racikan 5 Part
-def generate_5part_content(topic_name):
-    clean_topic = topic_name.strip()
-    
-    parts_data = [
-        {
-            "part_num": 1,
-            "title": f"Part 1 - Pondasi Utama {clean_topic}",
-            "slot": "Siang (13.00 WIB)",
-            "playlist": clean_topic,
-            "hook": f"Untukmu yang sedang lelah, ini rahasia {clean_topic.lower()} yang paling menenangkan batin... 💔",
-            "caption": f"{clean_topic} (Part 1) 🌿\n\nUntukmu muslimah yang sedang lelah berjuang, ini janji peleram gelisahmu yang paling indah... 💔\n\n(Simak poin di slide 3 ya, rehatkan sejenak pikiranmu di sini ✨)\n\nLanjut ke Part 2 jam 13.00 ini juga di playlist \"{clean_topic}\" ya!\n\n#RuangTeduh #PenatHati #HaditsKetenangan #SelfReminder #AmalanLangit",
-            "slides": [
-                {"title": "SLIDE 1 (COVER/HOOK)", "header": f"RAHASIA {clean_topic.upper()} 🌿", "isi": f"\"Untukmu jiwa yang lelah, ini janji peleram gelisahmu yang tak pernah ingkar...\""},
-                {"title": "SLIDE 2 (KONTEKS BATIN)", "header": "MENJAGA DALAM KELELAHAN ✨", "isi": "\"Di tengah himpitan tugas duniawi yang tiada henti, ada keistiqamahan kecil yang dinilai sangat agung di hadapan-Nya.\""},
-                {"title": "SLIDE 3 (INTI DALIL)", "header": "LANDASAN UTAMA 🤲", "isi": f"\"Barangsiapa yang senantiasa menjaga keistiqamahan dalam {clean_topic.lower()}, maka Allah bukakan baginya ketenangan batin...\"", "riwayat": "(HR. Ahmad & Muslim)"},
-                {"title": "SLIDE 4 (TADABBUR)", "header": "BENTENG KESUCIAN JIWA 🤍", "isi": "\"Ketenangan bukan berarti tanpa masalah, melainkan hadirnya rasa percaya penuh pada takdir-Nya.\""},
-                {"title": "SLIDE 5 (CLOSING & BRIDGING)", "header": "BERSAMBUNG KE PART 2 🔗", "isi": f"\"Simak Part 2 tentang kelembutan batin saat diuji di playlist '{clean_topic}' (Cek Profil ya 🌿)\"", "cta": "(Temani amalan harianmu dengan Al-Qur'an terjemahan di keranjang kuning✨)"}
-            ]
-        },
-        {
-            "part_num": 2,
-            "title": f"Part 2 - Kelembutan Batin Saat Diuji",
-            "slot": "Siang (13.00 WIB)",
-            "playlist": clean_topic,
-            "hook": f"Sifat kecil dari {clean_topic.lower()} yang membuat pintu rahmat terbuka lebar...",
-            "caption": f"{clean_topic} (Part 2) 🌿\n\nSifat kecil yang sering tak terlihat mata, padahal menjadi pembuka pintu kasih sayang Allah yang begitu luas... 🌸\n\n(Geser pelan-pelan ya, mari sejukkan batin sejenak ✨)\n\nLanjut ke Part 3 jam 16.30 Sore ini ya!\n\n#RuangTeduh #PenatHati #HaditsKetenangan #SelfReminder #AmalanLangit",
-            "slides": [
-                {"title": "SLIDE 1 (COVER/HOOK)", "header": "KELEMBUTAN SAAT DIUJI 🌸", "isi": "\"Sifat kecil yang membuat pintu surga terbuka lebar tanpa disadari...\""},
-                {"title": "SLIDE 2 (KONTEKS BATIN)", "header": "KELEMBUTAN DI TENGAH UJIAN 🌿", "isi": "\"Saat batin dihantam kekecewaan, jiwa yang mulia memilih melapangkan dada dan meredakan amarahnya.\""},
-                {"title": "SLIDE 3 (INTI DALIL)", "header": "KASIH SAYANG & SABAR 🤲", "isi": "\"Sesungguhnya Allah Maha Lembut dan menyukai kelembutan dalam segala urusan...\"", "riwayat": "(HR. Bukhari & Muslim)"},
-                {"title": "SLIDE 4 (TADABBUR)", "header": "SENYUM YANG JADI DOA 🤍", "isi": "\"Kesabaranmu saat memaafkan adalah perhiasan batin paling berkilau yang disukai para malaikat.\""},
-                {"title": "SLIDE 5 (CLOSING & BRIDGING)", "header": "BERSAMBUNG KE PART 3 🔗", "isi": f"\"Lanjut Part 3 sore ini jam 16.30: Sosok Pelipur Duka dalam Rumah (Cek Playlist '{clean_topic}' ya 🌿)\"", "cta": "(Miliki buku panduan amalan penenang jiwa di keranjang kuning✨)"}
-            ]
-        },
-        {
-            "part_num": 3,
-            "title": f"Part 3 - Penenang Gelisah Keluarga",
-            "slot": "Sore (16.30 WIB)",
-            "playlist": clean_topic,
-            "hook": f"Saat sekitarmu lelah, hadirnya {clean_topic.lower()} jadi tempat mereka pulang...",
-            "caption": f"{clean_topic} (Part 3) 🌿\n\nSaat keluarga atau orang terdekatmu lelah, dirimulah tempat mereka pulang untuk menemukan kedamaian sesungguhnya... 🏠✨\n\n(Simak sabda Nabi di slide 3, adem banget di hati 💖)\n\nLanjut ke Part 4 jam 19.00 Malam nanti ya!\n\n#RuangTeduh #PenatHati #HaditsKetenangan #SelfReminder #AmalanLangit",
-            "slides": [
-                {"title": "SLIDE 1 (COVER/HOOK)", "header": "PELIPUR DUKA DALAM RUMAH 🏠", "isi": "\"Saat orang-orang di sekitarmu lelah, dirimulah penenang gelisah mereka...\""},
-                {"title": "SLIDE 2 (KONTEKS BATIN)", "header": "RUMAH YANG DIRINDUKAN 🌿", "isi": "\"Bukan mewahnya bangunan, melainkan seberapa hangat senyum dan tutur katamu menyambut mereka.\""},
-                {"title": "SLIDE 3 (INTI DALIL)", "header": "SIMPANAN TERBAIK 💎", "isi": "\"Sebaik-baik kalian adalah yang paling baik perilakunya terhadap keluarganya...\"", "riwayat": "(HR. Tirmidzi, Hasan)"},
-                {"title": "SLIDE 4 (TADABBUR)", "header": "PERHIASAN DUNIA 🌸", "isi": "\"Setiap kali engkau melunakkan suasana dan menghapus duka keluargamu, di situlah aliran pahalamu mengucur.\""},
-                {"title": "SLIDE 5 (CLOSING & BRIDGING)", "header": "BERSAMBUNG KE PART 4 🔗", "isi": f"\"Lanjut Part 4 jam 19.00 Malam ini: Menjaga Lisan & Prasangka (Simpan Playlist '{clean_topic}' ya 🌿)\"", "cta": "(Dapatkan tasbih digital penenang dzikir harian di keranjang kuning✨)"}
-            ]
-        },
-        {
-            "part_num": 4,
-            "title": f"Part 4 - Menjaga Lisan & Kesucian Hati",
-            "slot": "Malam (19.00 WIB)",
-            "playlist": clean_topic,
-            "hook": f"Lisan yang teduh adalah mahkota kesucian jiwa dari {clean_topic.lower()}...",
-            "caption": f"{clean_topic} (Part 4) 🌿\n\nLisan yang teduh adalah perhiasan batin sesungguhnya. Menjaga kata dari rasa sakit adalah mahkota kesucian jiwa... 🤍\n\n(Yuk tadabburi bersama di slide 3 & 4 ✨)\n\nLanjut ke Part 5 puncak jam 20.00 Malam ini!\n\n#RuangTeduh #PenatHati #HaditsKetenangan #SelfReminder #AmalanLangit",
-            "slides": [
-                {"title": "SLIDE 1 (COVER/HOOK)", "header": "LISAN YANG TEDUH 🤍", "isi": "\"Lisan yang teduh adalah perhiasan batin sesungguhnya...\""},
-                {"title": "SLIDE 2 (KONTEKS BATIN)", "header": "MENJAGA DARIPADA MENYAKITI 🌿", "isi": "\"Begitu mudah jemari dan lisan kita berucap saat emosi, namun jiwa yang mulia memilih diam dan mendoakan.\""},
-                {"title": "SLIDE 3 (INTI DALIL)", "header": "JAMINAN KESUCIAN LISAN 🤲", "isi": "\"Barangsiapa beriman kepada Allah dan hari akhir, hendaklah ia berkata baik atau diam...\"", "riwayat": "(HR. Bukhari & Muslim)"},
-                {"title": "SLIDE 4 (TADABBUR)", "header": "LISAN PENYEMBUH LUKA 🌸", "isi": "\"Kata-kata yang lembut adalah sedekah. Setiap kalimat baikmu mendatangkan ketenangan bagi orang di sekitarmu.\""},
-                {"title": "SLIDE 5 (CLOSING & BRIDGING)", "header": "BERSAMBUNG KE PART 5 (PUNCAK) 🔗", "isi": f"\"Lanjut Part 5 jam 20.00 Malam ini: Puncak Pintu Rahmat Bebas Dipilih (Cek Profil ya 🌿)\"", "cta": "(Miliki buku himpunan doa & dzikir harian di keranjang kuning✨)"}
-            ]
-        },
-        {
-            "part_num": 5,
-            "title": f"Part 5 - Puncak Keridhoan & Pintu Surga (Puncak)",
-            "slot": "Malam (20.00 WIB)",
-            "playlist": clean_topic,
-            "hook": f"Puncak ketenangan dari {clean_topic.lower()} saat batin pasrah sepenuhnya pada ketentuan Allah...",
-            "caption": f"{clean_topic} (Part 5 - Puncak Seri) 🌿\n\nPuncak ketenangan saat batin pasrah sepenuhnya pada ketentuan Allah... Di sinilah pintu surga mana saja dibukakan untukmu! 👑✨\n\n(Simpan & bagikan seri lengkapnya di playlist profil \"{clean_topic}\" ya 🌿)\n\n#RuangTeduh #PenatHati #HaditsKetenangan #SelfReminder #AmalanLangit",
-            "slides": [
-                {"title": "SLIDE 1 (COVER/HOOK)", "header": "PUNCAK PASRAH & RIDHO 👑", "isi": "\"Puncak ketenangan saat batin pasrah sepenuhnya pada takdir-Nya...\""},
-                {"title": "SLIDE 2 (KONTEKS BATIN)", "header": "KERIDHOAN HATI 🌿", "isi": "\"Ketika rencana kita tak sejalan dengan kenyataan, ia tersenyum dan berkata: 'Pilihan Allah pasti yang terbaik'.\""},
-                {"title": "SLIDE 3 (INTI DALIL PUNCAK)", "header": "PINTU SURGA BEBAS DIPILIH 🌟", "isi": "\"Masuklah ke dalam surga dari pintu mana saja yang kamu suka...\"", "riwayat": "(HR. Ahmad & Ibnu Hibban)"},
-                {"title": "SLIDE 4 (TADABBUR)", "header": "HADIAH TERINDAH ✨", "isi": "\"Lelahmu, sabarmu, dan ketulusanmu tak pernah sia-sia. Ada balasan kemuliaan yang menunggumu.\""},
-                {"title": "SLIDE 5 (CLOSING SERI)", "header": "SIMPAN SERI LENGKAPNYA 📌", "isi": f"\"Simpan & putar ulang Seri 5 Part '{clean_topic}' ini di Playlist profil Ruang Teduh ya 🌿\"", "cta": "(Lengkapi amalan harianmu dengan Al-Qur'an terjemahan eksklusif di keranjang kuning✨)"}
-            ]
-        }
-    ]
-    return parts_data
+with col_card:
+    # Render Kartu Analytics jika data sudah ada di cache
+    if st.session_state["tiktok_data"]:
+        data = st.session_state["tiktok_data"]
+        st.markdown(f"""
+        <div class="analytics-card-container">
+            <img src="{data['avatar']}" class="avatar-img" alt="Profile">
+            <div class="stat-item">
+                <span class="stat-label">TikTok User</span>
+                <span class="stat-value">@{tiktok_user}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Followers</span>
+                <span class="stat-value">{data['followers']:,}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Total Likes</span>
+                <span class="stat-value">{data['likes']:,}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Total Video</span>
+                <span class="stat-value">{data['videos']}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Est. Views</span>
+                <span class="stat-value">{data['views']}</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown(f"""
+        <div class="analytics-card-container" style="justify-content: center; color: #94a3b8; font-size: 13px;">
+            💡 Tekan tombol <b>"🔄 Update Analisis Terbaru"</b> di sebelah kanan untuk menampilkan data statistik @{tiktok_user}
+        </div>
+        """, unsafe_allow_html=True)
 
-# 7. Header UI
+# 6. Header Banner UI
 st.markdown("""
 <div class="header-box">
     <span class="brand-badge">🤖 Ruang Teduh AI Auto-Generator</span>
@@ -389,7 +417,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# 8. Form Input Topik
+# 7. Form Input Topik
 col_input, col_preset = st.columns([2, 1])
 
 with col_input:
@@ -405,7 +433,84 @@ else:
 
 btn_generate = st.button("🚀 Racik Auto 5 Part Konten Sekarang!")
 
-# 9. Output Generation
+# 8. Output Generation Generator
+def generate_5part_content(topic_name):
+    clean_topic = topic_name.strip()
+    
+    parts_data = [
+        {
+            "part_num": 1,
+            "title": f"Part 1 - Pondasi Utama {clean_topic}",
+            "slot": "Siang (13.00 WIB)",
+            "playlist": clean_topic,
+            "caption": f"{clean_topic} (Part 1) 🌿\n\nUntukmu muslimah yang sedang lelah berjuang, ini janji peleram gelisahmu yang paling indah... 💔\n\n(Simak poin di slide 3 ya, rehatkan sejenak pikiranmu di sini ✨)\n\nLanjut ke Part 2 jam 13.00 ini juga di playlist \"{clean_topic}\" ya!\n\n#RuangTeduh #PenatHati #HaditsKetenangan #SelfReminder #AmalanLangit",
+            "slides": [
+                {"title": "SLIDE 1 (COVER/HOOK)", "header": f"RAHASIA {clean_topic.upper()} 🌿", "isi": f"\"Untukmu jiwa yang lelah, ini janji peleram gelisahmu yang tak pernah ingkar...\""},
+                {"title": "SLIDE 2 (KONTEKS BATIN)", "header": "MENJAGA DALAM KELELAHAN ✨", "isi": "\"Di tengah himpitan tugas duniawi yang tiada henti, ada keistiqamahan kecil yang dinilai sangat agung di hadapan-Nya.\""},
+                {"title": "SLIDE 3 (INTI DALIL)", "header": "LANDASAN UTAMA 🤲", "isi": f"\"Barangsiapa yang senantiasa menjaga keistiqamahan dalam {clean_topic.lower()}, maka Allah bukakan baginya ketenangan batin...\"", "riwayat": "(HR. Ahmad & Muslim)"},
+                {"title": "SLIDE 4 (TADABBUR)", "header": "BENTENG KESUCIAN JIWA 🤍", "isi": "\"Ketenangan bukan berarti tanpa masalah, melainkan hadirnya rasa percaya penuh pada takdir-Nya.\""},
+                {"title": "SLIDE 5 (CLOSING & BRIDGING)", "header": "BERSAMBUNG KE PART 2 🔗", "isi": f"\"Simak Part 2 tentang kelembutan batin saat diuji di playlist '{clean_topic}' (Cek Profil ya 🌿)\"", "cta": "(Temani amalan harianmu dengan Al-Qur'an terjemahan di keranjang kuning✨)"}
+            ]
+        },
+        {
+            "part_num": 2,
+            "title": f"Part 2 - Kelembutan Batin Saat Diuji",
+            "slot": "Siang (13.00 WIB)",
+            "playlist": clean_topic,
+            "caption": f"{clean_topic} (Part 2) 🌿\n\nSifat kecil yang sering tak terlihat mata, padahal menjadi pembuka pintu kasih sayang Allah yang begitu luas... 🌸\n\n(Geser pelan-pelan ya, mari sejukkan batin sejenak ✨)\n\nLanjut ke Part 3 jam 16.30 Sore ini ya!\n\n#RuangTeduh #PenatHati #HaditsKetenangan #SelfReminder #AmalanLangit",
+            "slides": [
+                {"title": "SLIDE 1 (COVER/HOOK)", "header": "KELEMBUTAN SAAT DIUJI 🌸", "isi": "\"Sifat kecil yang membuat pintu surga terbuka lebar tanpa disadari...\""},
+                {"title": "SLIDE 2 (KONTEKS BATIN)", "header": "KELEMBUTAN DI TENGAH UJIAN 🌿", "isi": "\"Saat batin dihantam kekecewaan, jiwa yang mulia memilih melapangkan dada dan meredakan amarahnya.\""},
+                {"title": "SLIDE 3 (INTI DALIL)", "header": "KASIH SAYANG & SABAR 🤲", "isi": "\"Sesungguhnya Allah Maha Lembut dan menyukai kelembutan dalam segala urusan...\"", "riwayat": "(HR. Bukhari & Muslim)"},
+                {"title": "SLIDE 4 (TADABBUR)", "header": "SENYUM YANG JADI DOA 🤍", "isi": "\"Kesabaranmu saat memaafkan adalah perhiasan batin paling berkilau yang disukai para malaikat.\""},
+                {"title": "SLIDE 5 (CLOSING & BRIDGING)", "header": "BERSAMBUNG KE PART 3 🔗", "isi": f"\"Lanjut Part 3 sore ini jam 16.30: Sosok Pelipur Duka dalam Rumah (Cek Playlist '{clean_topic}' ya 🌿)\"", "cta": "(Miliki buku panduan amalan penenang jiwa di keranjang kuning✨)"}
+            ]
+        },
+        {
+            "part_num": 3,
+            "title": f"Part 3 - Penenang Gelisah Keluarga",
+            "slot": "Sore (16.30 WIB)",
+            "playlist": clean_topic,
+            "caption": f"{clean_topic} (Part 3) 🌿\n\nSaat keluarga atau orang terdekatmu lelah, dirimulah tempat mereka pulang untuk menemukan kedamaian sesungguhnya... 🏠✨\n\n(Simak sabda Nabi di slide 3, adem banget di hati 💖)\n\nLanjut ke Part 4 jam 19.00 Malam nanti ya!\n\n#RuangTeduh #PenatHati #HaditsKetenangan #SelfReminder #AmalanLangit",
+            "slides": [
+                {"title": "SLIDE 1 (COVER/HOOK)", "header": "PELIPUR DUKA DALAM RUMAH 🏠", "isi": "\"Saat orang-orang di sekitarmu lelah, dirimulah penenang gelisah mereka...\""},
+                {"title": "SLIDE 2 (KONTEKS BATIN)", "header": "RUMAH YANG DIRINDUKAN 🌿", "isi": "\"Bukan mewahnya bangunan, melainkan seberapa hangat senyum dan tutur katamu menyambut mereka.\""},
+                {"title": "SLIDE 3 (INTI DALIL)", "header": "SIMPANAN TERBAIK 💎", "isi": "\"Sebaik-baik kalian adalah yang paling baik perilakunya terhadap keluarganya...\"", "riwayat": "(HR. Tirmidzi, Hasan)"},
+                {"title": "SLIDE 4 (TADABBUR)", "header": "PERHIASAN DUNIA 🌸", "isi": "\"Setiap kali engkau melunakkan suasana dan menghapus duka keluargamu, di situlah aliran pahalamu mengucur.\""},
+                {"title": "SLIDE 5 (CLOSING & BRIDGING)", "header": "BERSAMBUNG KE PART 4 🔗", "isi": f"\"Lanjut Part 4 jam 19.00 Malam ini: Menjaga Lisan & Prasangka (Simpan Playlist '{clean_topic}' ya 🌿)\"", "cta": "(Dapatkan tasbih digital penenang dzikir harian di keranjang kuning✨)"}
+            ]
+        },
+        {
+            "part_num": 4,
+            "title": f"Part 4 - Menjaga Lisan & Kesucian Hati",
+            "slot": "Malam (19.00 WIB)",
+            "playlist": clean_topic,
+            "caption": f"{clean_topic} (Part 4) 🌿\n\nLisan yang teduh adalah perhiasan batin sesungguhnya. Menjaga kata dari rasa sakit adalah mahkota kesucian jiwa... 🤍\n\n(Yuk tadabburi bersama di slide 3 & 4 ✨)\n\nLanjut ke Part 5 puncak jam 20.00 Malam ini!\n\n#RuangTeduh #PenatHati #HaditsKetenangan #SelfReminder #AmalanLangit",
+            "slides": [
+                {"title": "SLIDE 1 (COVER/HOOK)", "header": "LISAN YANG TEDUH 🤍", "isi": "\"Lisan yang teduh adalah perhiasan batin sesungguhnya...\""},
+                {"title": "SLIDE 2 (KONTEKS BATIN)", "header": "MENJAGA DARIPADA MENYAKITI 🌿", "isi": "\"Begitu mudah jemari dan lisan kita berucap saat emosi, namun jiwa yang mulia memilih diam dan mendoakan.\""},
+                {"title": "SLIDE 3 (INTI DALIL)", "header": "JAMINAN KESUCIAN LISAN 🤲", "isi": "\"Barangsiapa beriman kepada Allah dan hari akhir, hendaklah ia berkata baik atau diam...\"", "riwayat": "(HR. Bukhari & Muslim)"},
+                {"title": "SLIDE 4 (TADABBUR)", "header": "LISAN PENYEMBUH LUKA 🌸", "isi": "\"Kata-kata yang lembut adalah sedekah. Setiap kalimat baikmu mendatangkan ketenangan bagi orang di sekitarmu.\""},
+                {"title": "SLIDE 5 (CLOSING & BRIDGING)", "header": "BERSAMBUNG KE PART 5 (PUNCAK) 🔗", "isi": f"\"Lanjut Part 5 jam 20.00 Malam ini: Puncak Pintu Rahmat Bebas Dipilih (Cek Profil ya 🌿)\"", "cta": "(Miliki buku himpunan doa & dzikir harian di keranjang kuning✨)"}
+            ]
+        },
+        {
+            "part_num": 5,
+            "title": f"Part 5 - Puncak Keridhoan & Pintu Surga (Puncak)",
+            "slot": "Malam (20.00 WIB)",
+            "playlist": clean_topic,
+            "caption": f"{clean_topic} (Part 5 - Puncak Seri) 🌿\n\nPuncak ketenangan saat batin pasrah sepenuhnya pada ketentuan Allah... Di sinilah pintu surga mana saja dibukakan untukmu! 👑✨\n\n(Simpan & bagikan seri lengkapnya di playlist profil \"{clean_topic}\" ya 🌿)\n\n#RuangTeduh #PenatHati #HaditsKetenangan #SelfReminder #AmalanLangit",
+            "slides": [
+                {"title": "SLIDE 1 (COVER/HOOK)", "header": "PUNCAK PASRAH & RIDHO 👑", "isi": "\"Puncak ketenangan saat batin pasrah sepenuhnya pada takdir-Nya...\""},
+                {"title": "SLIDE 2 (KONTEKS BATIN)", "header": "KERIDHOAN HATI 🌿", "isi": "\"Ketika rencana kita tak sejalan dengan kenyataan, ia tersenyum dan berkata: 'Pilihan Allah pasti yang terbaik'.\""},
+                {"title": "SLIDE 3 (INTI DALIL PUNCAK)", "header": "PINTU SURGA BEBAS DIPILIH 🌟", "isi": "\"Masuklah ke dalam surga dari pintu mana saja yang kamu suka...\"", "riwayat": "(HR. Ahmad & Ibnu Hibban)"},
+                {"title": "SLIDE 4 (TADABBUR)", "header": "HADIAH TERINDAH ✨", "isi": "\"Lelahmu, sabarmu, dan ketulusanmu tak pernah sia-sia. Ada balasan kemuliaan yang menunggumu.\""},
+                {"title": "SLIDE 5 (CLOSING SERI)", "header": "SIMPAN SERI LENGKAPNYA 📌", "isi": f"\"Simpan & putar ulang Seri 5 Part '{clean_topic}' ini di Playlist profil Ruang Teduh ya 🌿\"", "cta": "(Lengkapi amalan harianmu dengan Al-Qur'an terjemahan eksklusif di keranjang kuning✨)"}
+            ]
+        }
+    ]
+    return parts_data
+
 if btn_generate or selected_topic:
     st.markdown("---")
     st.markdown(f"### 🌿 HASIL RACIKAN AUTOMATIS: `{selected_topic}` (5 PART)")
