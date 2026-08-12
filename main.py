@@ -183,7 +183,3 @@ st.dataframe(
 )
 
 st.caption("✨ *Tips: Gunakan pencarian built-in di pojok kanan atas tabel Streamlit di atas untuk mencari keyword atau hashtag tertentu.*")
-```
-
----
-
