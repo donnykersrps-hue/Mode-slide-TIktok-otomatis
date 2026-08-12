@@ -9,109 +9,78 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. Inject Custom CSS (Duplikasi 100% Visual Dark Slate & Accent Gold)
+# 2. Inject Custom CSS (Dark Theme #0f172a & Accent Gold #eab308)
 custom_css = """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
-
+    /* Background Utama */
     .stApp {
-        background-color: #0b1120;
+        background-color: #0f172a;
         color: #f8fafc;
         font-family: 'Plus Jakarta Sans', sans-serif;
     }
 
-    /* Container Header Utama */
+    /* Container Header */
     .header-box {
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.9) 100%);
-        border: 1px solid rgba(234, 179, 8, 0.35);
-        border-radius: 20px;
-        padding: 28px 36px;
-        margin-bottom: 20px;
-        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border: 1px solid rgba(234, 179, 8, 0.3);
+        border-radius: 16px;
+        padding: 24px 30px;
+        margin-bottom: 25px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
     }
 
     .brand-badge {
         display: inline-block;
-        background: rgba(234, 179, 8, 0.12);
+        background: rgba(234, 179, 8, 0.15);
         color: #fef08a;
-        padding: 6px 16px;
-        border-radius: 30px;
+        padding: 6px 14px;
+        border-radius: 20px;
         font-size: 13px;
         font-weight: 700;
-        border: 1px solid rgba(234, 179, 8, 0.4);
-        margin-bottom: 12px;
+        border: 1px solid rgba(234, 179, 8, 0.3);
+        margin-bottom: 10px;
     }
 
     .header-title {
         color: #ffffff;
-        font-size: 32px;
+        font-size: 28px;
         font-weight: 800;
         margin: 0;
     }
 
     .header-subtitle {
         color: #94a3b8;
-        font-size: 15px;
-        margin-top: 6px;
-        margin-bottom: 22px;
+        font-size: 14px;
+        margin-top: 4px;
     }
 
-    /* Tombol Download Excel Lebar di Dalam Header Box */
-    .stDownloadButton > button {
-        width: 100% !important;
-        background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%) !important;
-        color: #0f172a !important;
-        font-weight: 800 !important;
-        font-size: 15px !important;
-        border: none !important;
-        border-radius: 12px !important;
-        padding: 12px 24px !important;
-        box-shadow: 0 4px 20px rgba(234, 179, 8, 0.35) !important;
-        transition: all 0.25s ease !important;
-    }
-
-    .stDownloadButton > button:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 6px 25px rgba(234, 179, 8, 0.6) !important;
-        background: linear-gradient(135deg, #facc15 0%, #eab308 100%) !important;
-    }
-
-    /* Filter Radio Button Interaktif (Menyala Saat Kursor Disentuhkan) */
-    div[data-testid="stRadioButton"] label {
-        background: rgba(30, 41, 59, 0.6) !important;
-        border: 1px solid rgba(255, 255, 255, 0.12) !important;
-        border-radius: 12px !important;
-        padding: 10px 22px !important;
-        color: #cbd5e1 !important;
-        font-weight: 600 !important;
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        cursor: pointer !important;
-        margin-right: 8px !important;
-    }
-
-    div[data-testid="stRadioButton"] label:hover {
-        background: rgba(234, 179, 8, 0.18) !important;
-        border-color: #eab308 !important;
-        color: #fef08a !important;
-        box-shadow: 0 0 16px rgba(234, 179, 8, 0.45) !important;
-        transform: translateY(-2px) !important;
-    }
-
-    div[data-testid="stRadioButton"] label[data-checked="true"] {
-        background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%) !important;
-        color: #0f172a !important;
-        font-weight: 800 !important;
-        border-color: #fef08a !important;
-        box-shadow: 0 4px 20px rgba(234, 179, 8, 0.5) !important;
-    }
-
-    /* Streamlit DataFrame Container */
+    /* Streamlit DataFrame Styling Override */
     div[data-testid="stDataFrame"] {
         background-color: #1e293b;
-        border-radius: 16px;
+        border-radius: 12px;
         border: 1px solid #334155;
-        padding: 12px;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+        padding: 10px;
+    }
+
+    /* Metric Cards */
+    div[data-testid="stMetricValue"] {
+        color: #fef08a !important;
+        font-weight: 800 !important;
+    }
+
+    div[data-testid="stMetricLabel"] {
+        color: #94a3b8 !important;
+    }
+
+    /* Custom Button */
+    .stDownloadButton > button {
+        background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%) !important;
+        color: #0f172a !important;
+        font-weight: 700 !important;
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 10px 20px !important;
+        box-shadow: 0 4px 15px rgba(234, 179, 8, 0.3) !important;
     }
 </style>
 """
@@ -143,38 +112,33 @@ data = [
 
 df = pd.DataFrame(data)
 
-# 4. Header Section Terintegrasi
-csv_data = df.drop(columns=['Day_Code']).to_csv(index=False).encode('utf-8')
-
+# 4. Header Section
 st.markdown("""
 <div class="header-box">
-    <span class="brand-badge">⚡ Ruang Teduh – Schedule Matrix</span>
+    <span class="brand-badge">🌿 Ruang Teduh - Schedule Matrix</span>
     <h1 class="header-title">Spreadsheet Gebrakan Emas (3 Hari)</h1>
     <p class="header-subtitle">Jadwal posting terstruktur Siang, Sore & Malam | 15 Konten Serial TikTok Mode Slide</p>
+</div>
 """, unsafe_allow_html=True)
 
-st.download_button(
-    label="📄 Download Excel (.csv)",
-    data=csv_data,
-    file_name="Jadwal_Gebrakan_Emas_3Hari.csv",
-    mime="text/csv",
-    use_container_width=True
-)
+# 5. Top KPI Metrics
+col1, col2, col3, col4 = st.columns(4)
+col1.metric("Total Postingan", "15 Konten")
+col2.metric("Durasi Program", "3 Hari")
+col3.metric("Format Postingan", "5 Slide TikTok")
+col4.metric("Jumlah Playlist", "3 Group List")
 
-st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("---")
 
-# 5. Filter Row Dengan Label Lengkap
-selected_day = st.radio(
-    "Filter Jadwal Hari:",
-    options=[
-        "Semua Hari (15 Postingan)",
-        "Rabu (Ciri Wanita Ahli Surga)",
-        "Kamis (Seri: Hati Seorang Wanita)",
-        "Jumat (Seri: Baiti Jannati)"
-    ],
-    horizontal=True,
-    label_visibility="collapsed"
-)
+# 6. Filter & Action Row
+filter_col, download_col = st.columns([3, 1])
+
+with filter_col:
+    selected_day = st.radio(
+        "Filter Jadwal Hari:",
+        options=["Semua Hari", "Rabu (Ciri Wanita Ahli Surga)", "Kamis (Seri: Hati Seorang Wanita)", "Jumat (Seri: Baiti Jannati)"],
+        horizontal=True
+    )
 
 # Filter Logic
 if "Rabu" in selected_day:
@@ -186,22 +150,62 @@ elif "Jumat" in selected_day:
 else:
     filtered_df = df.copy()
 
+# Drop Internal Helper Column
 display_df = filtered_df.drop(columns=['Day_Code'])
 
-# 6. Interactive Streamlit Data Table
+# Download Button
+csv_data = display_df.to_csv(index=False).encode('utf-8')
+with download_col:
+    st.download_button(
+        label="📥 Download Excel (.csv)",
+        data=csv_data,
+        file_name="Jadwal_Gebrakan_Emas_3Hari.csv",
+        mime="text/csv",
+        use_container_width=True
+    )
+
+# 7. Interactive Streamlit Data Table
 st.dataframe(
     display_df,
     use_container_width=True,
     hide_index=True,
     column_config={
-        "Hari & Tanggal": st.column_config.TextColumn("HARI & TANGGAL", width="medium"),
-        "Jam Upload": st.column_config.TextColumn("JAM UPLOAD", width="small"),
-        "Group List / Playlist": st.column_config.TextColumn("GROUP LIST / PLAYLIST", width="medium"),
-        "Part": st.column_config.TextColumn("PART", width="small"),
-        "Tema Postingan": st.column_config.TextColumn("TEMA POSTINGAN (PART)", width="large"),
-        "Hook / Cover (Slide 1)": st.column_config.TextColumn("HOOK COVER (SLIDE 1)", width="large"),
-        "Isi Hadits (Slide 3)": st.column_config.TextColumn("ISI HADITS (SLIDE 3)", width="large"),
-        "Tautan Sambungan (Slide 5)": st.column_config.TextColumn("TAUTAN SAMBUNGAN", width="medium"),
-        "5 Hashtag Booster": st.column_config.TextColumn("5 HASHTAG BOOSTER", width="large"),
+        "Hari & Tanggal": st.column_config.TextColumn("Hari & Tanggal", width="medium"),
+        "Jam Upload": st.column_config.TextColumn("Jam Upload", width="small"),
+        "Group List / Playlist": st.column_config.TextColumn("Group List / Playlist", width="medium"),
+        "Part": st.column_config.TextColumn("Part", width="small"),
+        "Tema Postingan": st.column_config.TextColumn("Tema Postingan", width="large"),
+        "Hook / Cover (Slide 1)": st.column_config.TextColumn("Hook Cover (Slide 1)", width="large"),
+        "Isi Hadits (Slide 3)": st.column_config.TextColumn("Isi Hadits (Slide 3)", width="large"),
+        "Tautan Sambungan (Slide 5)": st.column_config.TextColumn("Tautan Sambungan", width="medium"),
+        "5 Hashtag Booster": st.column_config.TextColumn("5 Hashtag Booster", width="large"),
     }
 )
+
+st.caption("✨ *Tips: Gunakan pencarian built-in di pojok kanan atas tabel Streamlit di atas untuk mencari keyword atau hashtag tertentu.*")
+```
+
+---
+
+### 🚀 Cara Menjalankan Script Ini di HP / Laptop:
+
+1. **Install Library Streamlit & Pandas:**
+   Buka Terminal / Command Prompt / Termux (HP), lalu jalankan:
+   ```bash
+   pip install streamlit pandas
+   ```
+
+2. **Jalankan App Streamlit:**
+   Simpan file di atas dengan nama `app.py`, lalu jalankan perintah:
+   ```bash
+   streamlit run app.py
+   ```
+
+3. **Hasil:**
+   Streamlit akan otomatis membuka browser dengan tampilan **Dark Gold Theme (Slate + Emas)**, lengkap dengan:
+   * **KPI Cards** di bagian atas.
+   * **Filter Tab Radio Button** untuk memilah jadwal hari Rabu, Kamis, atau Jumat.
+   * **Tabel Interaktif Streamlit** yang bisa di-search, di-sort, dan di-resize kolomnya.
+   * **Tombol Download CSV** otomatis yang bisa langsung mengekspor data ke Microsoft Excel.
+
+Gimana Kak Donny, simpel banget kan meracik tampilan profesional di Streamlit? 🚀🌿
