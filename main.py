@@ -19,34 +19,44 @@ if "tiktok_data" not in st.session_state:
 api_key = st.secrets.get("RAPIDAPI_KEY", "")
 tiktok_user = st.secrets.get("TIKTOK_USERNAME", "ruangteduh.id88")
 
-# 2. Fungsi Penarik Analytics TikTok Realtime (Parsing JSON Sesuai RapidAPI)
+# 2. Fungsi Penarik Analytics TikTok Realtime (Mode Resilient & Multi-Structure)
 def fetch_tiktok_data_realtime(username, key):
     if not key:
-        return None
+        return {"error": "⚠️ RAPIDAPI_KEY belum terpasang di Secrets Streamlit Cloud!"}
     
     url = f"https://tiktok-data-api.p.rapidapi.com/user/info?username={username}"
     headers = {
         "x-rapidapi-key": key,
         "x-rapidapi-host": "tiktok-data-api.p.rapidapi.com"
     }
+    
     try:
-        response = requests.get(url, headers=headers, timeout=8)
+        response = requests.get(url, headers=headers, timeout=10)
+        
         if response.status_code == 200:
             res = response.json()
             
-            # Coba ekstrak data dari beberapa kemungkinan skema JSON RapidAPI
-            user_info = res.get("userInfo", res.get("data", {}))
-            user_meta = user_info.get("user", user_info.get("user_info", {}))
-            stats = user_info.get("stats", user_info.get("user_stats", {}))
+            # Fleksibilitas Ekstraksi JSON (Mencakup variasi struktur RapidAPI TikTok)
+            user_info = res.get("userInfo") or res.get("data") or res.get("user") or res
+            if isinstance(user_info, dict) and "userInfo" in user_info:
+                user_info = user_info["userInfo"]
+                
+            user_meta = user_info.get("user") or user_info.get("user_info") or user_info.get("author") or {}
+            stats = user_info.get("stats") or user_info.get("user_stats") or res.get("stats") or {}
             
-            avatar_url = user_meta.get("avatarMedium") or user_meta.get("avatarLarger") or user_meta.get("avatarThumb") or "https://p16-va.tiktokcdn.com/tos-maliva-avt-0068/default-avatar.jpeg"
+            # Extract Avatar
+            avatar_url = (
+                user_meta.get("avatarMedium") or 
+                user_meta.get("avatarLarger") or 
+                user_meta.get("avatarThumb") or 
+                "https://p16-va.tiktokcdn.com/tos-maliva-avt-0068/default-avatar.jpeg"
+            )
             
-            followers_count = stats.get("followerCount", stats.get("followers", 0))
-            likes_count = stats.get("heartCount", stats.get("hearts", stats.get("likes", 0)))
-            videos_count = stats.get("videoCount", stats.get("videos", 0))
-            
-            # Perhitungan estimasi views jika tidak disediakan langsung oleh API
-            views_est = stats.get("playCount", stats.get("views", likes_count * 3 if likes_count else 0))
+            # Extract Counters
+            followers_count = stats.get("followerCount") or stats.get("followers") or stats.get("follower_count") or 0
+            likes_count = stats.get("heartCount") or stats.get("hearts") or stats.get("likes") or stats.get("heart") or 0
+            videos_count = stats.get("videoCount") or stats.get("videos") or stats.get("video_count") or 0
+            views_est = stats.get("playCount") or stats.get("views") or (likes_count * 3 if likes_count else 0)
             
             return {
                 "avatar": avatar_url,
@@ -55,12 +65,23 @@ def fetch_tiktok_data_realtime(username, key):
                 "videos": videos_count,
                 "views": f"{views_est:,}" if isinstance(views_est, int) else str(views_est)
             }
+        elif response.status_code == 401:
+            return {"error": "❌ Token RapidAPI Tidak Valid (HTTP 401). Periksa Key di Secrets."}
+        elif response.status_code == 429:
+            return {"error": "⚠️ Kuota Bulanan RapidAPI Anda Telah Habis / Rate Limited (HTTP 429)."}
+        else:
+            return {"error": f"❌ Gagal Terhubung ke RapidAPI (HTTP Status: {response.status_code})"}
+            
+    except requests.exceptions.Timeout:
+        return {"error": "⏳ Timeout: Koneksi ke RapidAPI terlalu lambat (>10 detik)."}
     except Exception as e:
-        st.error(f"Error menarik data TikTok Realtime: {e}")
-        
-    return None
+        return {"error": f"💥 Exception Error: {str(e)}"}
 
-# 3. Custom CSS UI & Sticky Top Bar
+# Auto-Fetch Pertama Kali (Langsung tarik data saat aplikasi dibuka)
+if st.session_state["tiktok_data"] is None and api_key:
+    st.session_state["tiktok_data"] = fetch_tiktok_data_realtime(tiktok_user, api_key)
+
+# 3. Custom CSS UI & Sticky Top Bar (Tema Dark Slate & Emas Mewah)
 custom_css = """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;800&display=swap');
@@ -107,7 +128,7 @@ custom_css = """
         margin-top: 6px;
     }
 
-    /* Analytics Card Box (Area Hijau) */
+    /* Analytics Card Box */
     .analytics-card-container {
         background: rgba(30, 41, 59, 0.95);
         border: 1px solid rgba(234, 179, 8, 0.4);
@@ -147,7 +168,7 @@ custom_css = """
         font-family: 'JetBrains Mono', monospace;
     }
 
-    /* Custom Streamlit Button Update Analisis */
+    /* Custom Streamlit Button */
     .stButton>button {
         background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%) !important;
         color: #0f172a !important;
@@ -363,50 +384,51 @@ sticky_top_html = f"""
 # Render Floating Bar
 components.html(sticky_top_html, height=58)
 
-# 5. KARTU ANALYTICS & TOMBOL UPDATE (AREA HIJAU)
+# 5. KARTU ANALYTICS & TOMBOL UPDATE UI
 col_card, col_btn = st.columns([3, 1])
 
 with col_btn:
     if st.button("🔄 Update Analisis Terbaru", use_container_width=True):
-        data_realtime = fetch_tiktok_data_realtime(tiktok_user, api_key)
-        if data_realtime:
-            st.session_state["tiktok_data"] = data_realtime
-        else:
-            st.warning("Gagal menarik data realtime, pastikan RAPIDAPI_KEY di Streamlit Secrets aktif.")
+        st.session_state["tiktok_data"] = fetch_tiktok_data_realtime(tiktok_user, api_key)
         st.rerun()
 
 with col_card:
-    if st.session_state["tiktok_data"]:
-        data = st.session_state["tiktok_data"]
+    data_state = st.session_state["tiktok_data"]
+    
+    # Jika mengembalikan dictionary data sukses
+    if isinstance(data_state, dict) and "followers" in data_state:
         st.markdown(f"""
         <div class="analytics-card-container">
-            <img src="{data['avatar']}" class="avatar-img" alt="Profile">
+            <img src="{data_state['avatar']}" class="avatar-img" alt="Profile">
             <div class="stat-item">
                 <span class="stat-label">TikTok User</span>
                 <span class="stat-value">@{tiktok_user}</span>
             </div>
             <div class="stat-item">
                 <span class="stat-label">Followers</span>
-                <span class="stat-value">{data['followers']:,}</span>
+                <span class="stat-value">{data_state['followers']:,}</span>
             </div>
             <div class="stat-item">
                 <span class="stat-label">Total Likes</span>
-                <span class="stat-value">{data['likes']:,}</span>
+                <span class="stat-value">{data_state['likes']:,}</span>
             </div>
             <div class="stat-item">
                 <span class="stat-label">Total Video</span>
-                <span class="stat-value">{data['videos']}</span>
+                <span class="stat-value">{data_state['videos']}</span>
             </div>
             <div class="stat-item">
                 <span class="stat-label">Est. Views</span>
-                <span class="stat-value">{data['views']}</span>
+                <span class="stat-value">{data_state['views']}</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
+    # Jika mengembalikan Error Message
+    elif isinstance(data_state, dict) and "error" in data_state:
+        st.warning(data_state["error"])
     else:
         st.markdown(f"""
         <div class="analytics-card-container" style="justify-content: center; color: #94a3b8; font-size: 13px;">
-            💡 Tekan tombol <b>"🔄 Update Analisis Terbaru"</b> di sebelah kanan untuk menarik data statistik realtime @{tiktok_user}
+            💡 Tekan tombol <b>"🔄 Update Analisis Terbaru"</b> untuk menarik data statistik realtime @{tiktok_user}
         </div>
         """, unsafe_allow_html=True)
 
@@ -435,7 +457,7 @@ else:
 
 btn_generate = st.button("🚀 Racik Auto 5 Part Konten Sekarang!")
 
-# 8. Output Generator
+# 8. Output Generator Engine
 def generate_5part_content(topic_name):
     clean_topic = topic_name.strip()
     
@@ -501,7 +523,7 @@ def generate_5part_content(topic_name):
             "title": f"Part 5 - Puncak Keridhoan & Pintu Surga (Puncak)",
             "slot": "Malam (20.00 WIB)",
             "playlist": clean_topic,
-            "caption": f"{clean_topic} (Part 5 - Puncak Seri) 🌿\n\nPuncak ketenangan saat batin pasrah sepenuhnya pada ketentuan Allah... Di sinilah pintu surga mana saja dibukakan untukmu! 👑✨\n\n(Simkan & bagikan seri lengkapnya di playlist profil \"{clean_topic}\" ya 🌿)\n\n#RuangTeduh #PenatHati #HaditsKetenangan #SelfReminder #AmalanLangit",
+            "caption": f"{clean_topic} (Part 5 - Puncak Seri) 🌿\n\nPuncak ketenangan saat batin pasrah sepenuhnya pada ketentuan Allah... Di sinilah pintu surga mana saja dibukakan untukmu! 👑✨\n\n(Simpan & bagikan seri lengkapnya di playlist profil \"{clean_topic}\" ya 🌿)\n\n#RuangTeduh #PenatHati #HaditsKetenangan #SelfReminder #AmalanLangit",
             "slides": [
                 {"title": "SLIDE 1 (COVER/HOOK)", "header": "PUNCAK PASRAH & RIDHO 👑", "isi": "\"Puncak ketenangan saat batin pasrah sepenuhnya pada takdir-Nya...\""},
                 {"title": "SLIDE 2 (KONTEKS BATIN)", "header": "KERIDHOAN HATI 🌿", "isi": "\"Ketika rencana kita tak sejalan dengan kenyataan, ia tersenyum dan berkata: 'Pilihan Allah pasti yang terbaik'.\""},
