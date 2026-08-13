@@ -19,15 +19,15 @@ if "tiktok_data" not in st.session_state:
 api_key = st.secrets.get("RAPIDAPI_KEY", "")
 tiktok_user = st.secrets.get("TIKTOK_USERNAME", "ruangteduh.id88")
 
-# 2. Fungsi Penarik Analytics TikTok Realtime (Mode Resilient & Multi-Structure)
+# 2. Fungsi Penarik Analytics TikTok Realtime (Cocok dengan API tiktok-api23)
 def fetch_tiktok_data_realtime(username, key):
     if not key:
         return {"error": "⚠️ RAPIDAPI_KEY belum terpasang di Secrets Streamlit Cloud!"}
     
-    url = f"https://tiktok-data-api.p.rapidapi.com/user/info?username={username}"
+    url = f"https://tiktok-api23.p.rapidapi.com/api/user/info?uniqueId={username}"
     headers = {
         "x-rapidapi-key": key,
-        "x-rapidapi-host": "tiktok-data-api.p.rapidapi.com"
+        "x-rapidapi-host": "tiktok-api23.p.rapidapi.com"
     }
     
     try:
@@ -36,27 +36,16 @@ def fetch_tiktok_data_realtime(username, key):
         if response.status_code == 200:
             res = response.json()
             
-            # Fleksibilitas Ekstraksi JSON (Mencakup variasi struktur RapidAPI TikTok)
-            user_info = res.get("userInfo") or res.get("data") or res.get("user") or res
-            if isinstance(user_info, dict) and "userInfo" in user_info:
-                user_info = user_info["userInfo"]
-                
-            user_meta = user_info.get("user") or user_info.get("user_info") or user_info.get("author") or {}
-            stats = user_info.get("stats") or user_info.get("user_stats") or res.get("stats") or {}
+            # Ekstraksi data presisi sesuai skema tiktok-api23
+            userInfo = res.get("userInfo", {})
+            user_meta = userInfo.get("user", {})
+            stats = userInfo.get("stats", {})
             
-            # Extract Avatar
-            avatar_url = (
-                user_meta.get("avatarMedium") or 
-                user_meta.get("avatarLarger") or 
-                user_meta.get("avatarThumb") or 
-                "https://p16-va.tiktokcdn.com/tos-maliva-avt-0068/default-avatar.jpeg"
-            )
-            
-            # Extract Counters
-            followers_count = stats.get("followerCount") or stats.get("followers") or stats.get("follower_count") or 0
-            likes_count = stats.get("heartCount") or stats.get("hearts") or stats.get("likes") or stats.get("heart") or 0
-            videos_count = stats.get("videoCount") or stats.get("videos") or stats.get("video_count") or 0
-            views_est = stats.get("playCount") or stats.get("views") or (likes_count * 3 if likes_count else 0)
+            avatar_url = user_meta.get("avatarMedium") or user_meta.get("avatarThumb") or "https://p16-va.tiktokcdn.com/tos-maliva-avt-0068/default-avatar.jpeg"
+            followers_count = stats.get("followerCount", 0)
+            likes_count = stats.get("heartCount", stats.get("heart", 0))
+            videos_count = stats.get("videoCount", 0)
+            views_est = stats.get("playCount", likes_count * 3 if likes_count else 0)
             
             return {
                 "avatar": avatar_url,
@@ -66,18 +55,16 @@ def fetch_tiktok_data_realtime(username, key):
                 "views": f"{views_est:,}" if isinstance(views_est, int) else str(views_est)
             }
         elif response.status_code == 401:
-            return {"error": "❌ Token RapidAPI Tidak Valid (HTTP 401). Periksa Key di Secrets."}
+            return {"error": "❌ Token RapidAPI Tidak Valid. Cek Key di Secrets."}
         elif response.status_code == 429:
-            return {"error": "⚠️ Kuota Bulanan RapidAPI Anda Telah Habis / Rate Limited (HTTP 429)."}
+            return {"error": "⚠️ Kuota Bulanan RapidAPI Habis / Rate Limited."}
         else:
-            return {"error": f"❌ Gagal Terhubung ke RapidAPI (HTTP Status: {response.status_code})"}
+            return {"error": f"❌ Error HTTP Status: {response.status_code}"}
             
-    except requests.exceptions.Timeout:
-        return {"error": "⏳ Timeout: Koneksi ke RapidAPI terlalu lambat (>10 detik)."}
     except Exception as e:
-        return {"error": f"💥 Exception Error: {str(e)}"}
+        return {"error": f"💥 Connection Error: {str(e)}"}
 
-# Auto-Fetch Pertama Kali (Langsung tarik data saat aplikasi dibuka)
+# Auto-Fetch Pertama Kali saat Web Dibuka
 if st.session_state["tiktok_data"] is None and api_key:
     st.session_state["tiktok_data"] = fetch_tiktok_data_realtime(tiktok_user, api_key)
 
@@ -242,7 +229,7 @@ custom_css = """
 """
 st.markdown(custom_css, unsafe_allow_html=True)
 
-# 4. COMPONENT STICKY TOP BAR (Jam Digital + Running Text Rapi)
+# 4. COMPONENT STICKY TOP BAR (Jam Digital + Running Text)
 sticky_top_html = f"""
 <!DOCTYPE html>
 <html>
@@ -395,7 +382,7 @@ with col_btn:
 with col_card:
     data_state = st.session_state["tiktok_data"]
     
-    # Jika mengembalikan dictionary data sukses
+    # Jika data sukses ditarik
     if isinstance(data_state, dict) and "followers" in data_state:
         st.markdown(f"""
         <div class="analytics-card-container">
@@ -422,7 +409,7 @@ with col_card:
             </div>
         </div>
         """, unsafe_allow_html=True)
-    # Jika mengembalikan Error Message
+    # Jika Error
     elif isinstance(data_state, dict) and "error" in data_state:
         st.warning(data_state["error"])
     else:
