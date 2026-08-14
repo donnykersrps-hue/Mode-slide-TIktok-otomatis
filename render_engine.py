@@ -5,7 +5,7 @@ import random
 import re
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageStat, ImageEnhance
 
-# --- FUNGSI SANITIZER TEKS (CLEANER SYMBOL ANEH) ---
+# --- FUNGSI SANITIZER TEKS (CLEANER SIMBOL ANEH) ---
 
 def clean_text_from_symbols(text):
     """
@@ -16,7 +16,7 @@ def clean_text_from_symbols(text):
     if not text:
         return ""
     # Menghapus emoji & simbol unicode khusus yang berpotensi jadi kotak rusak di font
-    cleaned = re.sub(r'[^\w\s\d\.,!\?'"'\(\)\-:]', '', text)
+    cleaned = re.sub(r'[^\w\s\d\.,!\?\'"\(\)\-:]', '', text)
     return cleaned.strip()
 
 # --- FUNGSI QUALITY CONTROL (BRIGHTNESS & ESTETIKA) ---
@@ -84,7 +84,6 @@ def fetch_bright_aesthetic_background(pexels_key=""):
                         if is_image_too_dark(img_resized, threshold=90):
                             return apply_bright_vibrant_filter(img_resized)
                         else:
-                            # Tetap beri sedikit sentuhan kontras & saturasi agar nendang
                             enhancer_col = ImageEnhance.Color(img_resized)
                             return enhancer_col.enhance(1.2)
         except Exception:
@@ -172,7 +171,7 @@ def render_single_slide_image(bg_image, slide_data, is_slide_3=False, is_slide_5
 
     # 1. RENDER HEADER (TOP AREA) - Bersih Tanpa Simbol Aneh
     raw_header = slide_data.get("header", "").upper()
-    header_text = clean_text_from_symbols(raw_header) # PEMBERSIHAN KARAKTER
+    header_text = clean_text_from_symbols(raw_header)
     
     header_color = (250, 204, 21) if is_slide_5 else (232, 121, 249) # Emas / Magenta
     
@@ -184,7 +183,7 @@ def render_single_slide_image(bg_image, slide_data, is_slide_3=False, is_slide_5
 
     # 2. RENDER BODY TEXT (CENTER AREA) - Cyan Bright Menyala
     raw_body = slide_data.get("isi", "")
-    body_text = clean_text_from_symbols(raw_body) # PEMBERSIHAN KARAKTER
+    body_text = clean_text_from_symbols(raw_body)
     body_color = (34, 211, 238) # Cyan Bright (#22d3ee)
     
     body_lines = wrap_text_simetris(body_text, font_body, 900, draw)
