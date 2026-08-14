@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. INJECT CUSTOM CSS (MINIMALIS & MEWAH)
+# 2. INJECT CUSTOM CSS (GOLD DEFAULT → NEON CYAN INTERACTION)
 # ==========================================
 custom_css = """
 <style>
@@ -26,6 +26,7 @@ custom_css = """
         font-family: 'Plus Jakarta Sans', sans-serif !important;
     }
 
+    /* HEADER BOX */
     .header-box {
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         border: 1px solid rgba(234, 179, 8, 0.35);
@@ -61,13 +62,13 @@ custom_css = """
         margin-top: 4px;
     }
 
-    /* CARD RINGKAS CONTENT QUEUE */
+    /* CARD CONTENT QUEUE */
     .part-card-compact {
         background: #1e293b;
-        border: 1px solid rgba(234, 179, 8, 0.25);
+        border: 1px solid rgba(234, 179, 8, 0.3);
         border-radius: 16px;
         padding: 18px 24px;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
         box-shadow: 0 8px 20px rgba(0,0,0,0.3);
     }
 
@@ -101,6 +102,7 @@ custom_css = """
         display: inline-block;
     }
 
+    /* SLIDE DETAIL ITEM IN EXPANDER */
     .slide-item {
         background: rgba(15, 23, 42, 0.6);
         border-left: 4px solid #eab308;
@@ -109,9 +111,62 @@ custom_css = """
         margin-bottom: 8px;
     }
 
-    .stButton>button {
-        border-radius: 10px !important;
+    /* ==========================================
+       🔥 CUSTOM STYLING TOMBOL & EXPANDER INTERAKTIF
+       ========================================== */
+
+    /* 1. STYLING TOMBOL EXPANDER (PRATINJAU TEKS & SLIDE) */
+    div[data-testid="stExpander"] {
+        border: 1px solid rgba(234, 179, 8, 0.4) !important;
+        border-radius: 12px !important;
+        background: rgba(30, 41, 59, 0.7) !important;
+        box-shadow: 0 0 10px rgba(234, 179, 8, 0.15) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    div[data-testid="stExpander"] summary p {
+        color: #fef08a !important;
         font-weight: 700 !important;
+        font-size: 14px !important;
+        transition: color 0.3s ease !important;
+    }
+
+    /* INTERAKSI HOVER / CLICK EXPANDER -> NEON CYAN GLOW */
+    div[data-testid="stExpander"]:hover {
+        border-color: #22d3ee !important;
+        background: rgba(15, 23, 42, 0.9) !important;
+        box-shadow: 0 0 20px rgba(6, 182, 212, 0.4), inset 0 0 10px rgba(6, 182, 212, 0.2) !important;
+        transform: translateY(-2px);
+    }
+
+    div[data-testid="stExpander"]:hover summary p {
+        color: #22d3ee !important;
+        text-shadow: 0 0 8px rgba(34, 211, 238, 0.6) !important;
+    }
+
+    /* 2. STYLING STREAMLIT BUTTONS (RENDER ENGINE) */
+    .stButton>button {
+        background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%) !important;
+        color: #0f172a !important;
+        font-weight: 800 !important;
+        border: 1px solid #fef08a !important;
+        border-radius: 12px !important;
+        padding: 10px 18px !important;
+        box-shadow: 0 4px 15px rgba(234, 179, 8, 0.3) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    /* INTERAKSI HOVER / CLICK ACTION BUTTONS -> NEON CYAN SHIFT */
+    .stButton>button:hover {
+        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%) !important;
+        color: #ffffff !important;
+        border-color: #67e8f9 !important;
+        box-shadow: 0 0 25px rgba(6, 182, 212, 0.65), 0 0 10px rgba(103, 232, 249, 0.8) !important;
+        transform: translateY(-2px) scale(1.02);
+    }
+
+    .stButton>button:active {
+        transform: translateY(1px) scale(0.98) !important;
     }
 </style>
 """
@@ -171,7 +226,7 @@ top_bar_html = """
 components.html(top_bar_html, height=50)
 
 # ==========================================
-# 4. MOCK DATA GENERATOR (DUMMY UNTUK CONCEPT)
+# 4. MOCK DATA GENERATOR (CONCEPT DEMO)
 # ==========================================
 def get_compact_parts_data(topic_name):
     clean_topic = topic_name.strip()
@@ -207,7 +262,7 @@ topic_input = st.text_input("💡 Masukkan Topik Konten Utama:", value="Syarat u
 btn_generate = st.button("🚀 Racik Content Queue 5 Part")
 
 # ==========================================
-# 6. RINGKASAN CONTENT QUEUE (GUI BARU)
+# 6. RINGKASAN CONTENT QUEUE (GUI INTERAKTIF)
 # ==========================================
 if btn_generate or topic_input:
     st.markdown("---")
@@ -219,18 +274,17 @@ if btn_generate or topic_input:
         st.markdown(f"""
         <div class="part-card-compact">
             <div class="part-header">📌 PART {part['part_num']}/5: {part['title']}</div>
-            <div style="margin-bottom: 12px;">
+            <div style="margin-bottom: 8px;">
                 <span class="slot-badge">⏰ Slot: {part['slot']}</span>
                 <span class="playlist-badge">📂 Playlist: {part['playlist']}</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
-        # 3 TOMBOL AKSI UTAMA DI SETIAP BARIS PART
+        # 3 TOMBOL UTAMA BERGAYA NEON GLOW INTERAKSI
         col_btn1, col_btn2, col_btn3 = st.columns([1.5, 1, 1])
 
         with col_btn1:
-            # Pop-Up / Expander untuk Pratinjau Teks & Slide tanpa memenuhi layar
             with st.expander(f"👁️ Pratinjau Teks & Slide (Part {part['part_num']})"):
                 st.markdown("**📝 Caption TikTok:**")
                 st.code(part['caption'], language="text")
@@ -250,4 +304,4 @@ if btn_generate or topic_input:
         with col_btn3:
             st.button(f"📸 Render Carousel", key=f"btn_slide_{part['part_num']}", use_container_width=True)
 
-        st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
