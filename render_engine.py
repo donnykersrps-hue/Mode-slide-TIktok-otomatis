@@ -33,7 +33,7 @@ def is_image_too_dark(img, threshold=85):
 def apply_bright_vibrant_filter(img):
     """
     QUALITY CONTROL 2: Filter Bright & Vibrant Presisi
-    - Brightness: +15%
+    - Brightness: +40%
     - Saturation: +40%
     - Contrast: +25%
     """
