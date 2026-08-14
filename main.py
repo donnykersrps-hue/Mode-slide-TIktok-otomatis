@@ -166,4 +166,114 @@ custom_css = """
         margin-right: 8px;
     }
 
-    .playlist
+    .playlist-badge {
+        background: rgba(168, 85, 247, 0.2);
+        color: #c084fc;
+        padding: 4px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid rgba(168, 85, 247, 0.3);
+        display: inline-block;
+    }
+
+    .slide-item {
+        background: rgba(15, 23, 42, 0.6);
+        border-left: 4px solid #eab308;
+        border-radius: 0 10px 10px 0;
+        padding: 10px 14px;
+        margin-bottom: 8px;
+    }
+
+    div[data-testid="stExpander"] {
+        border: 1px solid rgba(234, 179, 8, 0.4) !important;
+        border-radius: 12px !important;
+        background: rgba(30, 41, 59, 0.7) !important;
+        box-shadow: 0 0 10px rgba(234, 179, 8, 0.15) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    div[data-testid="stExpander"] summary p {
+        color: #fef08a !important;
+        font-weight: 700 !important;
+        font-size: 14px !important;
+        transition: color 0.3s ease !important;
+    }
+
+    div[data-testid="stExpander"]:hover {
+        border-color: #22d3ee !important;
+        background: rgba(15, 23, 42, 0.9) !important;
+        box-shadow: 0 0 20px rgba(6, 182, 212, 0.4), inset 0 0 10px rgba(6, 182, 212, 0.2) !important;
+        transform: translateY(-2px);
+    }
+
+    div[data-testid="stExpander"]:hover summary p {
+        color: #22d3ee !important;
+        text-shadow: 0 0 8px rgba(34, 211, 238, 0.6) !important;
+    }
+
+    .stButton>button, .stDownloadButton>button {
+        background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%) !important;
+        color: #0f172a !important;
+        font-weight: 800 !important;
+        border: 1px solid #fef08a !important;
+        border-radius: 12px !important;
+        padding: 10px 18px !important;
+        box-shadow: 0 4px 15px rgba(234, 179, 8, 0.3) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    .stButton>button:hover, .stDownloadButton>button:hover {
+        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%) !important;
+        color: #ffffff !important;
+        border-color: #67e8f9 !important;
+        box-shadow: 0 0 25px rgba(6, 182, 212, 0.65), 0 0 10px rgba(103, 232, 249, 0.8) !important;
+        transform: translateY(-2px) scale(1.02);
+    }
+</style>
+"""
+st.markdown(custom_css, unsafe_allow_html=True)
+
+# ==========================================
+# 4. TOP BAR JAM REALTIME
+# ==========================================
+top_bar_html = """
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="[https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&family=JetBrains+Mono:wght@700&display=swap](https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&family=JetBrains+Mono:wght@700&display=swap)" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: #0f172a; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .top-bar {
+            width: 100%; height: 46px; background: rgba(15, 23, 42, 0.95);
+            border-bottom: 1px solid rgba(234, 179, 8, 0.35);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 16px;
+        }
+        .clock-card {
+            display: flex; align-items: center; gap: 8px; background: rgba(30, 41, 59, 0.85);
+            border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 8px; padding: 4px 12px;
+        }
+        .clock-time { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: #fef08a; }
+        .clock-date { font-size: 11px; color: #94a3b8; border-left: 1px solid rgba(255, 255, 255, 0.15); padding-left: 8px; }
+        .status-badge {
+            background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3);
+            font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <div class="clock-card">
+            <span class="clock-time" id="digital-clock">00:00:00 WIB</span>
+            <span class="clock-date" id="digital-date">Loading...</span>
+        </div>
+        <div class="status-badge">⚡ GEMINI AI MANAGER: ACTIVE</div>
+    </div>
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document
