@@ -7,7 +7,7 @@ from datetime import datetime
 import google.generativeai as genai
 
 # ==========================================
-# 1. KONFIGURASI HALAMAN
+# 1. KONFIGURASI HALAMAN & SECRETS
 # ==========================================
 st.set_page_config(
     page_title="Ruang Teduh - Auto Content Engine",
@@ -276,4 +276,124 @@ top_bar_html = """
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
-            document
+            document.getElementById('digital-clock').textContent = hours + ':' + minutes + ':' + seconds + ' WIB';
+            const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+            document.getElementById('digital-date').textContent = now.toLocaleDateString('id-ID', options);
+        }
+        setInterval(updateClock, 1000); updateClock();
+    </script>
+</body>
+</html>
+"""
+components.html(top_bar_html, height=50)
+
+# ==========================================
+# 5. HEADER & INPUT CONTROL
+# ==========================================
+st.markdown("""
+<div class="header-box">
+    <span class="brand-badge">🤖 Ruang Teduh AI Control Center</span>
+    <h1 class="header-title">Dashboard Generator & Automation 5 Part</h1>
+    <p class="header-subtitle">Gemini AI Manager meracik naskah 5 Part → Pratinjau Visual & Render Carousel dalam sekali klik</p>
+</div>
+""", unsafe_allow_html=True)
+
+topic_input = st.text_input("💡 Masukkan Topik Konten Utama:", value="Rahasia keajaiban doa seorang istri", placeholder="Contoh: Rahasia Sedekah Subuh, Syarat Pintu Taubat, dll.")
+btn_generate = st.button("🚀 Racik Content Queue 5 Part (via Gemini AI)")
+
+if "parts_data" not in st.session_state:
+    st.session_state["parts_data"] = None
+if "carousel_previews" not in st.session_state:
+    st.session_state["carousel_previews"] = {}
+
+if btn_generate:
+    with st.spinner("👤 Manager AI (Gemini) sedang meracik naskah & jadwal 5 Part..."):
+        ai_result = generate_5part_with_gemini(topic_input)
+        if ai_result:
+            st.session_state["parts_data"] = ai_result
+            st.session_state["active_topic"] = topic_input
+            st.session_state["carousel_previews"] = {}
+            st.success("✅ Manager AI Berhasil Meracik 5 Part Content Queue!")
+
+# ==========================================
+# 6. CONTENT QUEUE & RENDER CAROUSEL CONNECTOR
+# ==========================================
+if st.session_state.get("parts_data"):
+    parts_data = st.session_state["parts_data"]
+    active_topic = st.session_state.get("active_topic", topic_input)
+
+    st.markdown("---")
+    st.markdown(f"### 🌿 CONTENT QUEUE TERATUR: `{active_topic}`")
+    
+    for part in parts_data:
+        p_num = part['part_num']
+        st.markdown(f"""
+        <div class="part-card-compact">
+            <div class="part-header">📌 PART {p_num}/5: {part['title']}</div>
+            <div style="margin-bottom: 8px;">
+                <span class="slot-badge">⏰ Slot: {part['slot']}</span>
+                <span class="playlist-badge">📂 Playlist: {part['playlist']}</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        col_btn1, col_btn2, col_btn3 = st.columns([1.5, 1, 1])
+
+        with col_btn1:
+            with st.expander(f"👁️ Pratinjau Teks & Slide (Part {p_num})"):
+                st.markdown("**📝 Caption TikTok:**")
+                st.code(part['caption'], language="text")
+                st.markdown("**🎨 Rincian 5 Slide:**")
+                for s in part.get('slides', []):
+                    riwayat = f"<br><b>Riwayat:</b> {s['riwayat']}" if 'riwayat' in s else ""
+                    cta = f"<br><b>CTA:</b> {s['cta']}" if 'cta' in s else ""
+                    st.markdown(f"""
+                    <div class="slide-item">
+                        <div style="color: #fef08a; font-weight:700;">{s['title']}</div>
+                        <div><b>Header:</b> {s['header']}</div>
+                        <div><b>Isi:</b> {s['isi']}{riwayat}{cta}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+        with col_btn2:
+            st.button(f"🎬 Render Video", key=f"btn_vid_{p_num}", use_container_width=True)
+
+        with col_btn3:
+            if st.button(f"📸 Render Carousel", key=f"btn_slide_{p_num}", use_container_width=True):
+                try:
+                    from render_engine import generate_carousel_pack
+                    
+                    with st.spinner(f"🎨 Merender 5 Gambar Carousel HD Part {p_num} via Render Engine..."):
+                        images, zip_data = generate_carousel_pack(part.get('slides', []), pexels_key=PEXELS_KEY)
+                        st.session_state["carousel_previews"][p_num] = {
+                            "images": images,
+                            "zip": zip_data
+                        }
+                    st.success(f"✅ Render Carousel Part {p_num} Selesai!")
+                except ImportError:
+                    st.error("⚠️ File 'render_engine.py' belum dikonfigurasi di repositori.")
+                except Exception as e:
+                    st.error(f"⚠️ Gagal merender carousel: {e}")
+
+        # SECTION GALERI PRATINJAU VISUAL CAROUSEL & DOWNLOAD ZIP
+        if p_num in st.session_state.get("carousel_previews", {}):
+            preview_info = st.session_state["carousel_previews"][p_num]
+            st.markdown(f"#### 🎨 Pratinjau Visual Hasil Render Part {p_num}:")
+            
+            c1, c2, c3, c4, c5 = st.columns(5)
+            cols = [c1, c2, c3, c4, c5]
+            
+            for idx, img in enumerate(preview_info["images"]):
+                with cols[idx]:
+                    st.image(img, caption=f"Slide {idx+1}", use_container_width=True)
+            
+            st.download_button(
+                label=f"💾 Download 5 Slide HD (ZIP) - Part {p_num}",
+                data=preview_info["zip"],
+                file_name=f"RuangTeduh_Part_{p_num}_{datetime.now().strftime('%Y%m%d')}.zip",
+                mime="application/zip",
+                key=f"dl_zip_{p_num}",
+                use_container_width=True
+            )
+
+        st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
