@@ -1,7 +1,9 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
+import json
 from datetime import datetime
+import google.generativeai as genai
 
 # ==========================================
 # 1. KONFIGURASI HALAMAN
@@ -13,12 +15,80 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# Ambil Gemini Key dari Secrets Streamlit Cloud
+GEMINI_KEY = st.secrets.get("GEMINI_API_KEY", "")
+
+if GEMINI_KEY:
+    genai.configure(api_key=GEMINI_KEY)
+
 # ==========================================
-# 2. INJECT CUSTOM CSS (GOLD DEFAULT → NEON CYAN INTERACTION)
+# 2. BRAIN ENGINE (GEMINI PROMPT MASTER)
+# ==========================================
+def generate_5part_with_gemini(topic_name):
+    """
+    Manager AI Engine: Meminta Gemini meracik naskah 5 Part terstruktur
+    dalam format JSON murni yang siap disajikan ke Content Queue GUI.
+    """
+    if not GEMINI_KEY:
+        st.error("❌ GEMINI_API_KEY tidak ditemukan di Streamlit Secrets.")
+        return None
+
+    prompt = f"""
+    Kamu adalah seorang Manager Konten & Pakar Strategi TikTok Algoritma FYP untuk akun "Ruang Teduh" (Niche: Islami, Self-Reminder, Ketenangan Hati, Dakwah Mendidik & Emosional).
+    
+    Tugasmu:
+    Buatkan serial naskah 5 Part berdasarkan Topik Utama: "{topic_name}".
+    
+    Aturan Penulisan 5 Part Serial:
+    - Part 1: Hook emosional peleram gelisah + Pengenalan topik utama. (Slot: Siang (13.00 WIB))
+    - Part 2: Kelembutan batin saat diuji + Dalil/Hadits pelipur duka. (Slot: Siang (13.00 WIB))
+    - Part 3: Penenang gelisah keluarga / lingkungan terdekat. (Slot: Sore (16.30 WIB))
+    - Part 4: Menjaga lisan, kesucian hati, dan prasangka. (Slot: Malam (19.00 WIB))
+    - Part 5: Puncak pasrah, keridhoan batin, pintu surga + Strong CTA Keranjang Kuning. (Slot: Malam (20.00 WIB))
+
+    Format Wajib Output: Berikan HANYA JSON MURNI tanpa format markdown ```json ... ```, dengan struktur objek array berisi 5 item seperti contoh berikut:
+    [
+      {{
+        "part_num": 1,
+        "title": "Part 1 - Judul Part Ringkas",
+        "slot": "Siang (13.00 WIB)",
+        "playlist": "{topic_name}",
+        "caption": "Teks Caption TikTok lengkap dengan emoji, Call to Action ke playlist, dan 5 hashtag relevan.",
+        "slides": [
+          {{"title": "SLIDE 1 (COVER)", "header": "HEADER SINGKAT 🌿", "isi": "Teks hook memikat hati..."}},
+          {{"title": "SLIDE 2 (KONTEKS)", "header": "HEADER KONTEKS ✨", "isi": "Teks penjelasan batin..."}},
+          {{"title": "SLIDE 3 (DALIL)", "header": "HEADER DALIL 🤲", "isi": "Teks isi hadits/ayat...", "riwayat": "(HR. Bukhari / Muslim)"}},
+          {{"title": "SLIDE 4 (TADABBUR)", "header": "HEADER TADABBUR 🤍", "isi": "Teks hikmah mendalam..."}},
+          {{"title": "SLIDE 5 (CLOSING)", "header": "HEADER CLOSING 🔗", "isi": "Teks ajakan lanjut ke Part berikutnya...", "cta": "(Sebutkan produk Al-Qur'an/buku di keranjang kuning✨)"}}
+        ]
+      }}
+    ]
+    """
+
+    try:
+        # Menggunakan model Gemini Flash yang cepat & responsif
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        response = model.generate_content(prompt)
+        
+        clean_text = response.text.strip()
+        if clean_text.startswith("```json"):
+            clean_text = clean_text.replace("```json", "", 1)
+        if clean_text.endswith("```"):
+            clean_text = clean_text[:-3]
+        clean_text = clean_text.strip()
+
+        data = json.loads(clean_text)
+        return data
+    except Exception as e:
+        st.error(f"⚠️ Gagal menghubungi Manager AI (Gemini): {e}")
+        return None
+
+# ==========================================
+# 3. INJECT CUSTOM CSS INTERAKTIF (GOLD -> CYAN)
 # ==========================================
 custom_css = """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;800&display=swap');
+    @import url('[https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;800&display=swap](https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;800&display=swap)');
 
     .stApp {
         background-color: #0f172a !important;
@@ -26,7 +96,6 @@ custom_css = """
         font-family: 'Plus Jakarta Sans', sans-serif !important;
     }
 
-    /* HEADER BOX */
     .header-box {
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         border: 1px solid rgba(234, 179, 8, 0.35);
@@ -62,7 +131,6 @@ custom_css = """
         margin-top: 4px;
     }
 
-    /* CARD CONTENT QUEUE */
     .part-card-compact {
         background: #1e293b;
         border: 1px solid rgba(234, 179, 8, 0.3);
@@ -102,7 +170,6 @@ custom_css = """
         display: inline-block;
     }
 
-    /* SLIDE DETAIL ITEM IN EXPANDER */
     .slide-item {
         background: rgba(15, 23, 42, 0.6);
         border-left: 4px solid #eab308;
@@ -111,11 +178,7 @@ custom_css = """
         margin-bottom: 8px;
     }
 
-    /* ==========================================
-       🔥 CUSTOM STYLING TOMBOL & EXPANDER INTERAKTIF
-       ========================================== */
-
-    /* 1. STYLING TOMBOL EXPANDER (PRATINJAU TEKS & SLIDE) */
+    /* TOMBOL EXPANDER & ACTION BUTTONS INTERAKTIF */
     div[data-testid="stExpander"] {
         border: 1px solid rgba(234, 179, 8, 0.4) !important;
         border-radius: 12px !important;
@@ -131,7 +194,6 @@ custom_css = """
         transition: color 0.3s ease !important;
     }
 
-    /* INTERAKSI HOVER / CLICK EXPANDER -> NEON CYAN GLOW */
     div[data-testid="stExpander"]:hover {
         border-color: #22d3ee !important;
         background: rgba(15, 23, 42, 0.9) !important;
@@ -144,7 +206,6 @@ custom_css = """
         text-shadow: 0 0 8px rgba(34, 211, 238, 0.6) !important;
     }
 
-    /* 2. STYLING STREAMLIT BUTTONS (RENDER ENGINE) */
     .stButton>button {
         background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%) !important;
         color: #0f172a !important;
@@ -156,7 +217,6 @@ custom_css = """
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
 
-    /* INTERAKSI HOVER / CLICK ACTION BUTTONS -> NEON CYAN SHIFT */
     .stButton>button:hover {
         background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%) !important;
         color: #ffffff !important;
@@ -173,13 +233,13 @@ custom_css = """
 st.markdown(custom_css, unsafe_allow_html=True)
 
 # ==========================================
-# 3. TOP BAR JAM REALTIME & ENGINE STATUS
+# 4. TOP BAR JAM REALTIME
 # ==========================================
 top_bar_html = """
 <!DOCTYPE html>
 <html>
 <head>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <link href="[https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&family=JetBrains+Mono:wght@700&display=swap](https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&family=JetBrains+Mono:wght@700&display=swap)" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #0f172a; font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -206,7 +266,7 @@ top_bar_html = """
             <span class="clock-time" id="digital-clock">00:00:00 WIB</span>
             <span class="clock-date" id="digital-date">Loading...</span>
         </div>
-        <div class="status-badge">⚡ AUTOMATION ENGINE: READY</div>
+        <div class="status-badge">⚡ GEMINI AI MANAGER: ACTIVE</div>
     </div>
     <script>
         function updateClock() {
@@ -226,49 +286,40 @@ top_bar_html = """
 components.html(top_bar_html, height=50)
 
 # ==========================================
-# 4. MOCK DATA GENERATOR (CONCEPT DEMO)
-# ==========================================
-def get_compact_parts_data(topic_name):
-    clean_topic = topic_name.strip()
-    return [
-        {
-            "part_num": i,
-            "title": f"Part {i} - Serial {clean_topic}",
-            "slot": ["Siang (13.00 WIB)", "Siang (13.00 WIB)", "Sore (16.30 WIB)", "Malam (19.00 WIB)", "Malam (20.00 WIB)"][i-1],
-            "playlist": clean_topic,
-            "caption": f"{clean_topic} (Part {i}) 🌿\n\nUntukmu yang sedang lelah, ini janji peleram gelisahmu... 💔\n\n#RuangTeduh #SelfReminder",
-            "slides": [
-                {"title": "SLIDE 1 (COVER)", "header": f"RAHASIA {clean_topic.upper()} 🌿", "isi": "\"Untukmu jiwa yang lelah, ini janji peleram gelisahmu tak pernah ingkar...\""},
-                {"title": "SLIDE 2 (KONTEKS)", "header": "MENJAGA DALAM KELELAHAN ✨", "isi": "\"Di tengah himpitan duniawi, ada keistiqamahan kecil yang dinilai sangat agung.\""},
-                {"title": "SLIDE 3 (DALIL)", "header": "LANDASAN UTAMA 🤲", "isi": f"\"Barangsiapa senantiasa menjaga keistiqamahan {clean_topic.lower()}, Allah bukakan ketenangan...\"", "riwayat": "(HR. Muslim)"},
-                {"title": "SLIDE 4 (TADABBUR)", "header": "BENTENG JIWA 🤍", "isi": "\"Ketenangan adalah hadirnya rasa percaya penuh pada takdir-Nya.\""},
-                {"title": "SLIDE 5 (CLOSING)", "header": "BERSAMBUNG 🔗", "isi": f"\"Simak Part berikutnya di playlist '{clean_topic}' (Cek Profil 🌿)\"", "cta": "(Al-Qur'an terjemahan di keranjang kuning✨)"}
-            ]
-        } for i in range(1, 6)
-    ]
-
-# ==========================================
 # 5. HEADER & INPUT CONTROL
 # ==========================================
 st.markdown("""
 <div class="header-box">
     <span class="brand-badge">🤖 Ruang Teduh AI Control Center</span>
     <h1 class="header-title">Dashboard Generator & Automation 5 Part</h1>
-    <p class="header-subtitle">Tampilan ringkas & interaktif untuk eksekusi cepat pembuatan konten TikTok</p>
+    <p class="header-subtitle">Gemini AI Manager meracik naskah 5 Part → Siap dipratinjau & di-render dalam sekali klik</p>
 </div>
 """, unsafe_allow_html=True)
 
 topic_input = st.text_input("💡 Masukkan Topik Konten Utama:", value="Syarat utama pintu taubat", placeholder="Contoh: Rahasia Sedekah Subuh, Syarat Pintu Taubat, dll.")
-btn_generate = st.button("🚀 Racik Content Queue 5 Part")
+btn_generate = st.button("🚀 Racik Content Queue 5 Part (via Gemini AI)")
+
+# Save State agar data tidak hilang saat interaksi UI
+if "parts_data" not in st.session_state:
+    st.session_state["parts_data"] = None
+
+if btn_generate:
+    with st.spinner("🤵‍♂️ Manager AI (Gemini) sedang meracik naskah & jadwal 5 Part..."):
+        ai_result = generate_5part_with_gemini(topic_input)
+        if ai_result:
+            st.session_state["parts_data"] = ai_result
+            st.session_state["active_topic"] = topic_input
+            st.success("✅ Manager AI Berhasil Meracik 5 Part Content Queue!")
 
 # ==========================================
-# 6. RINGKASAN CONTENT QUEUE (GUI INTERAKTIF)
+# 6. RINGKASAN CONTENT QUEUE (GUI REAL GEMINI)
 # ==========================================
-if btn_generate or topic_input:
+if st.session_state.get("parts_data"):
+    parts_data = st.session_state["parts_data"]
+    active_topic = st.session_state.get("active_topic", topic_input)
+
     st.markdown("---")
-    st.markdown(f"### 🌿 CONTENT QUEUE RINGKAS: `{topic_input}`")
-    
-    parts_data = get_compact_parts_data(topic_input)
+    st.markdown(f"### 🌿 CONTENT QUEUE TERATUR: `{active_topic}`")
     
     for part in parts_data:
         st.markdown(f"""
@@ -281,20 +332,21 @@ if btn_generate or topic_input:
         </div>
         """, unsafe_allow_html=True)
 
-        # 3 TOMBOL UTAMA BERGAYA NEON GLOW INTERAKSI
         col_btn1, col_btn2, col_btn3 = st.columns([1.5, 1, 1])
 
         with col_btn1:
             with st.expander(f"👁️ Pratinjau Teks & Slide (Part {part['part_num']})"):
-                st.markdown("**📝 Caption TikTok:**")
+                st.markdown("**📝 Caption TikTok (Hasil Racikan Gemini):**")
                 st.code(part['caption'], language="text")
                 st.markdown("**🎨 Rincian 5 Slide:**")
-                for s in part['slides']:
+                for s in part.get('slides', []):
+                    riwayat = f"<br><b>Riwayat:</b> {s['riwayat']}" if 'riwayat' in s else ""
+                    cta = f"<br><b>CTA:</b> {s['cta']}" if 'cta' in s else ""
                     st.markdown(f"""
                     <div class="slide-item">
                         <div style="color: #fef08a; font-weight:700;">{s['title']}</div>
                         <div><b>Header:</b> {s['header']}</div>
-                        <div><b>Isi:</b> {s['isi']}</div>
+                        <div><b>Isi:</b> {s['isi']}{riwayat}{cta}</div>
                     </div>
                     """, unsafe_allow_html=True)
 
