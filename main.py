@@ -67,7 +67,7 @@ def generate_5part_with_gemini(topic_name):
 
     try:
         # Menggunakan model Gemini Flash yang cepat & responsif
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("gemini-3.6-flash")
         response = model.generate_content(prompt)
         
         clean_text = response.text.strip()
@@ -332,7 +332,7 @@ if st.session_state.get("parts_data"):
         </div>
         """, unsafe_allow_html=True)
 
-        col_btn1, col_btn2, col_btn3 = st.columns([1.5, 1, 1])
+        col_btn1, col_btn2, col_btn3 = st.columns([3.6, 1, 1])
 
         with col_btn1:
             with st.expander(f"👁️ Pratinjau Teks & Slide (Part {part['part_num']})"):
