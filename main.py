@@ -2,6 +2,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
 import json
+import io
 from datetime import datetime
 import google.generativeai as genai
 
@@ -15,14 +16,13 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Ambil Gemini Key dari Secrets Streamlit Cloud
 GEMINI_KEY = st.secrets.get("GEMINI_API_KEY", "")
 
 if GEMINI_KEY:
     genai.configure(api_key=GEMINI_KEY)
 
 # ==========================================
-# 2. BRAIN ENGINE (GEMINI PROMPT MASTER)
+# 2. GEMINI AI BRAIN ENGINE (MANAGER KONTEN)
 # ==========================================
 def generate_5part_with_gemini(topic_name):
     """
@@ -39,12 +39,19 @@ def generate_5part_with_gemini(topic_name):
     Tugasmu:
     Buatkan serial naskah 5 Part berdasarkan Topik Utama: "{topic_name}".
     
-    Aturan Penulisan 5 Part Serial:
-    - Part 1: Hook emosional peleram gelisah + Pengenalan topik utama. (Slot: Siang (13.00 WIB))
-    - Part 2: Kelembutan batin saat diuji + Dalil/Hadits pelipur duka. (Slot: Siang (13.00 WIB))
-    - Part 3: Penenang gelisah keluarga / lingkungan terdekat. (Slot: Sore (16.30 WIB))
-    - Part 4: Menjaga lisan, kesucian hati, dan prasangka. (Slot: Malam (19.00 WIB))
-    - Part 5: Puncak pasrah, keridhoan batin, pintu surga + Strong CTA Keranjang Kuning. (Slot: Malam (20.00 WIB))
+    ATURAN BAKU POLA SLIDE (SANGAT WAJIB PADA SETIAP PART):
+    - SLIDE 1 (COVER): Hook emosional memikat batin + Judul Serial.
+    - SLIDE 2 (KONTEKS): Relevansi masalah batin/kehidupan sehari-hari.
+    - SLIDE 3 (INTI DALIL - WAJIB HADITS SHAHIH): Harus memuat Teks Hadits Shahih / Ayat Al-Qur'an lengkap dengan nama Perawinya (contoh: HR. Bukhari, HR. Muslim, HR. Tirmidzi, dll).
+    - SLIDE 4 (TADABBUR): Hikmah, perenungan mendalam, dan penyejuk jiwa.
+    - SLIDE 5 (CLOSING & CTA): Ajakan simpan/lanjut part + CTA produk Al-Qur'an/buku di keranjang kuning.
+
+    Struktur 5 Part Serial:
+    - Part 1: Hook emosional + Pengenalan topik. (Slot: Siang (13.00 WIB))
+    - Part 2: Kelembutan batin saat diuji + Hadits Pelipur Duka. (Slot: Siang (13.00 WIB))
+    - Part 3: Penenang gelisah keluarga / lingkungan terdekat + Hadits Akhlak/Keluarga. (Slot: Sore (16.30 WIB))
+    - Part 4: Menjaga lisan & kesucian hati + Hadits Berkata Baik/Diam. (Slot: Malam (19.00 WIB))
+    - Part 5: Puncak pasrah & keridhoan batin + Hadits Pintu Surga/Keridhoan Allah. (Slot: Malam (20.00 WIB))
 
     Format Wajib Output: Berikan HANYA JSON MURNI tanpa format markdown ```json ... ```, dengan struktur objek array berisi 5 item seperti contoh berikut:
     [
@@ -57,7 +64,7 @@ def generate_5part_with_gemini(topic_name):
         "slides": [
           {{"title": "SLIDE 1 (COVER)", "header": "HEADER SINGKAT 🌿", "isi": "Teks hook memikat hati..."}},
           {{"title": "SLIDE 2 (KONTEKS)", "header": "HEADER KONTEKS ✨", "isi": "Teks penjelasan batin..."}},
-          {{"title": "SLIDE 3 (DALIL)", "header": "HEADER DALIL 🤲", "isi": "Teks isi hadits/ayat...", "riwayat": "(HR. Bukhari / Muslim)"}},
+          {{"title": "SLIDE 3 (DALIL SHAHIH)", "header": "LANDASAN HADITS 🤲", "isi": "Matan/Arti Hadits Shahih relevan...", "riwayat": "(HR. Bukhari / Muslim / Tirmidzi)"}},
           {{"title": "SLIDE 4 (TADABBUR)", "header": "HEADER TADABBUR 🤍", "isi": "Teks hikmah mendalam..."}},
           {{"title": "SLIDE 5 (CLOSING)", "header": "HEADER CLOSING 🔗", "isi": "Teks ajakan lanjut ke Part berikutnya...", "cta": "(Sebutkan produk Al-Qur'an/buku di keranjang kuning✨)"}}
         ]
@@ -66,8 +73,7 @@ def generate_5part_with_gemini(topic_name):
     """
 
     try:
-        # Menggunakan model Gemini Flash yang cepat & responsif
-        model = genai.GenerativeModel("gemini-3.6-flash")
+        model = genai.GenerativeModel("gemini-1.5-flash")
         response = model.generate_content(prompt)
         
         clean_text = response.text.strip()
@@ -206,7 +212,7 @@ custom_css = """
         text-shadow: 0 0 8px rgba(34, 211, 238, 0.6) !important;
     }
 
-    .stButton>button {
+    .stButton>button, .stDownloadButton>button {
         background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%) !important;
         color: #0f172a !important;
         font-weight: 800 !important;
@@ -217,16 +223,12 @@ custom_css = """
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
 
-    .stButton>button:hover {
+    .stButton>button:hover, .stDownloadButton>button:hover {
         background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%) !important;
         color: #ffffff !important;
         border-color: #67e8f9 !important;
         box-shadow: 0 0 25px rgba(6, 182, 212, 0.65), 0 0 10px rgba(103, 232, 249, 0.8) !important;
         transform: translateY(-2px) scale(1.02);
-    }
-
-    .stButton>button:active {
-        transform: translateY(1px) scale(0.98) !important;
     }
 </style>
 """
@@ -292,27 +294,29 @@ st.markdown("""
 <div class="header-box">
     <span class="brand-badge">🤖 Ruang Teduh AI Control Center</span>
     <h1 class="header-title">Dashboard Generator & Automation 5 Part</h1>
-    <p class="header-subtitle">Gemini AI Manager meracik naskah 5 Part → Siap dipratinjau & di-render dalam sekali klik</p>
+    <p class="header-subtitle">Gemini AI Manager meracik naskah 5 Part → Pratinjau Visual & Render Carousel dalam sekali klik</p>
 </div>
 """, unsafe_allow_html=True)
 
-topic_input = st.text_input("💡 Masukkan Topik Konten Utama:", value="Syarat utama pintu taubat", placeholder="Contoh: Rahasia Sedekah Subuh, Syarat Pintu Taubat, dll.")
+topic_input = st.text_input("💡 Masukkan Topik Konten Utama:", value="Rahasia keajaiban doa seorang istri", placeholder="Contoh: Rahasia Sedekah Subuh, Syarat Pintu Taubat, dll.")
 btn_generate = st.button("🚀 Racik Content Queue 5 Part (via Gemini AI)")
 
-# Save State agar data tidak hilang saat interaksi UI
 if "parts_data" not in st.session_state:
     st.session_state["parts_data"] = None
+if "carousel_previews" not in st.session_state:
+    st.session_state["carousel_previews"] = {}
 
 if btn_generate:
-    with st.spinner("🤵‍♂️ Manager AI (Gemini) sedang meracik naskah & jadwal 5 Part..."):
+    with st.spinner("👤 Manager AI (Gemini) sedang meracik naskah & jadwal 5 Part..."):
         ai_result = generate_5part_with_gemini(topic_input)
         if ai_result:
             st.session_state["parts_data"] = ai_result
             st.session_state["active_topic"] = topic_input
+            st.session_state["carousel_previews"] = {}
             st.success("✅ Manager AI Berhasil Meracik 5 Part Content Queue!")
 
 # ==========================================
-# 6. RINGKASAN CONTENT QUEUE (GUI REAL GEMINI)
+# 6. CONTENT QUEUE & RENDER CAROUSEL CONNECTOR
 # ==========================================
 if st.session_state.get("parts_data"):
     parts_data = st.session_state["parts_data"]
@@ -322,9 +326,10 @@ if st.session_state.get("parts_data"):
     st.markdown(f"### 🌿 CONTENT QUEUE TERATUR: `{active_topic}`")
     
     for part in parts_data:
+        p_num = part['part_num']
         st.markdown(f"""
         <div class="part-card-compact">
-            <div class="part-header">📌 PART {part['part_num']}/5: {part['title']}</div>
+            <div class="part-header">📌 PART {p_num}/5: {part['title']}</div>
             <div style="margin-bottom: 8px;">
                 <span class="slot-badge">⏰ Slot: {part['slot']}</span>
                 <span class="playlist-badge">📂 Playlist: {part['playlist']}</span>
@@ -332,11 +337,11 @@ if st.session_state.get("parts_data"):
         </div>
         """, unsafe_allow_html=True)
 
-        col_btn1, col_btn2, col_btn3 = st.columns([3.6, 1, 1])
+        col_btn1, col_btn2, col_btn3 = st.columns([1.5, 1, 1])
 
         with col_btn1:
-            with st.expander(f"👁️ Pratinjau Teks & Slide (Part {part['part_num']})"):
-                st.markdown("**📝 Caption TikTok (Hasil Racikan Gemini):**")
+            with st.expander(f"👁️ Pratinjau Teks & Slide (Part {p_num})"):
+                st.markdown("**📝 Caption TikTok:**")
                 st.code(part['caption'], language="text")
                 st.markdown("**🎨 Rincian 5 Slide:**")
                 for s in part.get('slides', []):
@@ -351,9 +356,45 @@ if st.session_state.get("parts_data"):
                     """, unsafe_allow_html=True)
 
         with col_btn2:
-            st.button(f"🎬 Render Video", key=f"btn_vid_{part['part_num']}", use_container_width=True)
+            st.button(f"🎬 Render Video", key=f"btn_vid_{p_num}", use_container_width=True)
 
         with col_btn3:
-            st.button(f"📸 Render Carousel", key=f"btn_slide_{part['part_num']}", use_container_width=True)
+            if st.button(f"📸 Render Carousel", key=f"btn_slide_{p_num}", use_container_width=True):
+                try:
+                    # Memanggil fungsi render_engine
+                    from render_engine import generate_carousel_pack
+                    
+                    with st.spinner(f"🎨 Merender 5 Gambar Carousel HD Part {p_num} via Render Engine..."):
+                        images, zip_data = generate_carousel_pack(part.get('slides', []))
+                        st.session_state["carousel_previews"][p_num] = {
+                            "images": images,
+                            "zip": zip_data
+                        }
+                    st.success(f"✅ Render Carousel Part {p_num} Selesai!")
+                except ImportError:
+                    st.error("⚠️ File 'render_engine.py' belum dikonfigurasi di repositori.")
+                except Exception as e:
+                    st.error(f"⚠️ Gagal merender carousel: {e}")
+
+        # SECTION GALERI PRATINJAU VISUAL CAROUSEL & DOWNLOAD ZIP
+        if p_num in st.session_state.get("carousel_previews", {}):
+            preview_info = st.session_state["carousel_previews"][p_num]
+            st.markdown(f"#### 🎨 Pratinjau Visual Hasil Render Part {p_num}:")
+            
+            c1, c2, c3, c4, c5 = st.columns(5)
+            cols = [c1, c2, c3, c4, c5]
+            
+            for idx, img in enumerate(preview_info["images"]):
+                with cols[idx]:
+                    st.image(img, caption=f"Slide {idx+1}", use_column_width=True)
+            
+            st.download_button(
+                label=f"💾 Download 5 Slide HD (ZIP) - Part {p_num}",
+                data=preview_info["zip"],
+                file_name=f"RuangTeduh_Part_{p_num}_{datetime.now().strftime('%Y%m%d')}.zip",
+                mime="application/zip",
+                key=f"dl_zip_{p_num}",
+                use_container_width=True
+            )
 
         st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
