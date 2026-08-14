@@ -268,7 +268,7 @@ top_bar_html = """
             <span class="clock-time" id="digital-clock">00:00:00 WIB</span>
             <span class="clock-date" id="digital-date">Loading...</span>
         </div>
-        <div class="status-badge">⚡ GEMINI AI MANAGER: ACTIVE</div>
+        <div class="status-badge">⚡ Ruang Teduh</div>
     </div>
     <script>
         function updateClock() {
