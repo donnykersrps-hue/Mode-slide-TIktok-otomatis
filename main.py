@@ -80,7 +80,7 @@ def generate_5part_with_gemini(topic_name):
         return None
 
 # ==========================================
-# 3. CUSTOM CSS
+# 3. CUSTOM CSS (NEON MAGENTA & CYAN GLOW)
 # ==========================================
 custom_css = """
 <style>
@@ -220,19 +220,6 @@ custom_css = """
         border-color: #00f0ff !important;
         box-shadow: 0 0 25px #00f0ff, 0 0 10px rgba(0, 240, 255, 0.8) !important;
         transform: translateY(-2px) !important;
-    }
-
-    /* CYAN & MAGENTA SPECIAL DOWNLOAD BUTTONS */
-    .btn-edit-pack button {
-        background: linear-gradient(135deg, #ec4899 0%, #be185d 100%) !important;
-        color: #ffffff !important;
-        border-color: #f472b6 !important;
-        box-shadow: 0 0 15px rgba(236, 72, 153, 0.4) !important;
-    }
-    .btn-edit-pack button:hover {
-        background: linear-gradient(135deg, #00f0ff 0%, #0284c7 100%) !important;
-        border-color: #00f0ff !important;
-        box-shadow: 0 0 25px #00f0ff !important;
     }
 </style>
 """
@@ -475,20 +462,22 @@ if st.session_state.get("parts_data"):
             
             st.markdown(f"#### 📌 Menyesuaikan {s['title']}")
             
+            # NUMBER INPUT UNTUK CONTROL UKURAN FONT
             st.markdown("##### 📏 Ukuran Font Presisi (Real-Time Canvas Connect)")
             c_f1, c_f2 = st.columns(2)
             with c_f1:
-                fh = st.number_input(f"Size Header S{s_idx+1}", min_value=30, max_value=120, value=76, step=2, key=f"fh_{p_num}_{s_idx}")
+                fh = st.number_input(f"Size Header S{s_idx+1}", min_value=30, max_value=120, value=s.get('font_setting', {}).get('header', 76), step=2, key=f"fh_{p_num}_{s_idx}")
             with c_f2:
-                fb = st.number_input(f"Size Body S{s_idx+1}", min_value=25, max_value=100, value=68 if s_idx != 2 else 52, step=2, key=f"fb_{p_num}_{s_idx}")
+                fb = st.number_input(f"Size Body S{s_idx+1}", min_value=25, max_value=100, value=s.get('font_setting', {}).get('body', 68 if s_idx != 2 else 52), step=2, key=f"fb_{p_num}_{s_idx}")
             
             fr = 44
             if s_idx == 2:
-                fr = st.number_input(f"Size Riwayat S{s_idx+1}", min_value=20, max_value=80, value=44, step=2, key=f"fr_{p_num}_{s_idx}")
+                fr = st.number_input(f"Size Riwayat S{s_idx+1}", min_value=20, max_value=80, value=s.get('font_setting', {}).get('riwayat', 44), step=2, key=f"fr_{p_num}_{s_idx}")
 
             pos_h = 360 if s_idx==2 else 380
             pos_b = 760 if s_idx==2 else 880
 
+            # METODE 1: AUTO-SYNC KONTROL FONT LANGSUNG KE MEMORI PYTHON (S['FONT_SETTING'])
             s['font_setting'] = {
                 "header": fh,
                 "body": fb,
@@ -497,6 +486,7 @@ if st.session_state.get("parts_data"):
                 "y_body": pos_b
             }
 
+            # TAMPILAN CANVAS INTERAKTIF
             render_compact_interactive_canvas(
                 header_text=s.get('header', ''),
                 body_text=s.get('isi', ''),
@@ -508,14 +498,14 @@ if st.session_state.get("parts_data"):
                 pos_b=pos_b
             )
 
-            # SINKRONISASI MUTAKHIR: BILA TEKS DIEDIT PADA TEXTBOX, DATA S KANVAS RE-BINDING 100%
+            # METODE 1: AUTO-SYNC INPUT TEXTBOX LANGSUNG BINDING KE MEMORI PYTHON (S['HEADER'], S['ISI'], S['RIWAYAT'])
             s['header'] = st.text_input(f"Header S{s_idx+1}", value=s.get('header', ''), key=f"h_{p_num}_{s_idx}")
             s['isi'] = st.text_area(f"Isi S{s_idx+1}", value=s.get('isi', ''), key=f"b_{p_num}_{s_idx}", height=85)
             
             if 'riwayat' in s or s_idx == 2:
                 s['riwayat'] = st.text_input(f"Riwayat Hadits S{s_idx+1}", value=s.get('riwayat', ''), key=f"r_{p_num}_{s_idx}")
 
-            # TOMBOL DOWNLOAD PER SLIDE SINGLE (.JPG)
+            # TOMBOL DOWNLOAD SINGLE SLIDE INSTAN (.JPG)
             try:
                 from render_engine import render_single_slide_image, fetch_bright_aesthetic_background
                 preview_bg = fetch_bright_aesthetic_background(pexels_key=PEXELS_KEY)
@@ -539,7 +529,7 @@ if st.session_state.get("parts_data"):
             except Exception as e_dl:
                 st.warning(f"Download helper loading... ({e_dl})")
 
-        # AREA DUAL BUTTON RENDER FINAL & DOWNLOAD EDITED PACK SINKRON
+        # AREA TOMBOL RENDER FULL PACK 5 SLIDE MASAL
         st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
         c_v, c_s = st.columns(2)
         with c_v:
@@ -549,8 +539,8 @@ if st.session_state.get("parts_data"):
                 try:
                     from render_engine import generate_carousel_pack
                     
-                    with st.spinner(f"🎨 Merender 5 Gambar Carousel HD Sinkron Part {p_num}..."):
-                        # SINKRONISASI SLIDES: MENGGUNAKAN DATA PART['SLIDES'] TERBARU
+                    with st.spinner(f"🎨 Merender 5 Gambar Carousel HD Part {p_num}..."):
+                        # METODE 1 EXECUTION: ENGINE SEKARANG MEMANGGIL PART['SLIDES'] YANG SUDAH TER-SYNC SUNTINGAN TERBARU
                         images, zip_data = generate_carousel_pack(
                             part.get('slides', []), 
                             pexels_key=PEXELS_KEY
@@ -559,11 +549,11 @@ if st.session_state.get("parts_data"):
                             "images": images,
                             "zip": zip_data
                         }
-                    st.success(f"✅ Render Carousel Part {p_num} Selesai & Ter-Sinkronisasi!")
+                    st.success(f"✅ Render Carousel Part {p_num} Selesai & Ter-Sinkronisasi Perfect!")
                 except Exception as e:
                     st.error(f"⚠️ Gagal merender carousel: {e}")
 
-        # SECTION GALERI HASIL RENDER FULL PACK 5 SLIDE
+        # GALERI & TOMBOL DOWNLOAD ZIP SINKRON
         if p_num in st.session_state.get("carousel_previews", {}):
             preview_info = st.session_state["carousel_previews"][p_num]
             st.markdown(f"#### 🎨 Galeri Lengkap Hasil Render Part {p_num}:")
@@ -575,29 +565,13 @@ if st.session_state.get("parts_data"):
                 with cols[idx]:
                     st.image(img, caption=f"Slide {idx+1}", use_container_width=True)
             
-            # FITUR BARU: SINKRONISASI TOMBOL DUAL DOWNLOAD NEON GLOW ATAS SELURUH HASIL EDIT SLIDE
-            col_dl1, col_dl2 = st.columns(2)
-            
-            with col_dl1:
-                st.download_button(
-                    label=f"💾 Download Original AI Pack (ZIP) - Part {p_num}",
-                    data=preview_info["zip"],
-                    file_name=f"RuangTeduh_Original_Part_{p_num}_{datetime.now().strftime('%Y%m%d')}.zip",
-                    mime="application/zip",
-                    key=f"dl_zip_orig_{p_num}",
-                    use_container_width=True
-                )
-            
-            with col_dl2:
-                st.markdown('<div class="btn-edit-pack">', unsafe_allow_html=True)
-                st.download_button(
-                    label=f"✨ Download All Custom Edited Slides (ZIP) - Part {p_num}",
-                    data=preview_info["zip"],
-                    file_name=f"RuangTeduh_CustomEdited_Part_{p_num}_{datetime.now().strftime('%Y%m%d')}.zip",
-                    mime="application/zip",
-                    key=f"dl_zip_edited_{p_num}",
-                    use_container_width=True
-                )
-                st.markdown('</div>', unsafe_allow_html=True)
+            st.download_button(
+                label=f"💾 Download 5 Slide HD (ZIP) Ter-Sync Edit - Part {p_num}",
+                data=preview_info["zip"],
+                file_name=f"RuangTeduh_Part_{p_num}_{datetime.now().strftime('%Y%m%d')}.zip",
+                mime="application/zip",
+                key=f"dl_zip_sync_{p_num}",
+                use_container_width=True
+            )
 
         st.markdown("<div style='margin-bottom: 24px;'></div>", unsafe_allow_html=True)
