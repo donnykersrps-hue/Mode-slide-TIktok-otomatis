@@ -87,7 +87,7 @@ def generate_5part_with_gemini(topic_name):
         return None
 
 # ==========================================
-# 3. CUSTOM CSS (DONGKER + KUNING EMAS + OUTDOOR VIEWPORT)
+# 3. CUSTOM CSS (MODERN RETRO CYBER GLOW: CYAN & MAGENTA GLOW)
 # ==========================================
 custom_css = """
 <style>
@@ -174,35 +174,36 @@ custom_css = """
     }
 
     div[data-testid="stExpander"] {
-        border: 1px solid rgba(234, 179, 8, 0.4) !important;
-        border-radius: 12px !important;
-        background: rgba(30, 41, 59, 0.7) !important;
-        box-shadow: 0 0 10px rgba(234, 179, 8, 0.15) !important;
+        border: 1px solid rgba(236, 72, 153, 0.5) !important;
+        border-radius: 14px !important;
+        background: rgba(30, 41, 59, 0.85) !important;
+        box-shadow: 0 0 15px rgba(236, 72, 153, 0.25) !important;
     }
 
-    /* DEEP OVERRIDE INPUT: DONGKER GELAP (#1e293b) & TEKS KUNING EMAS (#fef08a) */
+    /* MODERN RETRO DROPDOWN INPUT BOX (BIRU CYAN + MAGENTA NEON GLOW) */
+    .stSelectbox div[data-baseweb="select"] > div {
+        background-color: #1e293b !important;
+        color: #fef08a !important;
+        border: 2px solid #ec4899 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 0 12px rgba(236, 72, 153, 0.4), inset 0 0 8px rgba(34, 211, 238, 0.2) !important;
+        font-weight: 700 !important;
+    }
+
+    /* DEEP OVERRIDE INPUT TEXTAREA/TEXTINPUT (DONGKER GELAP + TEKS KUNING EMAS) */
     .stTextArea textarea, .stTextInput input, div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea {
         background-color: #1e293b !important;
         color: #fef08a !important;
         font-weight: 600 !important;
         border-radius: 10px !important;
+        border: 1px solid rgba(34, 211, 238, 0.4) !important;
         font-family: 'Plus Jakarta Sans', sans-serif !important;
     }
 
     div[data-baseweb="base-input"], div[data-baseweb="input"], div[data-baseweb="textarea"] {
         background-color: #1e293b !important;
-        border: 1px solid rgba(234, 179, 8, 0.4) !important;
+        border: 1px solid rgba(34, 211, 238, 0.4) !important;
         border-radius: 10px !important;
-    }
-
-    /* KARTU VIEWPORT LUAR SEJAJAR */
-    .outdoor-viewport-box {
-        background: #1e293b;
-        border: 2px solid rgba(56, 189, 248, 0.5);
-        border-radius: 18px;
-        padding: 16px;
-        box-shadow: 0 10px 30px rgba(56, 189, 248, 0.2);
-        margin-bottom: 20px;
     }
 
     .stButton>button, .stDownloadButton>button {
@@ -278,7 +279,7 @@ st.markdown("""
 <div class="header-box">
     <span class="brand-badge">🤖 Ruang Teduh AI Control Center</span>
     <h1 class="header-title">Dashboard Generator & Automation 5 Part</h1>
-    <p class="header-subtitle">Gemini AI Manager meracik naskah 5 Part → Outdoor Live Viewport Studio & Quick Download → Render Carousel HD</p>
+    <p class="header-subtitle">Gemini AI Manager meracik naskah 5 Part → Dynamic Dropdown Studio & Outdoor Viewport → Render Carousel HD</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -300,7 +301,7 @@ if btn_generate:
             st.success("✅ Manager AI Berhasil Meracik 5 Part Content Queue!")
 
 # ==========================================
-# 6. CONTENT QUEUE & OUTDOOR VIEWPORT WITH QUICK DOWNLOAD
+# 6. CONTENT QUEUE & DROPDOWN NASKAH STUDIO WITH OUTDOOR VIEWPORT
 # ==========================================
 if st.session_state.get("parts_data"):
     parts_data = st.session_state["parts_data"]
@@ -321,43 +322,53 @@ if st.session_state.get("parts_data"):
         </div>
         """, unsafe_allow_html=True)
 
-        # PEMBAGIAN KOLOM UTAMA HALAMAN: KIRI (EDITOR FORM) vs KANAN (OUTDOOR VIEWPORT LINGKARAN BIRU)
-        main_col_left, main_col_right = st.columns([1.6, 1])
+        # PEMBAGIAN KOLOM UTAMA HALAMAN: KIRI (DROPDOWN EDITOR FORM) vs KANAN (OUTDOOR LIVE VIEWPORT)
+        main_col_left, main_col_right = st.columns([3.6, 1])
 
         with main_col_left:
-            with st.expander(f"🛠️ Studio Editor Manual (Part {p_num})", expanded=True):
+            with st.expander(f"🛠️ Studio Editor Manual & Dropdown Studio (Part {p_num})", expanded=True):
                 st.markdown("**📝 Caption TikTok:**")
                 part['caption'] = st.text_area(f"Edit Caption Part {p_num}", value=part['caption'], key=f"cap_{p_num}", height=90)
                 
                 st.markdown("---")
-                st.markdown("### 🎨 Editor Tipografi Per Slide (Slide 1 - 5)")
+                st.markdown("### 🎛️ Selectbox Editor Naskah & Tipografi Slide")
                 
-                for s_idx, s in enumerate(part.get('slides', [])):
-                    st.markdown(f"#### 📌 {s['title']}")
-                    
-                    c_f1, c_f2 = st.columns(2)
-                    with c_f1:
-                        fh = st.slider(f"Font Header S{s_idx+1}", 40, 100, 76, key=f"fh_{p_num}_{s_idx}")
-                    with c_f2:
-                        fb = st.slider(f"Font Body S{s_idx+1}", 30, 90, 68 if s_idx != 2 else 52, key=f"fb_{p_num}_{s_idx}")
-                    
-                    fr = 44
-                    if s_idx == 2:
-                        fr = st.slider(f"Font Riwayat S{s_idx+1}", 25, 60, 44, key=f"fr_{p_num}_{s_idx}")
-                    
-                    s['font_setting'] = {
-                        "header": fh,
-                        "body": fb,
-                        "riwayat": fr
-                    }
+                # DROPDOWN PEMILIH SLIDE EDITOR (MODERN RETRO CYBER GLOW)
+                selected_edit_idx = st.selectbox(
+                    f"Pilih Slide yang Ingin Disunting (Part {p_num}):",
+                    options=[0, 1, 2, 3, 4],
+                    format_func=lambda x: f"Slide {x+1} - {part['slides'][x].get('header', 'Slide ' + str(x+1))}",
+                    key=f"edit_slide_select_{p_num}"
+                )
+                
+                s = part['slides'][selected_edit_idx]
+                s_idx = selected_edit_idx
+                
+                st.markdown(f"#### 📌 Menyesuaikan {s['title']}")
+                
+                # Slider Ukuran Font Slide Aktif
+                c_f1, c_f2 = st.columns(2)
+                with c_f1:
+                    fh = st.slider(f"Font Header S{s_idx+1}", 40, 100, 76, key=f"fh_{p_num}_{s_idx}")
+                with c_f2:
+                    fb = st.slider(f"Font Body S{s_idx+1}", 30, 90, 68 if s_idx != 2 else 52, key=f"fb_{p_num}_{s_idx}")
+                
+                fr = 44
+                if s_idx == 2:
+                    fr = st.slider(f"Font Riwayat S{s_idx+1}", 25, 60, 44, key=f"fr_{p_num}_{s_idx}")
+                
+                s['font_setting'] = {
+                    "header": fh,
+                    "body": fb,
+                    "riwayat": fr
+                }
 
-                    s['header'] = st.text_input(f"Header S{s_idx+1}", value=s.get('header', ''), key=f"h_{p_num}_{s_idx}")
-                    s['isi'] = st.text_area(f"Isi S{s_idx+1}", value=s.get('isi', ''), key=f"b_{p_num}_{s_idx}", height=80)
-                    
-                    if 'riwayat' in s or s_idx == 2:
-                        s['riwayat'] = st.text_input(f"Riwayat Hadits S{s_idx+1}", value=s.get('riwayat', ''), key=f"r_{p_num}_{s_idx}")
-
-                    st.markdown("<hr style='margin: 12px 0; border-color: rgba(234, 179, 8, 0.2);'>", unsafe_allow_html=True)
+                # Text Box Input Header & Isi
+                s['header'] = st.text_input(f"Header S{s_idx+1}", value=s.get('header', ''), key=f"h_{p_num}_{s_idx}")
+                s['isi'] = st.text_area(f"Isi S{s_idx+1}", value=s.get('isi', ''), key=f"b_{p_num}_{s_idx}", height=85)
+                
+                if 'riwayat' in s or s_idx == 2:
+                    s['riwayat'] = st.text_input(f"Riwayat Hadits S{s_idx+1}", value=s.get('riwayat', ''), key=f"r_{p_num}_{s_idx}")
 
             # TOMBOL UTAMA RENDER
             c_v, c_s = st.columns(2)
@@ -382,18 +393,11 @@ if st.session_state.get("parts_data"):
                         st.error(f"⚠️ Gagal merender carousel: {e}")
 
         with main_col_right:
-            # AREA KHUSUS LUAR VIEWPORT PRATINJAU LANGSUNG (SISI KANAN SEJAJAR CORETAN BIRU)
+            # AREA OUTDOOR LIVE VIEWPORT PRATINJAU SISI KANAN SEJAJAR
             st.markdown(f"#### 📱 Outdoor Live Viewport Studio (Part {p_num})")
             
-            # Pilihan slide mana yang ingin di-preview dan didownload instan
-            select_slide_idx = st.selectbox(
-                f"Pilih Slide Preview (Part {p_num}):", 
-                options=[0, 1, 2, 3, 4], 
-                format_func=lambda x: f"Slide {x+1} - {part['slides'][x].get('header', 'Slide ' + str(x+1))}",
-                key=f"select_prev_{p_num}"
-            )
-            
-            target_slide = part['slides'][select_slide_idx]
+            # Viewport Otomatis Mengikuti Slide yang Dipilih di Dropdown Kiri
+            target_slide = part['slides'][selected_edit_idx]
             
             try:
                 from render_engine import render_single_slide_image, fetch_bright_aesthetic_background
@@ -401,14 +405,14 @@ if st.session_state.get("parts_data"):
                 preview_bg = fetch_bright_aesthetic_background(pexels_key=PEXELS_KEY)
                 preview_img = render_single_slide_image(
                     preview_bg, target_slide, 
-                    is_slide_3=(select_slide_idx==2), 
-                    is_slide_5=(select_slide_idx==4)
+                    is_slide_3=(selected_edit_idx==2), 
+                    is_slide_5=(selected_edit_idx==4)
                 )
                 
-                # Tampilkan Gambar Live Pratinjau 100% Asli
+                # Tampilkan Gambar Live Pratinjau Visual 100% Asli
                 st.image(
                     preview_img, 
-                    caption=f"Visual Asli Slide {select_slide_idx+1} (HD Canvas Result)", 
+                    caption=f"Visual Asli Slide {selected_edit_idx+1} (HD Canvas Result)", 
                     use_container_width=True
                 )
                 
@@ -417,37 +421,10 @@ if st.session_state.get("parts_data"):
                 preview_img.save(img_byte_arr, format='JPEG', quality=98)
                 single_img_bytes = img_byte_arr.getvalue()
                 
-                # TOMBOL DOWNLOAD LANGSUNG PER SLIDE (.JPG)
+                # TOMBOL QUICK DOWNLOAD LANGSUNG (.JPG)
                 st.download_button(
-                    label=f"💾 Download Gambar Slide {select_slide_idx+1} (.jpg)",
+                    label=f"💾 Download Gambar Slide {selected_edit_idx+1} (.jpg)",
                     data=single_img_bytes,
-                    file_name=f"RuangTeduh_Part{p_num}_Slide{select_slide_idx+1}.jpg",
+                    file_name=f"RuangTeduh_Part{p_num}_Slide{selected_edit_idx+1}.jpg",
                     mime="image/jpeg",
-                    key=f"dl_single_{p_num}_{select_slide_idx}",
-                    use_container_width=True
-                )
-            except Exception as e_prev:
-                st.warning(f"Preview loading... ({e_prev})")
-
-        # SECTION GALERI HASIL RENDER FULL PACK 5 SLIDE (JIKA TOMBOL CAROUSEL DIKLIK)
-        if p_num in st.session_state.get("carousel_previews", {}):
-            preview_info = st.session_state["carousel_previews"][p_num]
-            st.markdown(f"#### 🎨 Galeri Lengkap Hasil Render Part {p_num}:")
-            
-            c1, c2, c3, c4, c5 = st.columns(5)
-            cols = [c1, c2, c3, c4, c5]
-            
-            for idx, img in enumerate(preview_info["images"]):
-                with cols[idx]:
-                    st.image(img, caption=f"Slide {idx+1}", use_container_width=True)
-            
-            st.download_button(
-                label=f"💾 Download 5 Slide HD (ZIP) - Part {p_num}",
-                data=preview_info["zip"],
-                file_name=f"RuangTeduh_Part_{p_num}_{datetime.now().strftime('%Y%m%d')}.zip",
-                mime="application/zip",
-                key=f"dl_zip_{p_num}",
-                use_container_width=True
-            )
-
-        st.markdown("<div style='margin-bottom: 24px;'></div>", unsafe_allow_html=True)
+                    key=f"dl
