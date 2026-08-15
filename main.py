@@ -7,7 +7,7 @@ from datetime import datetime
 import google.generativeai as genai
 
 # ==========================================
-# 1. KONFIGURASI HALAMAN
+# 1. KONFIGURASI HALAMAN & SECRETS
 # ==========================================
 st.set_page_config(
     page_title="Ruang Teduh - Auto Content Engine",
@@ -87,7 +87,7 @@ def generate_5part_with_gemini(topic_name):
         return None
 
 # ==========================================
-# 3. CUSTOM CSS
+# 3. CUSTOM CSS (WARNA DONGKER + TEKS KUNING EMAS)
 # ==========================================
 custom_css = """
 <style>
@@ -180,6 +180,25 @@ custom_css = """
         box-shadow: 0 0 10px rgba(234, 179, 8, 0.15) !important;
     }
 
+    /* KUSTOMISASI KOTAK INPUT EDITOR: DONGKER GELAP + TEKS KUNING EMAS */
+    div[data-baseweb="input"] > div, div[data-baseweb="textarea"] > div {
+        background-color: #1e293b !important;
+        border: 1px solid rgba(234, 179, 8, 0.4) !important;
+        border-radius: 10px !important;
+        color: #fef08a !important;
+    }
+
+    input, textarea {
+        color: #fef08a !important;
+        font-weight: 600 !important;
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+    }
+
+    input:focus, textarea:focus {
+        border-color: #38bdf8 !important;
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.4) !important;
+    }
+
     .stButton>button, .stDownloadButton>button {
         background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%) !important;
         color: #0f172a !important;
@@ -253,7 +272,7 @@ st.markdown("""
 <div class="header-box">
     <span class="brand-badge">🤖 Ruang Teduh AI Control Center</span>
     <h1 class="header-title">Dashboard Generator & Automation 5 Part</h1>
-    <p class="header-subtitle">Gemini AI Manager meracik naskah 5 Part → Studio Editor Manual → Render Carousel HD</p>
+    <p class="header-subtitle">Gemini AI Manager meracik naskah 5 Part → Studio Editor Manual Per Slide → Render Carousel HD</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -275,7 +294,7 @@ if btn_generate:
             st.success("✅ Manager AI Berhasil Meracik 5 Part Content Queue!")
 
 # ==========================================
-# 6. CONTENT QUEUE & MANUAL STUDIO EDITOR
+# 6. CONTENT QUEUE & MANUAL STUDIO EDITOR INDIVIDUAL SLIDE
 # ==========================================
 if st.session_state.get("parts_data"):
     parts_data = st.session_state["parts_data"]
@@ -299,39 +318,40 @@ if st.session_state.get("parts_data"):
         col_btn1, col_btn2, col_btn3 = st.columns([3.6, 1, 1])
 
         with col_btn1:
-            # STUDIO EDITOR MANUAL (EDIT TEKS & UKURAN FONT)
-            with st.expander(f"🛠️ Studio Editor Manual & Pratinjau Teks (Part {p_num})"):
+            # STUDIO EDITOR MANUAL & PENGATURAN PER SLIDE
+            with st.expander(f"🛠️ Studio Editor Manual & Setting Tipografi Slide (Part {p_num})"):
                 st.markdown("**📝 Caption TikTok:**")
-                part['caption'] = st.text_area(f"Edit Caption Part {p_num}", value=part['caption'], key=f"cap_{p_num}", height=100)
+                part['caption'] = st.text_area(f"Edit Caption Part {p_num}", value=part['caption'], key=f"cap_{p_num}", height=90)
                 
                 st.markdown("---")
-                st.markdown("### 🎨 Pengaturan Tipografi & Teks Per Slide")
-                
-                # Slider Ukuran Font Manual
-                col_f1, col_f2, col_f3 = st.columns(3)
-                with col_f1:
-                    font_header_size = st.slider(f"Font Header (Part {p_num})", 50, 100, 76, key=f"fh_{p_num}")
-                with col_f2:
-                    font_body_size = st.slider(f"Font Body Cyan (Part {p_num})", 35, 80, 68, key=f"fb_{p_num}")
-                with col_f3:
-                    font_riwayat_size = st.slider(f"Font Riwayat (Part {p_num})", 30, 60, 48, key=f"fr_{p_num}")
-                
-                part['font_sizes'] = {
-                    "header": font_header_size,
-                    "body": font_body_size,
-                    "riwayat": font_riwayat_size
-                }
-
-                st.markdown("---")
-                st.markdown("**✏️ Sunting Teks 5 Slide:**")
+                st.markdown("### 🎨 Pengaturan Teks & Ukuran Font Per Slide (Slide 1 - 5)")
                 
                 for s_idx, s in enumerate(part.get('slides', [])):
-                    st.markdown(f"##### 📌 {s['title']}")
-                    s['header'] = st.text_input(f"Header Slide {s_idx+1} (Part {p_num})", value=s.get('header', ''), key=f"h_{p_num}_{s_idx}")
-                    s['isi'] = st.text_area(f"Isi Slide {s_idx+1} (Part {p_num})", value=s.get('isi', ''), key=f"b_{p_num}_{s_idx}", height=70)
+                    st.markdown(f"#### 📌 {s['title']}")
+                    
+                    # Setting Font Khusus Slide Ini
+                    c_f1, c_f2, c_f3 = st.columns(3)
+                    with c_f1:
+                        fh = st.slider(f"Font Header Slide {s_idx+1}", 40, 100, 76, key=f"fh_{p_num}_{s_idx}")
+                    with c_f2:
+                        fb = st.slider(f"Font Body Slide {s_idx+1}", 30, 90, 68 if s_idx != 2 else 52, key=f"fb_{p_num}_{s_idx}")
+                    with c_f3:
+                        fr = st.slider(f"Font Riwayat Slide {s_idx+1}", 25, 60, 44, key=f"fr_{p_num}_{s_idx}") if s_idx == 2 else 0
+                    
+                    s['font_setting'] = {
+                        "header": fh,
+                        "body": fb,
+                        "riwayat": fr
+                    }
+
+                    # Input Teks Dongker + Teks Kuning Emas
+                    s['header'] = st.text_input(f"Header Slide {s_idx+1}", value=s.get('header', ''), key=f"h_{p_num}_{s_idx}")
+                    s['isi'] = st.text_area(f"Isi Slide {s_idx+1}", value=s.get('isi', ''), key=f"b_{p_num}_{s_idx}", height=75)
                     
                     if 'riwayat' in s or s_idx == 2:
                         s['riwayat'] = st.text_input(f"Riwayat Hadits (Slide {s_idx+1})", value=s.get('riwayat', ''), key=f"r_{p_num}_{s_idx}")
+
+                    st.markdown("<hr style='margin: 10px 0; border-color: rgba(234, 179, 8, 0.2);'>", unsafe_allow_html=True)
 
         with col_btn2:
             st.button(f"🎬 Render Video", key=f"btn_vid_{p_num}", use_container_width=True)
@@ -342,11 +362,9 @@ if st.session_state.get("parts_data"):
                     from render_engine import generate_carousel_pack
                     
                     with st.spinner(f"🎨 Merender 5 Gambar Carousel HD Part {p_num} via Render Engine..."):
-                        # Mengirimkan data slides & font_sizes yang sudah disunting manual
                         images, zip_data = generate_carousel_pack(
                             part.get('slides', []), 
-                            pexels_key=PEXELS_KEY,
-                            custom_font_sizes=part.get('font_sizes')
+                            pexels_key=PEXELS_KEY
                         )
                         st.session_state["carousel_previews"][p_num] = {
                             "images": images,
