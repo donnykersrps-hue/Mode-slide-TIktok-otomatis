@@ -87,7 +87,7 @@ def generate_5part_with_gemini(topic_name):
         return None
 
 # ==========================================
-# 3. CUSTOM CSS (WARNA DONGKER + TEKS KUNING EMAS)
+# 3. CUSTOM CSS (DEEP OVERRIDE: DONGKER + KUNING EMAS)
 # ==========================================
 custom_css = """
 <style>
@@ -180,23 +180,28 @@ custom_css = """
         box-shadow: 0 0 10px rgba(234, 179, 8, 0.15) !important;
     }
 
-    /* KUSTOMISASI KOTAK INPUT EDITOR: DONGKER GELAP + TEKS KUNING EMAS */
-    div[data-baseweb="input"] > div, div[data-baseweb="textarea"] > div {
+    /* DEEP CSS OVERRIDE: MEMAKSA SELURUH KOTAK TEXTBOX JADI NAVY DONGKER & KUNING EMAS */
+    .stTextArea textarea, .stTextInput input, div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea {
         background-color: #1e293b !important;
-        border: 1px solid rgba(234, 179, 8, 0.4) !important;
-        border-radius: 10px !important;
-        color: #fef08a !important;
-    }
-
-    input, textarea {
         color: #fef08a !important;
         font-weight: 600 !important;
+        border-radius: 10px !important;
         font-family: 'Plus Jakarta Sans', sans-serif !important;
     }
 
-    input:focus, textarea:focus {
-        border-color: #38bdf8 !important;
-        box-shadow: 0 0 10px rgba(56, 189, 248, 0.4) !important;
+    div[data-baseweb="base-input"], div[data-baseweb="input"], div[data-baseweb="textarea"] {
+        background-color: #1e293b !important;
+        border: 1px solid rgba(234, 179, 8, 0.4) !important;
+        border-radius: 10px !important;
+    }
+
+    /* KARTU VIEWPORT PREVIEW HP KHUSUS PER SLIDE */
+    .viewport-card {
+        background: #0f172a;
+        border: 1px solid rgba(56, 189, 248, 0.4);
+        border-radius: 14px;
+        padding: 14px;
+        box-shadow: 0 0 15px rgba(56, 189, 248, 0.15);
     }
 
     .stButton>button, .stDownloadButton>button {
@@ -272,7 +277,7 @@ st.markdown("""
 <div class="header-box">
     <span class="brand-badge">🤖 Ruang Teduh AI Control Center</span>
     <h1 class="header-title">Dashboard Generator & Automation 5 Part</h1>
-    <p class="header-subtitle">Gemini AI Manager meracik naskah 5 Part → Studio Editor Manual Per Slide → Render Carousel HD</p>
+    <p class="header-subtitle">Gemini AI Manager meracik naskah 5 Part → Studio Editor Manual & Viewport Per Slide → Render Carousel HD</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -294,7 +299,7 @@ if btn_generate:
             st.success("✅ Manager AI Berhasil Meracik 5 Part Content Queue!")
 
 # ==========================================
-# 6. CONTENT QUEUE & MANUAL STUDIO EDITOR INDIVIDUAL SLIDE
+# 6. CONTENT QUEUE & SIDE-BY-SIDE STUDIO EDITOR WITH LIVE VIEWPORT
 # ==========================================
 if st.session_state.get("parts_data"):
     parts_data = st.session_state["parts_data"]
@@ -318,40 +323,58 @@ if st.session_state.get("parts_data"):
         col_btn1, col_btn2, col_btn3 = st.columns([3.6, 1, 1])
 
         with col_btn1:
-            # STUDIO EDITOR MANUAL & PENGATURAN PER SLIDE
-            with st.expander(f"🛠️ Studio Editor Manual & Setting Tipografi Slide (Part {p_num})"):
+            # STUDIO EDITOR MANUAL SIMETRIS DENGAN LIVE VIEWPORT PER SLIDE
+            with st.expander(f"🛠️ Studio Editor Manual & Live Viewport Studio (Part {p_num})"):
                 st.markdown("**📝 Caption TikTok:**")
                 part['caption'] = st.text_area(f"Edit Caption Part {p_num}", value=part['caption'], key=f"cap_{p_num}", height=90)
                 
                 st.markdown("---")
-                st.markdown("### 🎨 Pengaturan Teks & Ukuran Font Per Slide (Slide 1 - 5)")
+                st.markdown("### 🎨 Editor Presisi & Viewport Pratinjau Per Slide (Slide 1 - 5)")
                 
                 for s_idx, s in enumerate(part.get('slides', [])):
                     st.markdown(f"#### 📌 {s['title']}")
                     
-                    # Setting Font Khusus Slide Ini
-                    c_f1, c_f2, c_f3 = st.columns(3)
-                    with c_f1:
-                        fh = st.slider(f"Font Header Slide {s_idx+1}", 40, 100, 76, key=f"fh_{p_num}_{s_idx}")
-                    with c_f2:
-                        fb = st.slider(f"Font Body Slide {s_idx+1}", 30, 90, 68 if s_idx != 2 else 52, key=f"fb_{p_num}_{s_idx}")
-                    with c_f3:
-                        fr = st.slider(f"Font Riwayat Slide {s_idx+1}", 25, 60, 44, key=f"fr_{p_num}_{s_idx}") if s_idx == 2 else 0
+                    # TATALETAK SIDE-BY-SIDE: KIRI (FORM EDITOR) & KANAN (LIVE VIEWPORT HP)
+                    col_editor, col_viewport = st.columns([1.4, 1])
                     
-                    s['font_setting'] = {
-                        "header": fh,
-                        "body": fb,
-                        "riwayat": fr
-                    }
+                    with col_editor:
+                        # Slider Font Khusus Slide Ini
+                        c_f1, c_f2 = st.columns(2)
+                        with c_f1:
+                            fh = st.slider(f"Font Header S{s_idx+1}", 40, 100, 76, key=f"fh_{p_num}_{s_idx}")
+                        with c_f2:
+                            fb = st.slider(f"Font Body S{s_idx+1}", 30, 90, 68 if s_idx != 2 else 52, key=f"fb_{p_num}_{s_idx}")
+                        
+                        fr = 44
+                        if s_idx == 2:
+                            fr = st.slider(f"Font Riwayat S{s_idx+1}", 25, 60, 44, key=f"fr_{p_num}_{s_idx}")
+                        
+                        s['font_setting'] = {
+                            "header": fh,
+                            "body": fb,
+                            "riwayat": fr
+                        }
 
-                    # Input Teks Dongker + Teks Kuning Emas
-                    s['header'] = st.text_input(f"Header Slide {s_idx+1}", value=s.get('header', ''), key=f"h_{p_num}_{s_idx}")
-                    s['isi'] = st.text_area(f"Isi Slide {s_idx+1}", value=s.get('isi', ''), key=f"b_{p_num}_{s_idx}", height=75)
-                    
-                    if 'riwayat' in s or s_idx == 2:
-                        s['riwayat'] = st.text_input(f"Riwayat Hadits (Slide {s_idx+1})", value=s.get('riwayat', ''), key=f"r_{p_num}_{s_idx}")
+                        # Text Box Editor (Dongker + Kuning Emas)
+                        s['header'] = st.text_input(f"Header S{s_idx+1}", value=s.get('header', ''), key=f"h_{p_num}_{s_idx}")
+                        s['isi'] = st.text_area(f"Isi S{s_idx+1}", value=s.get('isi', ''), key=f"b_{p_num}_{s_idx}", height=80)
+                        
+                        if 'riwayat' in s or s_idx == 2:
+                            s['riwayat'] = st.text_input(f"Riwayat Hadits S{s_idx+1}", value=s.get('riwayat', ''), key=f"r_{p_num}_{s_idx}")
 
-                    st.markdown("<hr style='margin: 10px 0; border-color: rgba(234, 179, 8, 0.2);'>", unsafe_allow_html=True)
+                    with col_viewport:
+                        # KARTU VIEWPORT SIDE-BY-SIDE DI SISI KANAN
+                        riwayat_html = f"<div style='color:#fef08a; font-size:11px; margin-top:8px;'><b>Riwayat:</b> {s.get('riwayat', '')}</div>" if s_idx == 2 else ""
+                        st.markdown(f"""
+                        <div class="viewport-card">
+                            <div style="color:#38bdf8; font-size:11px; font-weight:800; margin-bottom:4px;">📱 VIEWPORT PREVIEW SLIDE {s_idx+1}</div>
+                            <div style="color:#eab308; font-weight:800; font-size:13px; line-height:1.2;">{s.get('header', '')}</div>
+                            <div style="color:#22d3ee; font-size:11px; font-style:italic; margin-top:6px; line-height:1.3;">"{s.get('isi', '')}"</div>
+                            {riwayat_html}
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                    st.markdown("<hr style='margin: 12px 0; border-color: rgba(234, 179, 8, 0.2);'>", unsafe_allow_html=True)
 
         with col_btn2:
             st.button(f"🎬 Render Video", key=f"btn_vid_{p_num}", use_container_width=True)
