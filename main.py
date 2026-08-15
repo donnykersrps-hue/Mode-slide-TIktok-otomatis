@@ -7,7 +7,7 @@ from datetime import datetime
 import google.generativeai as genai
 
 # ==========================================
-# 1. KONFIGURASI HALAMAN & SECRETS
+# 1. KONFIGURASI HALAMAN
 # ==========================================
 st.set_page_config(
     page_title="Ruang Teduh - Auto Content Engine",
@@ -26,10 +26,6 @@ if GEMINI_KEY:
 # 2. GEMINI AI BRAIN ENGINE (MANAGER KONTEN)
 # ==========================================
 def generate_5part_with_gemini(topic_name):
-    """
-    Manager AI Engine: Meminta Gemini meracik naskah 5 Part terstruktur
-    dalam format JSON murni yang siap disajikan ke Content Queue GUI.
-    """
     if not GEMINI_KEY:
         st.error("❌ GEMINI_API_KEY tidak ditemukan di Streamlit Secrets.")
         return None
@@ -91,7 +87,7 @@ def generate_5part_with_gemini(topic_name):
         return None
 
 # ==========================================
-# 3. INJECT CUSTOM CSS INTERAKTIF (GOLD -> CYAN)
+# 3. CUSTOM CSS
 # ==========================================
 custom_css = """
 <style>
@@ -177,39 +173,11 @@ custom_css = """
         display: inline-block;
     }
 
-    .slide-item {
-        background: rgba(15, 23, 42, 0.6);
-        border-left: 4px solid #eab308;
-        border-radius: 0 10px 10px 0;
-        padding: 10px 14px;
-        margin-bottom: 8px;
-    }
-
     div[data-testid="stExpander"] {
         border: 1px solid rgba(234, 179, 8, 0.4) !important;
         border-radius: 12px !important;
         background: rgba(30, 41, 59, 0.7) !important;
         box-shadow: 0 0 10px rgba(234, 179, 8, 0.15) !important;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    }
-
-    div[data-testid="stExpander"] summary p {
-        color: #fef08a !important;
-        font-weight: 700 !important;
-        font-size: 14px !important;
-        transition: color 0.3s ease !important;
-    }
-
-    div[data-testid="stExpander"]:hover {
-        border-color: #22d3ee !important;
-        background: rgba(15, 23, 42, 0.9) !important;
-        box-shadow: 0 0 20px rgba(6, 182, 212, 0.4), inset 0 0 10px rgba(6, 182, 212, 0.2) !important;
-        transform: translateY(-2px);
-    }
-
-    div[data-testid="stExpander"]:hover summary p {
-        color: #22d3ee !important;
-        text-shadow: 0 0 8px rgba(34, 211, 238, 0.6) !important;
     }
 
     .stButton>button, .stDownloadButton>button {
@@ -220,15 +188,6 @@ custom_css = """
         border-radius: 12px !important;
         padding: 10px 18px !important;
         box-shadow: 0 4px 15px rgba(234, 179, 8, 0.3) !important;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    }
-
-    .stButton>button:hover, .stDownloadButton>button:hover {
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%) !important;
-        color: #ffffff !important;
-        border-color: #67e8f9 !important;
-        box-shadow: 0 0 25px rgba(6, 182, 212, 0.65), 0 0 10px rgba(103, 232, 249, 0.8) !important;
-        transform: translateY(-2px) scale(1.02);
     }
 </style>
 """
@@ -268,7 +227,7 @@ top_bar_html = """
             <span class="clock-time" id="digital-clock">00:00:00 WIB</span>
             <span class="clock-date" id="digital-date">Loading...</span>
         </div>
-        <div class="status-badge">⚡ Ruang Teduh</div>
+        <div class="status-badge">⚡ SUPER CREATOR: ACTIVE</div>
     </div>
     <script>
         function updateClock() {
@@ -294,7 +253,7 @@ st.markdown("""
 <div class="header-box">
     <span class="brand-badge">🤖 Ruang Teduh AI Control Center</span>
     <h1 class="header-title">Dashboard Generator & Automation 5 Part</h1>
-    <p class="header-subtitle">Gemini AI Manager meracik naskah 5 Part → Pratinjau Visual & Render Carousel dalam sekali klik</p>
+    <p class="header-subtitle">Gemini AI Manager meracik naskah 5 Part → Studio Editor Manual → Render Carousel HD</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -316,7 +275,7 @@ if btn_generate:
             st.success("✅ Manager AI Berhasil Meracik 5 Part Content Queue!")
 
 # ==========================================
-# 6. CONTENT QUEUE & RENDER CAROUSEL CONNECTOR
+# 6. CONTENT QUEUE & MANUAL STUDIO EDITOR
 # ==========================================
 if st.session_state.get("parts_data"):
     parts_data = st.session_state["parts_data"]
@@ -325,7 +284,7 @@ if st.session_state.get("parts_data"):
     st.markdown("---")
     st.markdown(f"### 🌿 CONTENT QUEUE TERATUR: `{active_topic}`")
     
-    for part in parts_data:
+    for idx_part, part in enumerate(parts_data):
         p_num = part['part_num']
         st.markdown(f"""
         <div class="part-card-compact">
@@ -340,20 +299,39 @@ if st.session_state.get("parts_data"):
         col_btn1, col_btn2, col_btn3 = st.columns([3.6, 1, 1])
 
         with col_btn1:
-            with st.expander(f"👁️ Pratinjau Teks & Slide (Part {p_num})"):
+            # STUDIO EDITOR MANUAL (EDIT TEKS & UKURAN FONT)
+            with st.expander(f"🛠️ Studio Editor Manual & Pratinjau Teks (Part {p_num})"):
                 st.markdown("**📝 Caption TikTok:**")
-                st.code(part['caption'], language="text")
-                st.markdown("**🎨 Rincian 5 Slide:**")
-                for s in part.get('slides', []):
-                    riwayat = f"<br><b>Riwayat:</b> {s['riwayat']}" if 'riwayat' in s else ""
-                    cta = f"<br><b>CTA:</b> {s['cta']}" if 'cta' in s else ""
-                    st.markdown(f"""
-                    <div class="slide-item">
-                        <div style="color: #fef08a; font-weight:700;">{s['title']}</div>
-                        <div><b>Header:</b> {s['header']}</div>
-                        <div><b>Isi:</b> {s['isi']}{riwayat}{cta}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
+                part['caption'] = st.text_area(f"Edit Caption Part {p_num}", value=part['caption'], key=f"cap_{p_num}", height=100)
+                
+                st.markdown("---")
+                st.markdown("### 🎨 Pengaturan Tipografi & Teks Per Slide")
+                
+                # Slider Ukuran Font Manual
+                col_f1, col_f2, col_f3 = st.columns(3)
+                with col_f1:
+                    font_header_size = st.slider(f"Font Header (Part {p_num})", 50, 100, 76, key=f"fh_{p_num}")
+                with col_f2:
+                    font_body_size = st.slider(f"Font Body Cyan (Part {p_num})", 35, 80, 68, key=f"fb_{p_num}")
+                with col_f3:
+                    font_riwayat_size = st.slider(f"Font Riwayat (Part {p_num})", 30, 60, 48, key=f"fr_{p_num}")
+                
+                part['font_sizes'] = {
+                    "header": font_header_size,
+                    "body": font_body_size,
+                    "riwayat": font_riwayat_size
+                }
+
+                st.markdown("---")
+                st.markdown("**✏️ Sunting Teks 5 Slide:**")
+                
+                for s_idx, s in enumerate(part.get('slides', [])):
+                    st.markdown(f"##### 📌 {s['title']}")
+                    s['header'] = st.text_input(f"Header Slide {s_idx+1} (Part {p_num})", value=s.get('header', ''), key=f"h_{p_num}_{s_idx}")
+                    s['isi'] = st.text_area(f"Isi Slide {s_idx+1} (Part {p_num})", value=s.get('isi', ''), key=f"b_{p_num}_{s_idx}", height=70)
+                    
+                    if 'riwayat' in s or s_idx == 2:
+                        s['riwayat'] = st.text_input(f"Riwayat Hadits (Slide {s_idx+1})", value=s.get('riwayat', ''), key=f"r_{p_num}_{s_idx}")
 
         with col_btn2:
             st.button(f"🎬 Render Video", key=f"btn_vid_{p_num}", use_container_width=True)
@@ -364,7 +342,12 @@ if st.session_state.get("parts_data"):
                     from render_engine import generate_carousel_pack
                     
                     with st.spinner(f"🎨 Merender 5 Gambar Carousel HD Part {p_num} via Render Engine..."):
-                        images, zip_data = generate_carousel_pack(part.get('slides', []), pexels_key=PEXELS_KEY)
+                        # Mengirimkan data slides & font_sizes yang sudah disunting manual
+                        images, zip_data = generate_carousel_pack(
+                            part.get('slides', []), 
+                            pexels_key=PEXELS_KEY,
+                            custom_font_sizes=part.get('font_sizes')
+                        )
                         st.session_state["carousel_previews"][p_num] = {
                             "images": images,
                             "zip": zip_data
