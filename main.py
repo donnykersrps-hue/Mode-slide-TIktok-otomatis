@@ -87,7 +87,7 @@ def generate_5part_with_gemini(topic_name):
         return None
 
 # ==========================================
-# 3. CUSTOM CSS (DEEP OVERRIDE: DONGKER + KUNING EMAS)
+# 3. CUSTOM CSS (DONGKER + KUNING EMAS + OUTDOOR VIEWPORT)
 # ==========================================
 custom_css = """
 <style>
@@ -195,6 +195,16 @@ custom_css = """
         border-radius: 10px !important;
     }
 
+    /* KARTU VIEWPORT LUAR SEJAJAR */
+    .outdoor-viewport-box {
+        background: #1e293b;
+        border: 2px solid rgba(56, 189, 248, 0.5);
+        border-radius: 18px;
+        padding: 16px;
+        box-shadow: 0 10px 30px rgba(56, 189, 248, 0.2);
+        margin-bottom: 20px;
+    }
+
     .stButton>button, .stDownloadButton>button {
         background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%) !important;
         color: #0f172a !important;
@@ -268,7 +278,7 @@ st.markdown("""
 <div class="header-box">
     <span class="brand-badge">🤖 Ruang Teduh AI Control Center</span>
     <h1 class="header-title">Dashboard Generator & Automation 5 Part</h1>
-    <p class="header-subtitle">Gemini AI Manager meracik naskah 5 Part → Dynamic Live Viewport Studio Per Slide → Render Carousel HD</p>
+    <p class="header-subtitle">Gemini AI Manager meracik naskah 5 Part → Outdoor Live Viewport Studio & Quick Download → Render Carousel HD</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -290,7 +300,7 @@ if btn_generate:
             st.success("✅ Manager AI Berhasil Meracik 5 Part Content Queue!")
 
 # ==========================================
-# 6. CONTENT QUEUE & LIVE INTERACTIVE VIEWPORT PER SLIDE
+# 6. CONTENT QUEUE & OUTDOOR VIEWPORT WITH QUICK DOWNLOAD
 # ==========================================
 if st.session_state.get("parts_data"):
     parts_data = st.session_state["parts_data"]
@@ -311,97 +321,118 @@ if st.session_state.get("parts_data"):
         </div>
         """, unsafe_allow_html=True)
 
-        col_btn1, col_btn2, col_btn3 = st.columns([3.6, 1, 1])
+        # PEMBAGIAN KOLOM UTAMA HALAMAN: KIRI (EDITOR FORM) vs KANAN (OUTDOOR VIEWPORT LINGKARAN BIRU)
+        main_col_left, main_col_right = st.columns([1.6, 1])
 
-        with col_btn1:
-            with st.expander(f"🛠️ Studio Editor Manual & Live Viewport Studio (Part {p_num})"):
+        with main_col_left:
+            with st.expander(f"🛠️ Studio Editor Manual (Part {p_num})", expanded=True):
                 st.markdown("**📝 Caption TikTok:**")
                 part['caption'] = st.text_area(f"Edit Caption Part {p_num}", value=part['caption'], key=f"cap_{p_num}", height=90)
                 
                 st.markdown("---")
-                st.markdown("### 🎨 Editor Presisi & Interactive Live Viewport Per Slide (Slide 1 - 5)")
+                st.markdown("### 🎨 Editor Tipografi Per Slide (Slide 1 - 5)")
                 
                 for s_idx, s in enumerate(part.get('slides', [])):
                     st.markdown(f"#### 📌 {s['title']}")
                     
-                    # SIDE-BY-SIDE LAYOUT: FORM EDITOR (KIRI) vs LIVE CANVAS VIEWPORT (KANAN)
-                    col_editor, col_viewport = st.columns([1.3, 1])
+                    c_f1, c_f2 = st.columns(2)
+                    with c_f1:
+                        fh = st.slider(f"Font Header S{s_idx+1}", 40, 100, 76, key=f"fh_{p_num}_{s_idx}")
+                    with c_f2:
+                        fb = st.slider(f"Font Body S{s_idx+1}", 30, 90, 68 if s_idx != 2 else 52, key=f"fb_{p_num}_{s_idx}")
                     
-                    with col_editor:
-                        # Slider Font Khusus Slide Ini
-                        c_f1, c_f2 = st.columns(2)
-                        with c_f1:
-                            fh = st.slider(f"Font Header S{s_idx+1}", 40, 100, 76, key=f"fh_{p_num}_{s_idx}")
-                        with c_f2:
-                            fb = st.slider(f"Font Body S{s_idx+1}", 30, 90, 68 if s_idx != 2 else 52, key=f"fb_{p_num}_{s_idx}")
-                        
-                        fr = 44
-                        if s_idx == 2:
-                            fr = st.slider(f"Font Riwayat S{s_idx+1}", 25, 60, 44, key=f"fr_{p_num}_{s_idx}")
-                        
-                        s['font_setting'] = {
-                            "header": fh,
-                            "body": fb,
-                            "riwayat": fr
-                        }
+                    fr = 44
+                    if s_idx == 2:
+                        fr = st.slider(f"Font Riwayat S{s_idx+1}", 25, 60, 44, key=f"fr_{p_num}_{s_idx}")
+                    
+                    s['font_setting'] = {
+                        "header": fh,
+                        "body": fb,
+                        "riwayat": fr
+                    }
 
-                        # Text Box Editor (Dongker + Kuning Emas)
-                        s['header'] = st.text_input(f"Header S{s_idx+1}", value=s.get('header', ''), key=f"h_{p_num}_{s_idx}")
-                        s['isi'] = st.text_area(f"Isi S{s_idx+1}", value=s.get('isi', ''), key=f"b_{p_num}_{s_idx}", height=80)
-                        
-                        if 'riwayat' in s or s_idx == 2:
-                            s['riwayat'] = st.text_input(f"Riwayat Hadits S{s_idx+1}", value=s.get('riwayat', ''), key=f"r_{p_num}_{s_idx}")
-
-                    with col_viewport:
-                        # RENDER INSTAN PREVIEW VISUAL 100% ASLI (PILLOW CANVAS ENGINE)
-                        try:
-                            from render_engine import render_single_slide_image, fetch_bright_aesthetic_background
-                            
-                            # Cache atau fetch background cepat untuk preview live
-                            preview_bg = fetch_bright_aesthetic_background(pexels_key=PEXELS_KEY)
-                            preview_img = render_single_slide_image(
-                                preview_bg, s, 
-                                is_slide_3=(s_idx==2), 
-                                is_slide_5=(s_idx==4)
-                            )
-                            
-                            st.image(
-                                preview_img, 
-                                caption=f"📱 Live Viewport Result (Slide {s_idx+1})", 
-                                use_container_width=True
-                            )
-                        except Exception as e_prev:
-                            st.warning(f"Preview loading: {e_prev}")
+                    s['header'] = st.text_input(f"Header S{s_idx+1}", value=s.get('header', ''), key=f"h_{p_num}_{s_idx}")
+                    s['isi'] = st.text_area(f"Isi S{s_idx+1}", value=s.get('isi', ''), key=f"b_{p_num}_{s_idx}", height=80)
+                    
+                    if 'riwayat' in s or s_idx == 2:
+                        s['riwayat'] = st.text_input(f"Riwayat Hadits S{s_idx+1}", value=s.get('riwayat', ''), key=f"r_{p_num}_{s_idx}")
 
                     st.markdown("<hr style='margin: 12px 0; border-color: rgba(234, 179, 8, 0.2);'>", unsafe_allow_html=True)
 
-        with col_btn2:
-            st.button(f"🎬 Render Video", key=f"btn_vid_{p_num}", use_container_width=True)
+            # TOMBOL UTAMA RENDER
+            c_v, c_s = st.columns(2)
+            with c_v:
+                st.button(f"🎬 Render Video Part {p_num}", key=f"btn_vid_{p_num}", use_container_width=True)
+            with c_s:
+                if st.button(f"📸 Render Full Carousel (ZIP) Part {p_num}", key=f"btn_slide_{p_num}", use_container_width=True):
+                    try:
+                        from render_engine import generate_carousel_pack
+                        
+                        with st.spinner(f"🎨 Merender 5 Gambar Carousel HD Part {p_num}..."):
+                            images, zip_data = generate_carousel_pack(
+                                part.get('slides', []), 
+                                pexels_key=PEXELS_KEY
+                            )
+                            st.session_state["carousel_previews"][p_num] = {
+                                "images": images,
+                                "zip": zip_data
+                            }
+                        st.success(f"✅ Render Carousel Part {p_num} Selesai!")
+                    except Exception as e:
+                        st.error(f"⚠️ Gagal merender carousel: {e}")
 
-        with col_btn3:
-            if st.button(f"📸 Render Carousel", key=f"btn_slide_{p_num}", use_container_width=True):
-                try:
-                    from render_engine import generate_carousel_pack
-                    
-                    with st.spinner(f"🎨 Merender 5 Gambar Carousel HD Part {p_num} via Render Engine..."):
-                        images, zip_data = generate_carousel_pack(
-                            part.get('slides', []), 
-                            pexels_key=PEXELS_KEY
-                        )
-                        st.session_state["carousel_previews"][p_num] = {
-                            "images": images,
-                            "zip": zip_data
-                        }
-                    st.success(f"✅ Render Carousel Part {p_num} Selesai!")
-                except ImportError:
-                    st.error("⚠️ File 'render_engine.py' belum dikonfigurasi di repositori.")
-                except Exception as e:
-                    st.error(f"⚠️ Gagal merender carousel: {e}")
+        with main_col_right:
+            # AREA KHUSUS LUAR VIEWPORT PRATINJAU LANGSUNG (SISI KANAN SEJAJAR CORETAN BIRU)
+            st.markdown(f"#### 📱 Outdoor Live Viewport Studio (Part {p_num})")
+            
+            # Pilihan slide mana yang ingin di-preview dan didownload instan
+            select_slide_idx = st.selectbox(
+                f"Pilih Slide Preview (Part {p_num}):", 
+                options=[0, 1, 2, 3, 4], 
+                format_func=lambda x: f"Slide {x+1} - {part['slides'][x].get('header', 'Slide ' + str(x+1))}",
+                key=f"select_prev_{p_num}"
+            )
+            
+            target_slide = part['slides'][select_slide_idx]
+            
+            try:
+                from render_engine import render_single_slide_image, fetch_bright_aesthetic_background
+                
+                preview_bg = fetch_bright_aesthetic_background(pexels_key=PEXELS_KEY)
+                preview_img = render_single_slide_image(
+                    preview_bg, target_slide, 
+                    is_slide_3=(select_slide_idx==2), 
+                    is_slide_5=(select_slide_idx==4)
+                )
+                
+                # Tampilkan Gambar Live Pratinjau 100% Asli
+                st.image(
+                    preview_img, 
+                    caption=f"Visual Asli Slide {select_slide_idx+1} (HD Canvas Result)", 
+                    use_container_width=True
+                )
+                
+                # Convert Image Ke Bytes Untuk Download Instan Single File
+                img_byte_arr = io.BytesIO()
+                preview_img.save(img_byte_arr, format='JPEG', quality=98)
+                single_img_bytes = img_byte_arr.getvalue()
+                
+                # TOMBOL DOWNLOAD LANGSUNG PER SLIDE (.JPG)
+                st.download_button(
+                    label=f"💾 Download Gambar Slide {select_slide_idx+1} (.jpg)",
+                    data=single_img_bytes,
+                    file_name=f"RuangTeduh_Part{p_num}_Slide{select_slide_idx+1}.jpg",
+                    mime="image/jpeg",
+                    key=f"dl_single_{p_num}_{select_slide_idx}",
+                    use_container_width=True
+                )
+            except Exception as e_prev:
+                st.warning(f"Preview loading... ({e_prev})")
 
-        # SECTION GALERI PRATINJAU VISUAL CAROUSEL & DOWNLOAD ZIP
+        # SECTION GALERI HASIL RENDER FULL PACK 5 SLIDE (JIKA TOMBOL CAROUSEL DIKLIK)
         if p_num in st.session_state.get("carousel_previews", {}):
             preview_info = st.session_state["carousel_previews"][p_num]
-            st.markdown(f"#### 🎨 Pratinjau Visual Hasil Render Part {p_num}:")
+            st.markdown(f"#### 🎨 Galeri Lengkap Hasil Render Part {p_num}:")
             
             c1, c2, c3, c4, c5 = st.columns(5)
             cols = [c1, c2, c3, c4, c5]
@@ -419,4 +450,4 @@ if st.session_state.get("parts_data"):
                 use_container_width=True
             )
 
-        st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='margin-bottom: 24px;'></div>", unsafe_allow_html=True)
