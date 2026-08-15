@@ -421,10 +421,37 @@ if st.session_state.get("parts_data"):
                 preview_img.save(img_byte_arr, format='JPEG', quality=98)
                 single_img_bytes = img_byte_arr.getvalue()
                 
-                # TOMBOL QUICK DOWNLOAD LANGSUNG (.JPG)
+                # TOMBOL QUICK DOWNLOAD LANGSUNG (.JPG) - TERFUNGSI LENGKAP & TIDAK TERPOTONG
                 st.download_button(
                     label=f"💾 Download Gambar Slide {selected_edit_idx+1} (.jpg)",
                     data=single_img_bytes,
                     file_name=f"RuangTeduh_Part{p_num}_Slide{selected_edit_idx+1}.jpg",
                     mime="image/jpeg",
-                    key=f"dl
+                    key=f"dl_single_{p_num}_{selected_edit_idx}",
+                    use_container_width=True
+                )
+            except Exception as e_prev:
+                st.warning(f"Preview loading... ({e_prev})")
+
+        # SECTION GALERI HASIL RENDER FULL PACK 5 SLIDE (JIKA TOMBOL CAROUSEL DIKLIK)
+        if p_num in st.session_state.get("carousel_previews", {}):
+            preview_info = st.session_state["carousel_previews"][p_num]
+            st.markdown(f"#### 🎨 Galeri Lengkap Hasil Render Part {p_num}:")
+            
+            c1, c2, c3, c4, c5 = st.columns(5)
+            cols = [c1, c2, c3, c4, c5]
+            
+            for idx, img in enumerate(preview_info["images"]):
+                with cols[idx]:
+                    st.image(img, caption=f"Slide {idx+1}", use_container_width=True)
+            
+            st.download_button(
+                label=f"💾 Download 5 Slide HD (ZIP) - Part {p_num}",
+                data=preview_info["zip"],
+                file_name=f"RuangTeduh_Part_{p_num}_{datetime.now().strftime('%Y%m%d')}.zip",
+                mime="application/zip",
+                key=f"dl_zip_{p_num}",
+                use_container_width=True
+            )
+
+        st.markdown("<div style='margin-bottom: 24px;'></div>", unsafe_allow_html=True)
