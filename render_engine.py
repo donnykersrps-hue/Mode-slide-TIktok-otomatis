@@ -117,7 +117,7 @@ def wrap_text_simetris(text, font, max_width, draw):
             bbox = draw.textbbox((0, 0), test_line, font=font)
             w = bbox[2] - bbox[0]
         except Exception:
-            w = len(test_line) * 22
+            w = len(test_line) * 24
             
         if w <= max_width:
             current_line.append(word)
@@ -131,8 +131,8 @@ def wrap_text_simetris(text, font, max_width, draw):
 
 def render_single_slide_image(bg_image, slide_data, is_slide_3=False, is_slide_5=False):
     """
-    Core Canvas Renderer Perfeksionis dengan SMART DYNAMIC AUTO-SCALER:
-    Mencegah teks terpotong di bagian bawah secara otomatis.
+    Core Canvas Renderer Perfeksionis dengan UKURAN FONT CYAN JUMBO
+    Ramah untuk audiens dewasa & orang tua.
     """
     canvas = bg_image.copy()
     
@@ -148,23 +148,23 @@ def render_single_slide_image(bg_image, slide_data, is_slide_3=False, is_slide_5
     raw_body = slide_data.get("isi", "")
     body_text = clean_text_from_symbols(raw_body)
     
-    # AUTO-SCALER PRESISI UNTUK SLIDE 3 & TEKS PANJANG
+    # AUTO-SCALER DENGAN FONT JUMBO UNTUK BACAAN ORANG TUA
     if is_slide_3 or len(body_text) > 100:
-        size_header = 64
-        size_body = 42
-        size_riwayat = 38
-        y_start_header = 340
-        y_start_body = 760
-        line_spacing_header = 80
-        line_spacing_body = 60
+        size_header = 70
+        size_body = 52       # Ditingkatkan dari 42px ke 52px
+        size_riwayat = 42
+        y_start_header = 320
+        y_start_body = 720
+        line_spacing_header = 85
+        line_spacing_body = 72
     else:
-        size_header = 76
-        size_body = 56
-        size_riwayat = 46
-        y_start_header = 420
-        y_start_body = 980
-        line_spacing_header = 95
-        line_spacing_body = 78
+        size_header = 80
+        size_body = 68       # Ditingkatkan dari 56px ke 68px (SANGAT JELAS)
+        size_riwayat = 48
+        y_start_header = 380
+        y_start_body = 920
+        line_spacing_header = 100
+        line_spacing_body = 90
 
     font_header = load_robust_large_font(size=size_header)
     font_body = load_robust_large_font(size=size_body)
@@ -178,34 +178,33 @@ def render_single_slide_image(bg_image, slide_data, is_slide_3=False, is_slide_5
         draw_perfeksionis_heavy_shadow_text(draw, (540, y_start_header), line, font_header, font_color=header_color, radius=14)
         y_start_header += line_spacing_header
 
-    # 2. RENDER BODY TEXT (CENTER AREA) - Cyan Bright
-    body_color = (34, 211, 238) # Cyan Bright
-    body_lines = wrap_text_simetris(body_text, font_body, 880, draw)
+    # 2. RENDER BODY TEXT (CENTER AREA) - Cyan Bright JUMBO
+    body_color = (34, 211, 238) # Cyan Bright (#22d3ee)
+    body_lines = wrap_text_simetris(body_text, font_body, 900, draw)
     
     for line in body_lines:
-        draw_perfeksionis_heavy_shadow_text(draw, (540, y_start_body), line, font_body, font_color=body_color, radius=12)
+        draw_perfeksionis_heavy_shadow_text(draw, (540, y_start_body), line, font_body, font_color=body_color, radius=14)
         y_start_body += line_spacing_body
 
-    # 3. RENDER RIWAYAT HADITS SHAHIH (KHUSUS SLIDE 3 - AMAN & TINGGI)
+    # 3. RENDER RIWAYAT HADITS SHAHIH (KHUSUS SLIDE 3)
     if is_slide_3 and "riwayat" in slide_data:
         raw_riwayat = slide_data['riwayat']
         clean_riwayat = clean_text_from_symbols(raw_riwayat)
         riwayat_text = f"Riwayat\n{clean_riwayat}"
         
-        riwayat_lines = wrap_text_simetris(riwayat_text, font_riwayat, 860, draw)
-        # Posisi Y Riwayat Ditarik Ke Atas (Maksimal Y = 1420px)
-        y_start_riwayat = min(y_start_body + 40, 1420)
+        riwayat_lines = wrap_text_simetris(riwayat_text, font_riwayat, 880, draw)
+        y_start_riwayat = min(y_start_body + 40, 1450)
         
         for line in riwayat_lines:
             draw_perfeksionis_heavy_shadow_text(draw, (540, y_start_riwayat), line, font_riwayat, font_color=(254, 240, 138), radius=10)
-            y_start_riwayat += 50
+            y_start_riwayat += 55
 
     return canvas
 
 # --- FUNGSI UTAMA GENERATE CAROUSEL PACK ---
 
 def generate_carousel_pack(slides_list, pexels_key=""):
-    """Fungsi Utama: Merender 5 Slide Gambar secara paralel dengan Auto-Scaler."""
+    """Fungsi Utama: Merender 5 Slide Gambar secara paralel dengan Font Jumbo."""
     rendered_images = []
     zip_buffer = io.BytesIO()
     
