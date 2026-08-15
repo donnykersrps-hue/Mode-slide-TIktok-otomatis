@@ -87,7 +87,7 @@ def generate_5part_with_gemini(topic_name):
         return None
 
 # ==========================================
-# 3. CUSTOM CSS (MODERN RETRO CYBER GLOW)
+# 3. CUSTOM CSS (NEON MAGENTA GLOW & CYBER BUTTONS)
 # ==========================================
 custom_css = """
 <style>
@@ -174,28 +174,29 @@ custom_css = """
     }
 
     div[data-testid="stExpander"] {
-        border: 1px solid rgba(236, 72, 153, 0.5) !important;
+        border: 1px solid rgba(236, 72, 153, 0.6) !important;
         border-radius: 14px !important;
         background: rgba(30, 41, 59, 0.85) !important;
-        box-shadow: 0 0 15px rgba(236, 72, 153, 0.25) !important;
+        box-shadow: 0 0 18px rgba(236, 72, 153, 0.3) !important;
     }
 
-    /* KOTAK DROPDOWN MAGENTA NEON GLOW INTERAKTIF */
+    /* POIN 6: STYLING KOTAK DROPDOWN MAGENTA NEON GLOW SANGAT MENYALA */
     .stSelectbox div[data-baseweb="select"] > div {
         background-color: #1e293b !important;
         color: #fef08a !important;
         border: 2px solid #ec4899 !important;
         border-radius: 12px !important;
-        box-shadow: 0 0 12px rgba(236, 72, 153, 0.4), inset 0 0 8px rgba(34, 211, 238, 0.2) !important;
+        box-shadow: 0 0 15px rgba(236, 72, 153, 0.5), inset 0 0 10px rgba(236, 72, 153, 0.2) !important;
         font-weight: 700 !important;
         transition: all 0.3s ease-in-out !important;
     }
 
     .stSelectbox div[data-baseweb="select"]:hover > div {
         border-color: #00f0ff !important;
-        box-shadow: 0 0 20px #00f0ff, inset 0 0 10px #00f0ff !important;
+        box-shadow: 0 0 22px #00f0ff, inset 0 0 12px #00f0ff !important;
     }
 
+    /* DEEP OVERRIDE INPUT TEXTAREA/TEXTINPUT/NUMBERINPUT */
     .stTextArea textarea, .stTextInput input, .stNumberInput input, div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea {
         background-color: #1e293b !important;
         color: #fef08a !important;
@@ -293,7 +294,7 @@ st.markdown("""
 <div class="header-box">
     <span class="brand-badge">🤖 Ruang Teduh AI Control Center</span>
     <h1 class="header-title">Dashboard Generator & Automation 5 Part</h1>
-    <p class="header-subtitle">Gemini AI Manager meracik naskah 5 Part → Direct Interactive Canvas Editor → Render Carousel HD</p>
+    <p class="header-subtitle">Gemini AI Manager meracik naskah 5 Part → Direct Interactive Compact Studio → Render Carousel HD</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -315,9 +316,12 @@ if btn_generate:
             st.success("✅ Manager AI Berhasil Meracik 5 Part Content Queue!")
 
 # ==========================================
-# 6. DIRECT INTERACTIVE CANVAS STUDIO ENGINE
+# 6. DIRECT COMPACT CANVAS ENGINE (POIN 1, 2, 3, 4)
 # ==========================================
-def render_direct_interactive_canvas(header_text, body_text, riwayat_text="", header_size=76, body_size=68, pos_h=380, pos_b=880):
+def render_compact_interactive_canvas(header_text, body_text, riwayat_text="", header_size=76, body_size=68, pos_h=380, pos_b=880):
+    # POIN 1: BAGKGROUND LIVE PEXELS CERAH (NO MORE BLANK BLACK)
+    bg_url = "[https://images.pexels.com/photos/1029604/pexels-photo-1029604.jpeg?auto=compress&cs=tinysrgb&w=800](https://images.pexels.com/photos/1029604/pexels-photo-1029604.jpeg?auto=compress&cs=tinysrgb&w=800)"
+    
     html_code = f"""
     <!DOCTYPE html>
     <html>
@@ -325,51 +329,54 @@ def render_direct_interactive_canvas(header_text, body_text, riwayat_text="", he
         <link href="[https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&display=swap](https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&display=swap)" rel="stylesheet">
         <style>
             * {{ box-sizing: border-box; margin: 0; padding: 0; user-select: none; }}
-            body {{ background: #0f172a; display: flex; justify-content: center; align-items: center; padding: 10px; font-family: 'Montserrat', sans-serif; }}
+            body {{ background: #0f172a; display: flex; justify-content: center; align-items: center; padding: 6px; font-family: 'Montserrat', sans-serif; }}
             
+            /* POIN 3: UKURAN CANVAS 50% LEBIH COMPACT (240px x 426px PAS TANPA POTONGAN) */
             .canvas-container {{
-                position: relative; width: 360px; height: 640px;
-                background: linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.5)), url('[https://images.pexels.com/photos/1029604/pexels-photo-1029604.jpeg?auto=compress&cs=tinysrgb&w=1080](https://images.pexels.com/photos/1029604/pexels-photo-1029604.jpeg?auto=compress&cs=tinysrgb&w=1080)');
+                position: relative; width: 240px; height: 426px;
+                background: linear-gradient(rgba(0,0,0,0.30), rgba(0,0,0,0.45)), url('{bg_url}');
                 background-size: cover; background-position: center;
-                border-radius: 18px; border: 2px solid #00f0ff;
-                box-shadow: 0 0 25px rgba(0, 240, 255, 0.45); overflow: hidden;
+                border-radius: 14px; border: 2px solid #00f0ff;
+                box-shadow: 0 0 20px rgba(0, 240, 255, 0.4); overflow: hidden;
             }}
 
             .draggable-text {{
-                position: absolute; width: 90%; left: 5%; text-align: center;
-                cursor: move; padding: 6px; border: 1px dashed transparent;
-                transition: border 0.2s ease; word-wrap: break-word;
+                position: absolute; width: 92%; left: 4%; text-align: center;
+                cursor: move; padding: 4px; border: 1px dashed transparent;
+                transition: border 0.2s ease, font-size 0.2s ease; word-wrap: break-word; outline: none;
             }}
 
             .draggable-text:hover {{ border: 1px dashed #00f0ff; background: rgba(0, 240, 255, 0.12); }}
+            .draggable-text:focus {{ border: 1px solid #e879f9; background: rgba(15, 23, 42, 0.75); cursor: text; }}
 
+            /* POIN 4: FONT SIZE TERKONEKSI REALTIME DENGAN SKALA PAS */
             .text-header {{
-                color: #e879f9; font-size: {int(header_size * 0.33)}px; font-weight: 900;
-                text-shadow: 0 0 10px #000, 2px 2px 0 #000, -2px -2px 0 #000;
-                top: {int(pos_h * 0.33)}px;
+                color: #e879f9; font-size: {int(header_size * 0.23)}px; font-weight: 900;
+                text-shadow: 0 0 8px #000, 1px 1px 0 #000, -1px -1px 0 #000;
+                top: {int(pos_h * 0.22)}px;
             }}
 
             .text-body {{
-                color: #22d3ee; font-size: {int(body_size * 0.33)}px; font-weight: 800;
-                text-shadow: 0 0 10px #000, 2px 2px 0 #000, -2px -2px 0 #000;
-                top: {int(pos_b * 0.33)}px;
+                color: #22d3ee; font-size: {int(body_size * 0.23)}px; font-weight: 800;
+                text-shadow: 0 0 8px #000, 1px 1px 0 #000, -1px -1px 0 #000;
+                top: {int(pos_b * 0.22)}px;
             }}
 
             .text-riwayat {{
-                color: #fef08a; font-size: 13px; font-weight: 700;
-                text-shadow: 0 0 8px #000; bottom: 30px; left: 5%; width: 90%; text-align: center; position: absolute;
+                color: #fef08a; font-size: 10px; font-weight: 700;
+                text-shadow: 0 0 6px #000; bottom: 18px; left: 4%; width: 92%; text-align: center; position: absolute;
             }}
 
             .hint-tag {{
-                position: absolute; top: 12px; left: 12px; background: rgba(15, 23, 42, 0.85);
-                color: #00f0ff; font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 20px;
-                border: 1px solid #00f0ff; pointer-events: none;
+                position: absolute; top: 8px; left: 8px; background: rgba(15, 23, 42, 0.85);
+                color: #00f0ff; font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 15px;
+                border: 1px solid #00f0ff; pointer-events: none; z-index: 10;
             }}
         </style>
     </head>
     <body>
         <div class="canvas-container">
-            <div class="hint-tag">⚡ Drag Teks / Double-Click Edit</div>
+            <div class="hint-tag">⚡ Double-Click Edit / Drag Teks</div>
             
             <div class="draggable-text text-header" id="drag-header" contenteditable="true" spellcheck="false">
                 {header_text}
@@ -383,17 +390,27 @@ def render_direct_interactive_canvas(header_text, body_text, riwayat_text="", he
         </div>
 
         <script>
-            function makeDraggable(elmnt) {{
+            // POIN 2: PERBAIKAN DOUBLE-CLICK EDIT & DRAG
+            function setupInteractiveText(elmnt) {{
                 var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-                elmnt.onmousedown = dragMouseDown;
+                var isEditing = false;
 
-                function dragMouseDown(e) {{
-                    if (document.activeElement === elmnt) return;
+                elmnt.ondblclick = function() {{
+                    isEditing = true;
+                    elmnt.focus();
+                }};
+
+                elmnt.onblur = function() {{
+                    isEditing = false;
+                }};
+
+                elmnt.onmousedown = function(e) {{
+                    if (isEditing || document.activeElement === elmnt) return;
                     e = e || window.event; e.preventDefault();
                     pos3 = e.clientX; pos4 = e.clientY;
                     document.onmouseup = closeDragElement;
                     document.onmousemove = elementDrag;
-                }}
+                }};
 
                 function elementDrag(e) {{
                     e = e || window.event; e.preventDefault();
@@ -408,13 +425,13 @@ def render_direct_interactive_canvas(header_text, body_text, riwayat_text="", he
                 }}
             }}
 
-            makeDraggable(document.getElementById("drag-header"));
-            makeDraggable(document.getElementById("drag-body"));
+            setupInteractiveText(document.getElementById("drag-header"));
+            setupInteractiveText(document.getElementById("drag-body"));
         </script>
     </body>
     </html>
     """
-    components.html(html_code, height=670)
+    components.html(html_code, height=450)
 
 # ==========================================
 # 7. MAIN CONTENT QUEUE ENGINE
@@ -443,8 +460,9 @@ if st.session_state.get("parts_data"):
             part['caption'] = st.text_area(f"Edit Caption Part {p_num}", value=part['caption'], key=f"cap_{p_num}", height=90)
             
             st.markdown("---")
-            st.markdown("### 🎛️ Selectbox Editor Naskah & Direct Canvas")
+            st.markdown("### 🎛️ Selectbox Editor Naskah & Compact Canvas Studio")
             
+            # POIN 6: DROPDOWN SELECTBOX DENGAN STYLE MAGENTA GLOW MENYALA
             selected_edit_idx = st.selectbox(
                 f"Pilih Slide yang Ingin Disunting (Part {p_num}):",
                 options=[0, 1, 2, 3, 4],
@@ -457,19 +475,8 @@ if st.session_state.get("parts_data"):
             
             st.markdown(f"#### 📌 Menyesuaikan {s['title']}")
             
-            # 1. DIRECT CANVAS EDITOR INTERAKSI REALTIME (CLICK 2X & DRAG)
-            render_direct_interactive_canvas(
-                header_text=s.get('header', ''),
-                body_text=s.get('isi', ''),
-                riwayat_text=s.get('riwayat', '') if selected_edit_idx==2 else "",
-                header_size=s.get('font_setting', {}).get('header', 76),
-                body_size=s.get('font_setting', {}).get('body', 68 if s_idx!=2 else 52),
-                pos_h=s.get('font_setting', {}).get('y_header', 360 if s_idx==2 else 380),
-                pos_b=s.get('font_setting', {}).get('y_body', 760 if s_idx==2 else 880)
-            )
-
-            # 2. TOMBOL PRESISI ANGKA MANUAL (NUMBER INPUT)
-            st.markdown("##### 📏 Ukuran Font Presisi")
+            # POIN 4: NUMBER INPUT TERKONEKSI DENGAN CANVAS
+            st.markdown("##### 📏 Ukuran Font Presisi (Real-Time Canvas Connect)")
             c_f1, c_f2 = st.columns(2)
             with c_f1:
                 fh = st.number_input(f"Size Header S{s_idx+1}", min_value=30, max_value=120, value=76, step=2, key=f"fh_{p_num}_{s_idx}")
@@ -479,13 +486,10 @@ if st.session_state.get("parts_data"):
             fr = 44
             if s_idx == 2:
                 fr = st.number_input(f"Size Riwayat S{s_idx+1}", min_value=20, max_value=80, value=44, step=2, key=f"fr_{p_num}_{s_idx}")
-            
-            st.markdown("##### 📍 Posisi Y-Offset Vertikal")
-            c_p1, c_p2 = st.columns(2)
-            with c_p1:
-                pos_h = st.number_input(f"Posisi Y Header S{s_idx+1}", min_value=150, max_value=800, value=360 if s_idx==2 else 380, step=10, key=f"pos_h_{p_num}_{s_idx}")
-            with c_p2:
-                pos_b = st.number_input(f"Posisi Y Body S{s_idx+1}", min_value=500, max_value=1500, value=760 if s_idx==2 else 880, step=10, key=f"pos_b_{p_num}_{s_idx}")
+
+            # POIN 5: HIDE BOX POSISI Y-OFFSET (VARIABEL DISIMPAN DI LATAR BELAKANG)
+            pos_h = 360 if s_idx==2 else 380
+            pos_b = 760 if s_idx==2 else 880
 
             s['font_setting'] = {
                 "header": fh,
@@ -495,13 +499,25 @@ if st.session_state.get("parts_data"):
                 "y_body": pos_b
             }
 
+            # POIN 1, 2, 3: CANVAS COMPACT 50% DENGAN BACKGROUND HD LIVE PEXELS & DOUBLE-CLICK EDIT
+            render_compact_interactive_canvas(
+                header_text=s.get('header', ''),
+                body_text=s.get('isi', ''),
+                riwayat_text=s.get('riwayat', '') if selected_edit_idx==2 else "",
+                header_size=fh,
+                body_size=fb,
+                pos_h=pos_h,
+                pos_b=pos_b
+            )
+
+            # TEXT BOX EDITOR NASKAH
             s['header'] = st.text_input(f"Header S{s_idx+1}", value=s.get('header', ''), key=f"h_{p_num}_{s_idx}")
             s['isi'] = st.text_area(f"Isi S{s_idx+1}", value=s.get('isi', ''), key=f"b_{p_num}_{s_idx}", height=85)
             
             if 'riwayat' in s or s_idx == 2:
                 s['riwayat'] = st.text_input(f"Riwayat Hadits S{s_idx+1}", value=s.get('riwayat', ''), key=f"r_{p_num}_{s_idx}")
 
-            # 3. TOMBOL DOWNLOAD PER SLIDE (.JPG)
+            # TOMBOL DOWNLOAD PER SLIDE (.JPG)
             try:
                 from render_engine import render_single_slide_image, fetch_bright_aesthetic_background
                 preview_bg = fetch_bright_aesthetic_background(pexels_key=PEXELS_KEY)
@@ -525,7 +541,7 @@ if st.session_state.get("parts_data"):
             except Exception as e_dl:
                 st.warning(f"Download helper loading... ({e_dl})")
 
-        # 4. TOMBOL RENDER MASAL FULL PACK 5 SLIDE (ZIP)
+        # TOMBOL RENDER MASAL FULL PACK 5 SLIDE (ZIP)
         st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
         c_v, c_s = st.columns(2)
         with c_v:
