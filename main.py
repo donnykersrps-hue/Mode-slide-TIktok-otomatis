@@ -80,7 +80,7 @@ def generate_5part_with_gemini(topic_name):
         return None
 
 # ==========================================
-# 3. CUSTOM CSS
+# 3. CUSTOM CSS (NEON MAGENTA & CYAN GLOW)
 # ==========================================
 custom_css = """
 <style>
@@ -317,7 +317,7 @@ if btn_generate:
             st.success("✅ Manager AI Berhasil Meracik 5 Part Content Queue!")
 
 # ==========================================
-# 6. DIRECT INTERACTIVE CANVAS ENGINE (DRAG & DOUBLE-CLICK RE-ENABLED)
+# 6. DIRECT INTERACTIVE CANVAS ENGINE (WITH COORDINATE BRIDGE)
 # ==========================================
 def render_compact_interactive_canvas(header_text, body_text, riwayat_text="", header_size=76, body_size=68, fr_size=44, pos_h=380, pos_b=880):
     html_code = f"""
@@ -473,28 +473,28 @@ if st.session_state.get("parts_data"):
             
             st.markdown(f"#### 📌 Menyesuaikan {s['title']}")
             
-            # FORM NASKAH TEKS
+            # FORM NASKAH TEKS (PRIORITY OVERRIDE DATA BINDING)
             s['header'] = st.text_input(f"Header S{s_idx+1}", value=s.get('header', ''), key=f"h_{p_num}_{s_idx}")
             s['isi'] = st.text_area(f"Isi S{s_idx+1}", value=s.get('isi', ''), key=f"b_{p_num}_{s_idx}", height=85)
             
             if 'riwayat' in s or s_idx == 2:
                 s['riwayat'] = st.text_input(f"Riwayat Hadits S{s_idx+1}", value=s.get('riwayat', ''), key=f"r_{p_num}_{s_idx}")
 
-            # CONTROL FONT SIZE
-            st.markdown("##### 📏 Ukuran Font Presisi")
+            # CONTROL FONT SIZE & COORDINATE POSITIONING (OVERRIDE SYSTEM)
+            st.markdown("##### 📏 Ukuran Font & Presisi Posisi (Priority Override System)")
             c_f1, c_f2 = st.columns(2)
             with c_f1:
                 fh = st.number_input(f"Size Header S{s_idx+1}", min_value=30, max_value=120, value=s.get('font_setting', {}).get('header', 76), step=2, key=f"fh_{p_num}_{s_idx}")
+                pos_h = st.number_input(f"Posisi Y Header S{s_idx+1}", min_value=100, max_value=1200, value=s.get('font_setting', {}).get('y_header', 360 if s_idx==2 else 380), step=10, key=f"yh_{p_num}_{s_idx}")
             with c_f2:
                 fb = st.number_input(f"Size Body S{s_idx+1}", min_value=25, max_value=100, value=s.get('font_setting', {}).get('body', 68 if s_idx != 2 else 52), step=2, key=f"fb_{p_num}_{s_idx}")
+                pos_b = st.number_input(f"Posisi Y Body S{s_idx+1}", min_value=200, max_value=1600, value=s.get('font_setting', {}).get('y_body', 760 if s_idx==2 else 880), step=10, key=f"yb_{p_num}_{s_idx}")
             
             fr = 44
             if s_idx == 2:
                 fr = st.number_input(f"Size Riwayat S{s_idx+1}", min_value=20, max_value=80, value=s.get('font_setting', {}).get('riwayat', 44), step=2, key=f"fr_{p_num}_{s_idx}")
 
-            pos_h = 360 if s_idx==2 else 380
-            pos_b = 760 if s_idx==2 else 880
-
+            # KUNCI MUTLAK: OVERRIDE S['FONT_SETTING'] DENGAN INPUT EDITING TERBARU KAK DONNY
             s['font_setting'] = {
                 "header": fh,
                 "body": fb,
@@ -503,7 +503,7 @@ if st.session_state.get("parts_data"):
                 "y_body": pos_b
             }
 
-            # 1. CANVAS INTERAKTIF (DRAG & DOUBLE-CLICK RE-ENABLED KEMBALI)
+            # 1. CANVAS INTERAKTIF PREVIEW
             st.markdown("##### 🎨 Interactive Canvas Editor (Drag & Double-Click To Edit)")
             render_compact_interactive_canvas(
                 header_text=s.get('header', ''),
@@ -525,6 +525,8 @@ if st.session_state.get("parts_data"):
                 try:
                     from render_engine import render_single_slide_image, fetch_bright_aesthetic_background
                     preview_bg = fetch_bright_aesthetic_background(pexels_key=PEXELS_KEY)
+                    
+                    # PRIORITY OVERRIDE EXECUTION: PAKSA RENDER PILLOW MEMBACA S DATA SUNTINGAN TERBARU
                     rendered_img = render_single_slide_image(
                         preview_bg, s, 
                         is_slide_3=(s_idx==2), 
@@ -569,6 +571,7 @@ if st.session_state.get("parts_data"):
                     from render_engine import generate_carousel_pack
                     
                     with st.spinner(f"🎨 Merender 5 Gambar Carousel HD Sinkron Part {p_num}..."):
+                        # PRIORITY OVERRIDE SYSTEM: GENERATE CAROUSEL PACK WAKTU DIPANGGIL AKAN MEMBACA PART['SLIDES'] HASIL SUNTINGAN MANUAL
                         images, zip_data = generate_carousel_pack(
                             part.get('slides', []), 
                             pexels_key=PEXELS_KEY
