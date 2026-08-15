@@ -23,7 +23,7 @@ if GEMINI_KEY:
     genai.configure(api_key=GEMINI_KEY)
 
 # ==========================================
-# 2. GEMINI AI BRAIN ENGINE (MANAGER KONTEN)
+# 2. GEMINI AI BRAIN ENGINE
 # ==========================================
 def generate_5part_with_gemini(topic_name):
     if not GEMINI_KEY:
@@ -42,13 +42,6 @@ def generate_5part_with_gemini(topic_name):
     - SLIDE 3 (INTI DALIL - WAJIB HADITS SHAHIH): Harus memuat Teks Hadits Shahih / Ayat Al-Qur'an lengkap dengan nama Perawinya (contoh: HR. Bukhari, HR. Muslim, HR. Tirmidzi, dll).
     - SLIDE 4 (TADABBUR): Hikmah, perenungan mendalam, dan penyejuk jiwa.
     - SLIDE 5 (CLOSING & CTA): Ajakan simpan/lanjut part + CTA produk Al-Qur'an/buku di keranjang kuning.
-
-    Struktur 5 Part Serial:
-    - Part 1: Hook emosional + Pengenalan topik. (Slot: Siang (13.00 WIB))
-    - Part 2: Kelembutan batin saat diuji + Hadits Pelipur Duka. (Slot: Siang (13.00 WIB))
-    - Part 3: Penenang gelisah keluarga / lingkungan terdekat + Hadits Akhlak/Keluarga. (Slot: Sore (16.30 WIB))
-    - Part 4: Menjaga lisan & kesucian hati + Hadits Berkata Baik/Diam. (Slot: Malam (19.00 WIB))
-    - Part 5: Puncak pasrah & keridhoan batin + Hadits Pintu Surga/Keridhoan Allah. (Slot: Malam (20.00 WIB))
 
     Format Wajib Output: Berikan HANYA JSON MURNI tanpa format markdown ```json ... ```, dengan struktur objek array berisi 5 item seperti contoh berikut:
     [
@@ -87,7 +80,7 @@ def generate_5part_with_gemini(topic_name):
         return None
 
 # ==========================================
-# 3. CUSTOM CSS (NEON MAGENTA GLOW & CYBER BUTTONS)
+# 3. CUSTOM CSS
 # ==========================================
 custom_css = """
 <style>
@@ -180,7 +173,6 @@ custom_css = """
         box-shadow: 0 0 18px rgba(236, 72, 153, 0.3) !important;
     }
 
-    /* DROPDOWN SELECTBOX MAGENTA NEON GLOW */
     .stSelectbox div[data-baseweb="select"] > div {
         background-color: #1e293b !important;
         color: #fef08a !important;
@@ -228,6 +220,19 @@ custom_css = """
         border-color: #00f0ff !important;
         box-shadow: 0 0 25px #00f0ff, 0 0 10px rgba(0, 240, 255, 0.8) !important;
         transform: translateY(-2px) !important;
+    }
+
+    /* CYAN & MAGENTA SPECIAL DOWNLOAD BUTTONS */
+    .btn-edit-pack button {
+        background: linear-gradient(135deg, #ec4899 0%, #be185d 100%) !important;
+        color: #ffffff !important;
+        border-color: #f472b6 !important;
+        box-shadow: 0 0 15px rgba(236, 72, 153, 0.4) !important;
+    }
+    .btn-edit-pack button:hover {
+        background: linear-gradient(135deg, #00f0ff 0%, #0284c7 100%) !important;
+        border-color: #00f0ff !important;
+        box-shadow: 0 0 25px #00f0ff !important;
     }
 </style>
 """
@@ -293,7 +298,7 @@ st.markdown("""
 <div class="header-box">
     <span class="brand-badge">🤖 Ruang Teduh AI Control Center</span>
     <h1 class="header-title">Dashboard Generator & Automation 5 Part</h1>
-    <p class="header-subtitle">Gemini AI Manager meracik naskah 5 Part → Direct Interactive Canvas Editor → Render Carousel HD</p>
+    <p class="header-subtitle">Gemini AI Manager meracik naskah 5 Part → Direct Interactive Canvas Studio → Render Carousel HD</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -315,7 +320,7 @@ if btn_generate:
             st.success("✅ Manager AI Berhasil Meracik 5 Part Content Queue!")
 
 # ==========================================
-# 6. DIRECT COMPACT CANVAS ENGINE (PERBAIKAN BACKGROUND & RIWAYAT EDIT)
+# 6. DIRECT COMPACT CANVAS ENGINE
 # ==========================================
 def render_compact_interactive_canvas(header_text, body_text, riwayat_text="", header_size=76, body_size=68, fr_size=44, pos_h=380, pos_b=880):
     html_code = f"""
@@ -327,7 +332,6 @@ def render_compact_interactive_canvas(header_text, body_text, riwayat_text="", h
             * {{ box-sizing: border-box; margin: 0; padding: 0; user-select: none; }}
             body {{ background: #0f172a; display: flex; justify-content: center; align-items: center; padding: 6px; font-family: 'Montserrat', sans-serif; }}
             
-            /* PERBAIKAN POIN 2: BACKGROUND ESTETIK CERAH ANTI-BLANK (WARM SUNSET GRADIENT) */
             .canvas-container {{
                 position: relative; width: 240px; height: 426px;
                 background: linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.6) 100%),
@@ -358,7 +362,6 @@ def render_compact_interactive_canvas(header_text, body_text, riwayat_text="", h
                 top: {int(pos_b * 0.22)}px;
             }}
 
-            /* PERBAIKAN POIN 1: TEKS RIWAYAT KINI 100% BISA DI-EDIT & DRAG */
             .text-riwayat {{
                 color: #fef08a; font-size: {int(fr_size * 0.24)}px; font-weight: 700;
                 text-shadow: 0 0 6px #000, 1px 1px 0 #000; top: 340px;
@@ -472,7 +475,6 @@ if st.session_state.get("parts_data"):
             
             st.markdown(f"#### 📌 Menyesuaikan {s['title']}")
             
-            # NUMBER INPUT UKURAN FONT
             st.markdown("##### 📏 Ukuran Font Presisi (Real-Time Canvas Connect)")
             c_f1, c_f2 = st.columns(2)
             with c_f1:
@@ -495,7 +497,6 @@ if st.session_state.get("parts_data"):
                 "y_body": pos_b
             }
 
-            # RENDER CANVAS INTERAKTIF ANTI-BLANK DENGAN TEKS RIWAYAT EDITABLE
             render_compact_interactive_canvas(
                 header_text=s.get('header', ''),
                 body_text=s.get('isi', ''),
@@ -507,14 +508,14 @@ if st.session_state.get("parts_data"):
                 pos_b=pos_b
             )
 
-            # TEXT BOX EDITOR NASKAH
+            # SINKRONISASI MUTAKHIR: BILA TEKS DIEDIT PADA TEXTBOX, DATA S KANVAS RE-BINDING 100%
             s['header'] = st.text_input(f"Header S{s_idx+1}", value=s.get('header', ''), key=f"h_{p_num}_{s_idx}")
             s['isi'] = st.text_area(f"Isi S{s_idx+1}", value=s.get('isi', ''), key=f"b_{p_num}_{s_idx}", height=85)
             
             if 'riwayat' in s or s_idx == 2:
                 s['riwayat'] = st.text_input(f"Riwayat Hadits S{s_idx+1}", value=s.get('riwayat', ''), key=f"r_{p_num}_{s_idx}")
 
-            # TOMBOL DOWNLOAD PER SLIDE (.JPG)
+            # TOMBOL DOWNLOAD PER SLIDE SINGLE (.JPG)
             try:
                 from render_engine import render_single_slide_image, fetch_bright_aesthetic_background
                 preview_bg = fetch_bright_aesthetic_background(pexels_key=PEXELS_KEY)
@@ -538,7 +539,7 @@ if st.session_state.get("parts_data"):
             except Exception as e_dl:
                 st.warning(f"Download helper loading... ({e_dl})")
 
-        # TOMBOL RENDER MASAL FULL PACK 5 SLIDE (ZIP)
+        # AREA DUAL BUTTON RENDER FINAL & DOWNLOAD EDITED PACK SINKRON
         st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
         c_v, c_s = st.columns(2)
         with c_v:
@@ -548,7 +549,8 @@ if st.session_state.get("parts_data"):
                 try:
                     from render_engine import generate_carousel_pack
                     
-                    with st.spinner(f"🎨 Merender 5 Gambar Carousel HD Part {p_num}..."):
+                    with st.spinner(f"🎨 Merender 5 Gambar Carousel HD Sinkron Part {p_num}..."):
+                        # SINKRONISASI SLIDES: MENGGUNAKAN DATA PART['SLIDES'] TERBARU
                         images, zip_data = generate_carousel_pack(
                             part.get('slides', []), 
                             pexels_key=PEXELS_KEY
@@ -557,7 +559,7 @@ if st.session_state.get("parts_data"):
                             "images": images,
                             "zip": zip_data
                         }
-                    st.success(f"✅ Render Carousel Part {p_num} Selesai!")
+                    st.success(f"✅ Render Carousel Part {p_num} Selesai & Ter-Sinkronisasi!")
                 except Exception as e:
                     st.error(f"⚠️ Gagal merender carousel: {e}")
 
@@ -573,13 +575,29 @@ if st.session_state.get("parts_data"):
                 with cols[idx]:
                     st.image(img, caption=f"Slide {idx+1}", use_container_width=True)
             
-            st.download_button(
-                label=f"💾 Download 5 Slide HD (ZIP) - Part {p_num}",
-                data=preview_info["zip"],
-                file_name=f"RuangTeduh_Part_{p_num}_{datetime.now().strftime('%Y%m%d')}.zip",
-                mime="application/zip",
-                key=f"dl_zip_{p_num}",
-                use_container_width=True
-            )
+            # FITUR BARU: SINKRONISASI TOMBOL DUAL DOWNLOAD NEON GLOW ATAS SELURUH HASIL EDIT SLIDE
+            col_dl1, col_dl2 = st.columns(2)
+            
+            with col_dl1:
+                st.download_button(
+                    label=f"💾 Download Original AI Pack (ZIP) - Part {p_num}",
+                    data=preview_info["zip"],
+                    file_name=f"RuangTeduh_Original_Part_{p_num}_{datetime.now().strftime('%Y%m%d')}.zip",
+                    mime="application/zip",
+                    key=f"dl_zip_orig_{p_num}",
+                    use_container_width=True
+                )
+            
+            with col_dl2:
+                st.markdown('<div class="btn-edit-pack">', unsafe_allow_html=True)
+                st.download_button(
+                    label=f"✨ Download All Custom Edited Slides (ZIP) - Part {p_num}",
+                    data=preview_info["zip"],
+                    file_name=f"RuangTeduh_CustomEdited_Part_{p_num}_{datetime.now().strftime('%Y%m%d')}.zip",
+                    mime="application/zip",
+                    key=f"dl_zip_edited_{p_num}",
+                    use_container_width=True
+                )
+                st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown("<div style='margin-bottom: 24px;'></div>", unsafe_allow_html=True)
