@@ -221,6 +221,14 @@ custom_css = """
         box-shadow: 0 0 25px #00f0ff, 0 0 10px rgba(0, 240, 255, 0.8) !important;
         transform: translateY(-2px) !important;
     }
+
+    /* CYAN NEON SPECIAL APPLY BUTTON */
+    .btn-apply button {
+        background: linear-gradient(135deg, #00f0ff 0%, #0284c7 100%) !important;
+        color: #ffffff !important;
+        border-color: #38bdf8 !important;
+        box-shadow: 0 0 20px rgba(0, 240, 255, 0.4) !important;
+    }
 </style>
 """
 st.markdown(custom_css, unsafe_allow_html=True)
@@ -296,6 +304,8 @@ if "parts_data" not in st.session_state:
     st.session_state["parts_data"] = None
 if "carousel_previews" not in st.session_state:
     st.session_state["carousel_previews"] = {}
+if "rendered_slide_cache" not in st.session_state:
+    st.session_state["rendered_slide_cache"] = {}
 
 if btn_generate:
     with st.spinner("👤 Manager AI (Gemini) sedang meracik naskah & jadwal 5 Part..."):
@@ -304,125 +314,11 @@ if btn_generate:
             st.session_state["parts_data"] = ai_result
             st.session_state["active_topic"] = topic_input
             st.session_state["carousel_previews"] = {}
+            st.session_state["rendered_slide_cache"] = {}
             st.success("✅ Manager AI Berhasil Meracik 5 Part Content Queue!")
 
 # ==========================================
-# 6. DIRECT COMPACT CANVAS ENGINE
-# ==========================================
-def render_compact_interactive_canvas(header_text, body_text, riwayat_text="", header_size=76, body_size=68, fr_size=44, pos_h=380, pos_b=880):
-    html_code = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <link href="[https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&display=swap](https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&display=swap)" rel="stylesheet">
-        <style>
-            * {{ box-sizing: border-box; margin: 0; padding: 0; user-select: none; }}
-            body {{ background: #0f172a; display: flex; justify-content: center; align-items: center; padding: 6px; font-family: 'Montserrat', sans-serif; }}
-            
-            .canvas-container {{
-                position: relative; width: 240px; height: 426px;
-                background: linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.6) 100%),
-                            radial-gradient(circle at 50% 30%, #f59e0b 0%, #d97706 40%, #0f172a 100%);
-                background-size: cover; background-position: center;
-                border-radius: 14px; border: 2px solid #00f0ff;
-                box-shadow: 0 0 20px rgba(0, 240, 255, 0.45); overflow: hidden;
-            }}
-
-            .draggable-text {{
-                position: absolute; width: 92%; left: 4%; text-align: center;
-                cursor: move; padding: 4px; border: 1px dashed transparent;
-                transition: border 0.2s ease, font-size 0.2s ease; word-wrap: break-word; outline: none;
-            }}
-
-            .draggable-text:hover {{ border: 1px dashed #00f0ff; background: rgba(0, 240, 255, 0.12); }}
-            .draggable-text:focus {{ border: 1px solid #e879f9; background: rgba(15, 23, 42, 0.75); cursor: text; }}
-
-            .text-header {{
-                color: #e879f9; font-size: {int(header_size * 0.23)}px; font-weight: 900;
-                text-shadow: 0 0 8px #000, 1px 1px 0 #000, -1px -1px 0 #000;
-                top: {int(pos_h * 0.22)}px;
-            }}
-
-            .text-body {{
-                color: #22d3ee; font-size: {int(body_size * 0.23)}px; font-weight: 800;
-                text-shadow: 0 0 8px #000, 1px 1px 0 #000, -1px -1px 0 #000;
-                top: {int(pos_b * 0.22)}px;
-            }}
-
-            .text-riwayat {{
-                color: #fef08a; font-size: {int(fr_size * 0.24)}px; font-weight: 700;
-                text-shadow: 0 0 6px #000, 1px 1px 0 #000; top: 340px;
-            }}
-
-            .hint-tag {{
-                position: absolute; top: 8px; left: 8px; background: rgba(15, 23, 42, 0.85);
-                color: #00f0ff; font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 15px;
-                border: 1px solid #00f0ff; pointer-events: none; z-index: 10;
-            }}
-        </style>
-    </head>
-    <body>
-        <div class="canvas-container">
-            <div class="hint-tag">⚡ Double-Click Edit / Drag Teks</div>
-            
-            <div class="draggable-text text-header" id="drag-header" contenteditable="true" spellcheck="false">
-                {header_text}
-            </div>
-
-            <div class="draggable-text text-body" id="drag-body" contenteditable="true" spellcheck="false">
-                {body_text}
-            </div>
-
-            {"<div class='draggable-text text-riwayat' id='drag-riwayat' contenteditable='true' spellcheck='false'>Riwayat<br>" + riwayat_text + "</div>" if riwayat_text else ""}
-        </div>
-
-        <script>
-            function setupInteractiveText(elmnt) {{
-                if (!elmnt) return;
-                var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-                var isEditing = false;
-
-                elmnt.ondblclick = function() {{
-                    isEditing = true;
-                    elmnt.focus();
-                }};
-
-                elmnt.onblur = function() {{
-                    isEditing = false;
-                }};
-
-                elmnt.onmousedown = function(e) {{
-                    if (isEditing || document.activeElement === elmnt) return;
-                    e = e || window.event; e.preventDefault();
-                    pos3 = e.clientX; pos4 = e.clientY;
-                    document.onmouseup = closeDragElement;
-                    document.onmousemove = elementDrag;
-                }};
-
-                function elementDrag(e) {{
-                    e = e || window.event; e.preventDefault();
-                    pos1 = pos3 - e.clientX; pos2 = pos4 - e.clientY;
-                    pos3 = e.clientX; pos4 = e.clientY;
-                    elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
-                    elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
-                }}
-
-                function closeDragElement() {{
-                    document.onmouseup = null; document.onmousemove = null;
-                }}
-            }}
-
-            setupInteractiveText(document.getElementById("drag-header"));
-            setupInteractiveText(document.getElementById("drag-body"));
-            setupInteractiveText(document.getElementById("drag-riwayat"));
-        </script>
-    </body>
-    </html>
-    """
-    components.html(html_code, height=450)
-
-# ==========================================
-# 7. MAIN CONTENT QUEUE ENGINE
+# 6. MAIN CONTENT QUEUE ENGINE
 # ==========================================
 if st.session_state.get("parts_data"):
     parts_data = st.session_state["parts_data"]
@@ -448,7 +344,7 @@ if st.session_state.get("parts_data"):
             part['caption'] = st.text_area(f"Edit Caption Part {p_num}", value=part['caption'], key=f"cap_{p_num}", height=90)
             
             st.markdown("---")
-            st.markdown("### 🎛️ Selectbox Editor Naskah & Compact Canvas Studio")
+            st.markdown("### 🎛️ Selectbox Editor Naskah & Direct Canvas Studio")
             
             selected_edit_idx = st.selectbox(
                 f"Pilih Slide yang Ingin Disunting (Part {p_num}):",
@@ -459,11 +355,19 @@ if st.session_state.get("parts_data"):
             
             s = part['slides'][selected_edit_idx]
             s_idx = selected_edit_idx
+            cache_key = f"{p_num}_{s_idx}"
             
             st.markdown(f"#### 📌 Menyesuaikan {s['title']}")
             
-            # NUMBER INPUT UNTUK CONTROL UKURAN FONT
-            st.markdown("##### 📏 Ukuran Font Presisi (Real-Time Canvas Connect)")
+            # INPUT FORM NASKAH NASKAH
+            s['header'] = st.text_input(f"Header S{s_idx+1}", value=s.get('header', ''), key=f"h_{p_num}_{s_idx}")
+            s['isi'] = st.text_area(f"Isi S{s_idx+1}", value=s.get('isi', ''), key=f"b_{p_num}_{s_idx}", height=85)
+            
+            if 'riwayat' in s or s_idx == 2:
+                s['riwayat'] = st.text_input(f"Riwayat Hadits S{s_idx+1}", value=s.get('riwayat', ''), key=f"r_{p_num}_{s_idx}")
+
+            # CONTROL FONT SIZE
+            st.markdown("##### 📏 Ukuran Font Presisi")
             c_f1, c_f2 = st.columns(2)
             with c_f1:
                 fh = st.number_input(f"Size Header S{s_idx+1}", min_value=30, max_value=120, value=s.get('font_setting', {}).get('header', 76), step=2, key=f"fh_{p_num}_{s_idx}")
@@ -477,7 +381,6 @@ if st.session_state.get("parts_data"):
             pos_h = 360 if s_idx==2 else 380
             pos_b = 760 if s_idx==2 else 880
 
-            # METODE 1: AUTO-SYNC KONTROL FONT LANGSUNG KE MEMORI PYTHON (S['FONT_SETTING'])
             s['font_setting'] = {
                 "header": fh,
                 "body": fb,
@@ -486,50 +389,50 @@ if st.session_state.get("parts_data"):
                 "y_body": pos_b
             }
 
-            # TAMPILAN CANVAS INTERAKTIF
-            render_compact_interactive_canvas(
-                header_text=s.get('header', ''),
-                body_text=s.get('isi', ''),
-                riwayat_text=s.get('riwayat', '') if selected_edit_idx==2 else "",
-                header_size=fh,
-                body_size=fb,
-                fr_size=fr,
-                pos_h=pos_h,
-                pos_b=pos_b
-            )
+            # TOMBOL UTAMA APPLY & RENDER VISUAL JPG CANVAS
+            st.markdown('<div class="btn-apply">', unsafe_allow_html=True)
+            btn_apply = st.button(f"⚡ Apply Changes & Render Visual (Slide {s_idx+1})", key=f"btn_apply_{p_num}_{s_idx}", use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
-            # METODE 1: AUTO-SYNC INPUT TEXTBOX LANGSUNG BINDING KE MEMORI PYTHON (S['HEADER'], S['ISI'], S['RIWAYAT'])
-            s['header'] = st.text_input(f"Header S{s_idx+1}", value=s.get('header', ''), key=f"h_{p_num}_{s_idx}")
-            s['isi'] = st.text_area(f"Isi S{s_idx+1}", value=s.get('isi', ''), key=f"b_{p_num}_{s_idx}", height=85)
-            
-            if 'riwayat' in s or s_idx == 2:
-                s['riwayat'] = st.text_input(f"Riwayat Hadits S{s_idx+1}", value=s.get('riwayat', ''), key=f"r_{p_num}_{s_idx}")
+            if btn_apply or cache_key not in st.session_state["rendered_slide_cache"]:
+                try:
+                    from render_engine import render_single_slide_image, fetch_bright_aesthetic_background
+                    preview_bg = fetch_bright_aesthetic_background(pexels_key=PEXELS_KEY)
+                    rendered_img = render_single_slide_image(
+                        preview_bg, s, 
+                        is_slide_3=(s_idx==2), 
+                        is_slide_5=(s_idx==4)
+                    )
+                    
+                    img_byte_arr = io.BytesIO()
+                    rendered_img.save(img_byte_arr, format='JPEG', quality=98)
+                    st.session_state["rendered_slide_cache"][cache_key] = {
+                        "img": rendered_img,
+                        "bytes": img_byte_arr.getvalue()
+                    }
+                except Exception as e_ren:
+                    st.error(f"⚠️ Gagal merender visual: {e_ren}")
 
-            # TOMBOL DOWNLOAD SINGLE SLIDE INSTAN (.JPG)
-            try:
-                from render_engine import render_single_slide_image, fetch_bright_aesthetic_background
-                preview_bg = fetch_bright_aesthetic_background(pexels_key=PEXELS_KEY)
-                preview_img = render_single_slide_image(
-                    preview_bg, s, 
-                    is_slide_3=(selected_edit_idx==2), 
-                    is_slide_5=(selected_edit_idx==4)
+            # BOX CANVAS: MENAMPILKAN GAMBAR JPG HASIL RENDER PILLOW PILLOW UTUH 100% PRESI
+            st.markdown("##### 📱 Direct JPG Canvas Result (Visual Download Asli)")
+            if cache_key in st.session_state["rendered_slide_cache"]:
+                st.image(
+                    st.session_state["rendered_slide_cache"][cache_key]["img"],
+                    caption=f"Visual Asli Gambar Slide {s_idx+1} (100% Identik Dengan Download)",
+                    width=280
                 )
-                img_byte_arr = io.BytesIO()
-                preview_img.save(img_byte_arr, format='JPEG', quality=98)
-                single_img_bytes = img_byte_arr.getvalue()
-                
+
+                # TOMBOL DOWNLOAD SINGLE (.JPG) 100% IDENTIK
                 st.download_button(
-                    label=f"💾 Download Gambar Slide {selected_edit_idx+1} Ini (.jpg)",
-                    data=single_img_bytes,
-                    file_name=f"RuangTeduh_Part{p_num}_Slide{selected_edit_idx+1}.jpg",
+                    label=f"💾 Download Gambar Slide {s_idx+1} Ini (.jpg)",
+                    data=st.session_state["rendered_slide_cache"][cache_key]["bytes"],
+                    file_name=f"RuangTeduh_Part{p_num}_Slide{s_idx+1}.jpg",
                     mime="image/jpeg",
-                    key=f"dl_single_{p_num}_{selected_edit_idx}",
+                    key=f"dl_single_{p_num}_{s_idx}",
                     use_container_width=True
                 )
-            except Exception as e_dl:
-                st.warning(f"Download helper loading... ({e_dl})")
 
-        # AREA TOMBOL RENDER FULL PACK 5 SLIDE MASAL
+        # AREA TOMBOL RENDER MASAL FULL PACK 5 SLIDE
         st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
         c_v, c_s = st.columns(2)
         with c_v:
@@ -539,8 +442,7 @@ if st.session_state.get("parts_data"):
                 try:
                     from render_engine import generate_carousel_pack
                     
-                    with st.spinner(f"🎨 Merender 5 Gambar Carousel HD Part {p_num}..."):
-                        # METODE 1 EXECUTION: ENGINE SEKARANG MEMANGGIL PART['SLIDES'] YANG SUDAH TER-SYNC SUNTINGAN TERBARU
+                    with st.spinner(f"🎨 Merender 5 Gambar Carousel HD Sinkron Part {p_num}..."):
                         images, zip_data = generate_carousel_pack(
                             part.get('slides', []), 
                             pexels_key=PEXELS_KEY
