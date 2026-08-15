@@ -180,7 +180,7 @@ custom_css = """
         box-shadow: 0 0 18px rgba(236, 72, 153, 0.3) !important;
     }
 
-    /* POIN 6: STYLING KOTAK DROPDOWN MAGENTA NEON GLOW SANGAT MENYALA */
+    /* DROPDOWN SELECTBOX MAGENTA NEON GLOW */
     .stSelectbox div[data-baseweb="select"] > div {
         background-color: #1e293b !important;
         color: #fef08a !important;
@@ -196,7 +196,6 @@ custom_css = """
         box-shadow: 0 0 22px #00f0ff, inset 0 0 12px #00f0ff !important;
     }
 
-    /* DEEP OVERRIDE INPUT TEXTAREA/TEXTINPUT/NUMBERINPUT */
     .stTextArea textarea, .stTextInput input, .stNumberInput input, div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea {
         background-color: #1e293b !important;
         color: #fef08a !important;
@@ -294,7 +293,7 @@ st.markdown("""
 <div class="header-box">
     <span class="brand-badge">🤖 Ruang Teduh AI Control Center</span>
     <h1 class="header-title">Dashboard Generator & Automation 5 Part</h1>
-    <p class="header-subtitle">Gemini AI Manager meracik naskah 5 Part → Direct Interactive Compact Studio → Render Carousel HD</p>
+    <p class="header-subtitle">Gemini AI Manager meracik naskah 5 Part → Direct Interactive Canvas Editor → Render Carousel HD</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -316,12 +315,9 @@ if btn_generate:
             st.success("✅ Manager AI Berhasil Meracik 5 Part Content Queue!")
 
 # ==========================================
-# 6. DIRECT COMPACT CANVAS ENGINE (POIN 1, 2, 3, 4)
+# 6. DIRECT COMPACT CANVAS ENGINE (PERBAIKAN BACKGROUND & RIWAYAT EDIT)
 # ==========================================
-def render_compact_interactive_canvas(header_text, body_text, riwayat_text="", header_size=76, body_size=68, pos_h=380, pos_b=880):
-    # POIN 1: BAGKGROUND LIVE PEXELS CERAH (NO MORE BLANK BLACK)
-    bg_url = "[https://images.pexels.com/photos/1029604/pexels-photo-1029604.jpeg?auto=compress&cs=tinysrgb&w=800](https://images.pexels.com/photos/1029604/pexels-photo-1029604.jpeg?auto=compress&cs=tinysrgb&w=800)"
-    
+def render_compact_interactive_canvas(header_text, body_text, riwayat_text="", header_size=76, body_size=68, fr_size=44, pos_h=380, pos_b=880):
     html_code = f"""
     <!DOCTYPE html>
     <html>
@@ -331,13 +327,14 @@ def render_compact_interactive_canvas(header_text, body_text, riwayat_text="", h
             * {{ box-sizing: border-box; margin: 0; padding: 0; user-select: none; }}
             body {{ background: #0f172a; display: flex; justify-content: center; align-items: center; padding: 6px; font-family: 'Montserrat', sans-serif; }}
             
-            /* POIN 3: UKURAN CANVAS 50% LEBIH COMPACT (240px x 426px PAS TANPA POTONGAN) */
+            /* PERBAIKAN POIN 2: BACKGROUND ESTETIK CERAH ANTI-BLANK (WARM SUNSET GRADIENT) */
             .canvas-container {{
                 position: relative; width: 240px; height: 426px;
-                background: linear-gradient(rgba(0,0,0,0.30), rgba(0,0,0,0.45)), url('{bg_url}');
+                background: linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.6) 100%),
+                            radial-gradient(circle at 50% 30%, #f59e0b 0%, #d97706 40%, #0f172a 100%);
                 background-size: cover; background-position: center;
                 border-radius: 14px; border: 2px solid #00f0ff;
-                box-shadow: 0 0 20px rgba(0, 240, 255, 0.4); overflow: hidden;
+                box-shadow: 0 0 20px rgba(0, 240, 255, 0.45); overflow: hidden;
             }}
 
             .draggable-text {{
@@ -349,7 +346,6 @@ def render_compact_interactive_canvas(header_text, body_text, riwayat_text="", h
             .draggable-text:hover {{ border: 1px dashed #00f0ff; background: rgba(0, 240, 255, 0.12); }}
             .draggable-text:focus {{ border: 1px solid #e879f9; background: rgba(15, 23, 42, 0.75); cursor: text; }}
 
-            /* POIN 4: FONT SIZE TERKONEKSI REALTIME DENGAN SKALA PAS */
             .text-header {{
                 color: #e879f9; font-size: {int(header_size * 0.23)}px; font-weight: 900;
                 text-shadow: 0 0 8px #000, 1px 1px 0 #000, -1px -1px 0 #000;
@@ -362,9 +358,10 @@ def render_compact_interactive_canvas(header_text, body_text, riwayat_text="", h
                 top: {int(pos_b * 0.22)}px;
             }}
 
+            /* PERBAIKAN POIN 1: TEKS RIWAYAT KINI 100% BISA DI-EDIT & DRAG */
             .text-riwayat {{
-                color: #fef08a; font-size: 10px; font-weight: 700;
-                text-shadow: 0 0 6px #000; bottom: 18px; left: 4%; width: 92%; text-align: center; position: absolute;
+                color: #fef08a; font-size: {int(fr_size * 0.24)}px; font-weight: 700;
+                text-shadow: 0 0 6px #000, 1px 1px 0 #000; top: 340px;
             }}
 
             .hint-tag {{
@@ -386,12 +383,12 @@ def render_compact_interactive_canvas(header_text, body_text, riwayat_text="", h
                 {body_text}
             </div>
 
-            {"<div class='text-riwayat'>Riwayat<br>" + riwayat_text + "</div>" if riwayat_text else ""}
+            {"<div class='draggable-text text-riwayat' id='drag-riwayat' contenteditable='true' spellcheck='false'>Riwayat<br>" + riwayat_text + "</div>" if riwayat_text else ""}
         </div>
 
         <script>
-            // POIN 2: PERBAIKAN DOUBLE-CLICK EDIT & DRAG
             function setupInteractiveText(elmnt) {{
+                if (!elmnt) return;
                 var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
                 var isEditing = false;
 
@@ -427,6 +424,7 @@ def render_compact_interactive_canvas(header_text, body_text, riwayat_text="", h
 
             setupInteractiveText(document.getElementById("drag-header"));
             setupInteractiveText(document.getElementById("drag-body"));
+            setupInteractiveText(document.getElementById("drag-riwayat"));
         </script>
     </body>
     </html>
@@ -462,7 +460,6 @@ if st.session_state.get("parts_data"):
             st.markdown("---")
             st.markdown("### 🎛️ Selectbox Editor Naskah & Compact Canvas Studio")
             
-            # POIN 6: DROPDOWN SELECTBOX DENGAN STYLE MAGENTA GLOW MENYALA
             selected_edit_idx = st.selectbox(
                 f"Pilih Slide yang Ingin Disunting (Part {p_num}):",
                 options=[0, 1, 2, 3, 4],
@@ -475,7 +472,7 @@ if st.session_state.get("parts_data"):
             
             st.markdown(f"#### 📌 Menyesuaikan {s['title']}")
             
-            # POIN 4: NUMBER INPUT TERKONEKSI DENGAN CANVAS
+            # NUMBER INPUT UKURAN FONT
             st.markdown("##### 📏 Ukuran Font Presisi (Real-Time Canvas Connect)")
             c_f1, c_f2 = st.columns(2)
             with c_f1:
@@ -487,7 +484,6 @@ if st.session_state.get("parts_data"):
             if s_idx == 2:
                 fr = st.number_input(f"Size Riwayat S{s_idx+1}", min_value=20, max_value=80, value=44, step=2, key=f"fr_{p_num}_{s_idx}")
 
-            # POIN 5: HIDE BOX POSISI Y-OFFSET (VARIABEL DISIMPAN DI LATAR BELAKANG)
             pos_h = 360 if s_idx==2 else 380
             pos_b = 760 if s_idx==2 else 880
 
@@ -499,13 +495,14 @@ if st.session_state.get("parts_data"):
                 "y_body": pos_b
             }
 
-            # POIN 1, 2, 3: CANVAS COMPACT 50% DENGAN BACKGROUND HD LIVE PEXELS & DOUBLE-CLICK EDIT
+            # RENDER CANVAS INTERAKTIF ANTI-BLANK DENGAN TEKS RIWAYAT EDITABLE
             render_compact_interactive_canvas(
                 header_text=s.get('header', ''),
                 body_text=s.get('isi', ''),
                 riwayat_text=s.get('riwayat', '') if selected_edit_idx==2 else "",
                 header_size=fh,
                 body_size=fb,
+                fr_size=fr,
                 pos_h=pos_h,
                 pos_b=pos_b
             )
