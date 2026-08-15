@@ -180,7 +180,7 @@ custom_css = """
         box-shadow: 0 0 15px rgba(236, 72, 153, 0.25) !important;
     }
 
-    /* POINT 3: KOTAK DROPDOWN MAGENTA NEON GLOW INTERAKTIF */
+    /* KOTAK DROPDOWN MAGENTA NEON GLOW INTERAKTIF */
     .stSelectbox div[data-baseweb="select"] > div {
         background-color: #1e293b !important;
         color: #fef08a !important;
@@ -196,8 +196,8 @@ custom_css = """
         box-shadow: 0 0 20px #00f0ff, inset 0 0 10px #00f0ff !important;
     }
 
-    /* DEEP OVERRIDE INPUT TEXTAREA/TEXTINPUT */
-    .stTextArea textarea, .stTextInput input, div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea {
+    /* DEEP OVERRIDE INPUT TEXTAREA/TEXTINPUT & NUMBER INPUT (DONGKER GELAP + TEKS KUNING EMAS) */
+    .stTextArea textarea, .stTextInput input, .stNumberInput input, div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea {
         background-color: #1e293b !important;
         color: #fef08a !important;
         font-weight: 600 !important;
@@ -212,7 +212,7 @@ custom_css = """
         border-radius: 10px !important;
     }
 
-    /* POINT 2: TOMBOL HOVER INTERAKTIF CYAN NEON MENYALA */
+    /* TOMBOL HOVER INTERAKTIF CYAN NEON MENYALA */
     .stButton>button, .stDownloadButton>button {
         background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%) !important;
         color: #0f172a !important;
@@ -295,7 +295,7 @@ st.markdown("""
 <div class="header-box">
     <span class="brand-badge">🤖 Ruang Teduh AI Control Center</span>
     <h1 class="header-title">Dashboard Generator & Automation 5 Part</h1>
-    <p class="header-subtitle">Gemini AI Manager meracik naskah 5 Part → Text Position Inspector & Outdoor Viewport → Render Carousel HD</p>
+    <p class="header-subtitle">Gemini AI Manager meracik naskah 5 Part → Dynamic Number Selector & Live Outdoor Viewport → Render Carousel HD</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -317,7 +317,7 @@ if btn_generate:
             st.success("✅ Manager AI Berhasil Meracik 5 Part Content Queue!")
 
 # ==========================================
-# 6. CONTENT QUEUE & TEXT POSITION INSPECTOR WITH OUTDOOR VIEWPORT
+# 6. CONTENT QUEUE & NUMBER INPUT STUDIO WITH OUTDOOR VIEWPORT
 # ==========================================
 if st.session_state.get("parts_data"):
     parts_data = st.session_state["parts_data"]
@@ -341,12 +341,12 @@ if st.session_state.get("parts_data"):
         main_col_left, main_col_right = st.columns([3.6, 1])
 
         with main_col_left:
-            with st.expander(f"🛠️ Studio Editor Manual & Position Inspector (Part {p_num})", expanded=True):
+            with st.expander(f"🛠️ Studio Editor Manual & Precision Inspector (Part {p_num})", expanded=True):
                 st.markdown("**📝 Caption TikTok:**")
                 part['caption'] = st.text_area(f"Edit Caption Part {p_num}", value=part['caption'], key=f"cap_{p_num}", height=90)
                 
                 st.markdown("---")
-                st.markdown("### 🎛️ Selectbox Editor Naskah & Position Inspector")
+                st.markdown("### 🎛️ Selectbox Editor Naskah & Precision Inspector")
                 
                 selected_edit_idx = st.selectbox(
                     f"Pilih Slide yang Ingin Disunting (Part {p_num}):",
@@ -360,24 +360,25 @@ if st.session_state.get("parts_data"):
                 
                 st.markdown(f"#### 📌 Menyesuaikan {s['title']}")
                 
-                # SLIDER UKURAN FONT SLIDE AKTIF
+                # INPUT ANGKA PRESISI: FONT SIZE (NUMBER INPUT + KETIK MANUAL)
+                st.markdown("##### 📏 Ukuran Font (Ketik Angka Manual / Klik + -)")
                 c_f1, c_f2 = st.columns(2)
                 with c_f1:
-                    fh = st.slider(f"Font Header S{s_idx+1}", 40, 100, 76, key=f"fh_{p_num}_{s_idx}")
+                    fh = st.number_input(f"Size Header S{s_idx+1}", min_value=30, max_value=120, value=76, step=2, key=f"fh_{p_num}_{s_idx}")
                 with c_f2:
-                    fb = st.slider(f"Font Body S{s_idx+1}", 30, 90, 68 if s_idx != 2 else 52, key=f"fb_{p_num}_{s_idx}")
+                    fb = st.number_input(f"Size Body S{s_idx+1}", min_value=25, max_value=100, value=68 if s_idx != 2 else 52, step=2, key=f"fb_{p_num}_{s_idx}")
                 
                 fr = 44
                 if s_idx == 2:
-                    fr = st.slider(f"Font Riwayat S{s_idx+1}", 25, 60, 44, key=f"fr_{p_num}_{s_idx}")
+                    fr = st.number_input(f"Size Riwayat S{s_idx+1}", min_value=20, max_value=80, value=44, step=2, key=f"fr_{p_num}_{s_idx}")
                 
-                # POINT 1: SLIDER KONTROL POSISI VERTIKAL TEKS (Y-OFFSET ALA CAPCUT)
-                st.markdown("##### 📍 Layout Position Inspector (Y-Axis Offset)")
+                # INPUT ANGKA PRESISI: POSISI Y-OFFSET (NUMBER INPUT + KETIK MANUAL)
+                st.markdown("##### 📍 Posisi Y-Offset Vertikal (Ketik Angka Manual / Klik + -)")
                 c_p1, c_p2 = st.columns(2)
                 with c_p1:
-                    pos_h = st.slider(f"Posisi Y Header S{s_idx+1}", 200, 600, 360 if s_idx==2 else 380, key=f"pos_h_{p_num}_{s_idx}")
+                    pos_h = st.number_input(f"Posisi Y Header S{s_idx+1}", min_value=150, max_value=800, value=360 if s_idx==2 else 380, step=10, key=f"pos_h_{p_num}_{s_idx}")
                 with c_p2:
-                    pos_b = st.slider(f"Posisi Y Body S{s_idx+1}", 600, 1200, 760 if s_idx==2 else 880, key=f"pos_b_{p_num}_{s_idx}")
+                    pos_b = st.number_input(f"Posisi Y Body S{s_idx+1}", min_value=500, max_value=1500, value=760 if s_idx==2 else 880, step=10, key=f"pos_b_{p_num}_{s_idx}")
 
                 s['font_setting'] = {
                     "header": fh,
