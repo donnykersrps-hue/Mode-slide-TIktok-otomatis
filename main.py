@@ -180,7 +180,7 @@ custom_css = """
         box-shadow: 0 0 10px rgba(234, 179, 8, 0.15) !important;
     }
 
-    /* DEEP CSS OVERRIDE: MEMAKSA SELURUH KOTAK TEXTBOX JADI NAVY DONGKER & KUNING EMAS */
+    /* DEEP OVERRIDE INPUT: DONGKER GELAP (#1e293b) & TEKS KUNING EMAS (#fef08a) */
     .stTextArea textarea, .stTextInput input, div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea {
         background-color: #1e293b !important;
         color: #fef08a !important;
@@ -193,15 +193,6 @@ custom_css = """
         background-color: #1e293b !important;
         border: 1px solid rgba(234, 179, 8, 0.4) !important;
         border-radius: 10px !important;
-    }
-
-    /* KARTU VIEWPORT PREVIEW HP KHUSUS PER SLIDE */
-    .viewport-card {
-        background: #0f172a;
-        border: 1px solid rgba(56, 189, 248, 0.4);
-        border-radius: 14px;
-        padding: 14px;
-        box-shadow: 0 0 15px rgba(56, 189, 248, 0.15);
     }
 
     .stButton>button, .stDownloadButton>button {
@@ -277,7 +268,7 @@ st.markdown("""
 <div class="header-box">
     <span class="brand-badge">🤖 Ruang Teduh AI Control Center</span>
     <h1 class="header-title">Dashboard Generator & Automation 5 Part</h1>
-    <p class="header-subtitle">Gemini AI Manager meracik naskah 5 Part → Studio Editor Manual & Viewport Per Slide → Render Carousel HD</p>
+    <p class="header-subtitle">Gemini AI Manager meracik naskah 5 Part → Dynamic Live Viewport Studio Per Slide → Render Carousel HD</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -299,7 +290,7 @@ if btn_generate:
             st.success("✅ Manager AI Berhasil Meracik 5 Part Content Queue!")
 
 # ==========================================
-# 6. CONTENT QUEUE & SIDE-BY-SIDE STUDIO EDITOR WITH LIVE VIEWPORT
+# 6. CONTENT QUEUE & LIVE INTERACTIVE VIEWPORT PER SLIDE
 # ==========================================
 if st.session_state.get("parts_data"):
     parts_data = st.session_state["parts_data"]
@@ -323,19 +314,18 @@ if st.session_state.get("parts_data"):
         col_btn1, col_btn2, col_btn3 = st.columns([3.6, 1, 1])
 
         with col_btn1:
-            # STUDIO EDITOR MANUAL SIMETRIS DENGAN LIVE VIEWPORT PER SLIDE
             with st.expander(f"🛠️ Studio Editor Manual & Live Viewport Studio (Part {p_num})"):
                 st.markdown("**📝 Caption TikTok:**")
                 part['caption'] = st.text_area(f"Edit Caption Part {p_num}", value=part['caption'], key=f"cap_{p_num}", height=90)
                 
                 st.markdown("---")
-                st.markdown("### 🎨 Editor Presisi & Viewport Pratinjau Per Slide (Slide 1 - 5)")
+                st.markdown("### 🎨 Editor Presisi & Interactive Live Viewport Per Slide (Slide 1 - 5)")
                 
                 for s_idx, s in enumerate(part.get('slides', [])):
                     st.markdown(f"#### 📌 {s['title']}")
                     
-                    # TATALETAK SIDE-BY-SIDE: KIRI (FORM EDITOR) & KANAN (LIVE VIEWPORT HP)
-                    col_editor, col_viewport = st.columns([1.4, 1])
+                    # SIDE-BY-SIDE LAYOUT: FORM EDITOR (KIRI) vs LIVE CANVAS VIEWPORT (KANAN)
+                    col_editor, col_viewport = st.columns([1.3, 1])
                     
                     with col_editor:
                         # Slider Font Khusus Slide Ini
@@ -363,16 +353,25 @@ if st.session_state.get("parts_data"):
                             s['riwayat'] = st.text_input(f"Riwayat Hadits S{s_idx+1}", value=s.get('riwayat', ''), key=f"r_{p_num}_{s_idx}")
 
                     with col_viewport:
-                        # KARTU VIEWPORT SIDE-BY-SIDE DI SISI KANAN
-                        riwayat_html = f"<div style='color:#fef08a; font-size:11px; margin-top:8px;'><b>Riwayat:</b> {s.get('riwayat', '')}</div>" if s_idx == 2 else ""
-                        st.markdown(f"""
-                        <div class="viewport-card">
-                            <div style="color:#38bdf8; font-size:11px; font-weight:800; margin-bottom:4px;">📱 VIEWPORT PREVIEW SLIDE {s_idx+1}</div>
-                            <div style="color:#eab308; font-weight:800; font-size:13px; line-height:1.2;">{s.get('header', '')}</div>
-                            <div style="color:#22d3ee; font-size:11px; font-style:italic; margin-top:6px; line-height:1.3;">"{s.get('isi', '')}"</div>
-                            {riwayat_html}
-                        </div>
-                        """, unsafe_allow_html=True)
+                        # RENDER INSTAN PREVIEW VISUAL 100% ASLI (PILLOW CANVAS ENGINE)
+                        try:
+                            from render_engine import render_single_slide_image, fetch_bright_aesthetic_background
+                            
+                            # Cache atau fetch background cepat untuk preview live
+                            preview_bg = fetch_bright_aesthetic_background(pexels_key=PEXELS_KEY)
+                            preview_img = render_single_slide_image(
+                                preview_bg, s, 
+                                is_slide_3=(s_idx==2), 
+                                is_slide_5=(s_idx==4)
+                            )
+                            
+                            st.image(
+                                preview_img, 
+                                caption=f"📱 Live Viewport Result (Slide {s_idx+1})", 
+                                use_container_width=True
+                            )
+                        except Exception as e_prev:
+                            st.warning(f"Preview loading: {e_prev}")
 
                     st.markdown("<hr style='margin: 12px 0; border-color: rgba(234, 179, 8, 0.2);'>", unsafe_allow_html=True)
 
