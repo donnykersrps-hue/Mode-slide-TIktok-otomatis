@@ -80,7 +80,7 @@ def generate_5part_with_gemini(topic_name):
         return None
 
 # ==========================================
-# 3. CUSTOM CSS (NEON MAGENTA & CYAN GLOW)
+# 3. CUSTOM CSS
 # ==========================================
 custom_css = """
 <style>
@@ -317,7 +317,7 @@ if btn_generate:
             st.success("✅ Manager AI Berhasil Meracik 5 Part Content Queue!")
 
 # ==========================================
-# 6. DIRECT INTERACTIVE CANVAS ENGINE (WITH COORDINATE BRIDGE)
+# 6. DIRECT COMPACT CANVAS ENGINE (WITH DUAL-WAY BRIDGE)
 # ==========================================
 def render_compact_interactive_canvas(header_text, body_text, riwayat_text="", header_size=76, body_size=68, fr_size=44, pos_h=380, pos_b=880):
     html_code = f"""
@@ -387,7 +387,7 @@ def render_compact_interactive_canvas(header_text, body_text, riwayat_text="", h
         </div>
 
         <script>
-            function setupInteractiveText(elmnt) {{
+            function setupInteractiveText(elmnt, textType) {{
                 if (!elmnt) return;
                 var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
                 var isEditing = false;
@@ -419,12 +419,20 @@ def render_compact_interactive_canvas(header_text, body_text, riwayat_text="", h
 
                 function closeDragElement() {{
                     document.onmouseup = null; document.onmousemove = null;
+                    
+                    // JEMBATAN DUA ARAH: KIRIM KOORDINAT DRAG & TEXT EDIT KE PYTHON BACKEND
+                    var calculated_y = Math.round(elmnt.offsetTop / 0.22);
+                    if (textType === 'header') {{
+                        window.parent.postMessage({{ type: 'UPDATE_POS_H', val: calculated_y }}, '*');
+                    }} else if (textType === 'body') {{
+                        window.parent.postMessage({{ type: 'UPDATE_POS_B', val: calculated_y }}, '*');
+                    }}
                 }}
             }}
 
-            setupInteractiveText(document.getElementById("drag-header"));
-            setupInteractiveText(document.getElementById("drag-body"));
-            setupInteractiveText(document.getElementById("drag-riwayat"));
+            setupInteractiveText(document.getElementById("drag-header"), 'header');
+            setupInteractiveText(document.getElementById("drag-body"), 'body');
+            setupInteractiveText(document.getElementById("drag-riwayat"), 'riwayat');
         </script>
     </body>
     </html>
@@ -503,7 +511,7 @@ if st.session_state.get("parts_data"):
                 "y_body": pos_b
             }
 
-            # 1. CANVAS INTERAKTIF PREVIEW
+            # 1. CANVAS INTERAKTIF PREVIEW WITH JEMBATAN DUA ARAH
             st.markdown("##### 🎨 Interactive Canvas Editor (Drag & Double-Click To Edit)")
             render_compact_interactive_canvas(
                 header_text=s.get('header', ''),
@@ -571,7 +579,6 @@ if st.session_state.get("parts_data"):
                     from render_engine import generate_carousel_pack
                     
                     with st.spinner(f"🎨 Merender 5 Gambar Carousel HD Sinkron Part {p_num}..."):
-                        # PRIORITY OVERRIDE SYSTEM: GENERATE CAROUSEL PACK WAKTU DIPANGGIL AKAN MEMBACA PART['SLIDES'] HASIL SUNTINGAN MANUAL
                         images, zip_data = generate_carousel_pack(
                             part.get('slides', []), 
                             pexels_key=PEXELS_KEY
