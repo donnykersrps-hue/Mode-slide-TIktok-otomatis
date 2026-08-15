@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageStat, ImageEnhanc
 
 def clean_text_from_symbols(text):
     """
-    PEMBERSIH KARTU/SIMBOL ANEH:
+    PEMBERSIH SIMBOL ANEH:
     Menghapus simbol non-standard, emoji rusak, atau karakter unicode anomali.
     """
     if not text:
@@ -81,7 +81,7 @@ def fetch_bright_aesthetic_background(pexels_key=""):
 # --- FUNGSI TIPOGRAFI & RENDER SLIDE PERFEKSIONIS ---
 
 def load_robust_large_font(size):
-    """QUALITY CONTROL 4: Memuat font TTF tebal berukuran DInamis."""
+    """QUALITY CONTROL 4: Memuat font TTF tebal berukuran Dinamis."""
     font_paths = [
         "/usr/share/fonts/truetype/montserrat/Montserrat-ExtraBold.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
@@ -136,7 +136,7 @@ def render_single_slide_image(bg_image, slide_data, is_slide_3=False, is_slide_5
     """
     canvas = bg_image.copy()
     
-    # Overlay Hitam Tipis (45/255)
+    # Dark Overlay Tipis (45/255)
     overlay = Image.new('RGBA', (1080, 1920), (0, 0, 0, 45))
     canvas.paste(overlay, (0, 0), overlay)
     
@@ -148,15 +148,15 @@ def render_single_slide_image(bg_image, slide_data, is_slide_3=False, is_slide_5
     raw_body = slide_data.get("isi", "")
     body_text = clean_text_from_symbols(raw_body)
     
-    # 1. AUTO-SCALER LOGIC UNTUK SLIDE 3 (TEKS PANJANG)
-    if is_slide_3 or len(body_text) > 130:
-        size_header = 68
-        size_body = 46
-        size_riwayat = 40
-        y_start_header = 360
-        y_start_body = 820
-        line_spacing_header = 85
-        line_spacing_body = 68
+    # AUTO-SCALER PRESISI UNTUK SLIDE 3 & TEKS PANJANG
+    if is_slide_3 or len(body_text) > 100:
+        size_header = 64
+        size_body = 42
+        size_riwayat = 38
+        y_start_header = 340
+        y_start_body = 760
+        line_spacing_header = 80
+        line_spacing_body = 60
     else:
         size_header = 76
         size_body = 56
@@ -170,7 +170,7 @@ def render_single_slide_image(bg_image, slide_data, is_slide_3=False, is_slide_5
     font_body = load_robust_large_font(size=size_body)
     font_riwayat = load_robust_large_font(size=size_riwayat)
 
-    # 2. RENDER HEADER (TOP AREA)
+    # 1. RENDER HEADER (TOP AREA)
     header_color = (250, 204, 21) if is_slide_5 else (232, 121, 249) # Emas / Magenta
     header_lines = wrap_text_simetris(header_text, font_header, 920, draw)
     
@@ -178,27 +178,27 @@ def render_single_slide_image(bg_image, slide_data, is_slide_3=False, is_slide_5
         draw_perfeksionis_heavy_shadow_text(draw, (540, y_start_header), line, font_header, font_color=header_color, radius=14)
         y_start_header += line_spacing_header
 
-    # 3. RENDER BODY TEXT (CENTER AREA) - Cyan Bright
+    # 2. RENDER BODY TEXT (CENTER AREA) - Cyan Bright
     body_color = (34, 211, 238) # Cyan Bright
-    body_lines = wrap_text_simetris(body_text, font_body, 900, draw)
+    body_lines = wrap_text_simetris(body_text, font_body, 880, draw)
     
     for line in body_lines:
         draw_perfeksionis_heavy_shadow_text(draw, (540, y_start_body), line, font_body, font_color=body_color, radius=12)
         y_start_body += line_spacing_body
 
-    # 4. RENDER RIWAYAT HADITS SHAHIH (KHUSUS SLIDE 3 - AMAN DARI POTONGAN)
+    # 3. RENDER RIWAYAT HADITS SHAHIH (KHUSUS SLIDE 3 - AMAN & TINGGI)
     if is_slide_3 and "riwayat" in slide_data:
         raw_riwayat = slide_data['riwayat']
         clean_riwayat = clean_text_from_symbols(raw_riwayat)
         riwayat_text = f"Riwayat\n{clean_riwayat}"
         
-        riwayat_lines = wrap_text_simetris(riwayat_text, font_riwayat, 880, draw)
-        # Hitung Y presisi agar riwayat berada aman di atas margin bawah (Maksimum Y = 1680)
-        y_start_riwayat = min(y_start_body + 60, 1520)
+        riwayat_lines = wrap_text_simetris(riwayat_text, font_riwayat, 860, draw)
+        # Posisi Y Riwayat Ditarik Ke Atas (Maksimal Y = 1420px)
+        y_start_riwayat = min(y_start_body + 40, 1420)
         
         for line in riwayat_lines:
             draw_perfeksionis_heavy_shadow_text(draw, (540, y_start_riwayat), line, font_riwayat, font_color=(254, 240, 138), radius=10)
-            y_start_riwayat += 55
+            y_start_riwayat += 50
 
     return canvas
 
