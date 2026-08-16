@@ -1,5 +1,6 @@
 import streamlit as st
 import streamlit.components.v1 as components
+import pandas as pd
 import json
 import io
 from datetime import datetime
@@ -22,7 +23,7 @@ if GEMINI_KEY:
     genai.configure(api_key=GEMINI_KEY)
 
 # ==========================================
-# 2. GEMINI AI BRAIN ENGINE (tetap)
+# 2. GEMINI AI BRAIN ENGINE
 # ==========================================
 def generate_5part_with_gemini(topic_name):
     if not GEMINI_KEY:
@@ -79,172 +80,11 @@ def generate_5part_with_gemini(topic_name):
         return None
 
 # ==========================================
-# 3. KOMPONEN KUSTOM: INTERACTIVE CANVAS (declare_component)
-# ==========================================
-@st.components.v1.declare_component
-def interactive_canvas(header_text="", body_text="", riwayat_text="",
-                       header_size=76, body_size=68, fr_size=44,
-                       pos_h=380, pos_b=880, key=None):
-    """
-    Komponen canvas interaktif (drag & double-click edit).
-    Mengembalikan dictionary: {header, body, riwayat, pos_h, pos_b}
-    """
-    html_code = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
-        <style>
-            * {{ box-sizing: border-box; margin: 0; padding: 0; user-select: none; }}
-            body {{ background: #0f172a; display: flex; justify-content: center; align-items: center; padding: 6px; font-family: 'Montserrat', sans-serif; }}
-            
-            .canvas-container {{
-                position: relative; width: 240px; height: 426px;
-                background: linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.6) 100%),
-                            radial-gradient(circle at 50% 30%, #f59e0b 0%, #d97706 40%, #0f172a 100%);
-                background-size: cover; background-position: center;
-                border-radius: 14px; border: 2px solid #00f0ff;
-                box-shadow: 0 0 20px rgba(0, 240, 255, 0.45); overflow: hidden;
-            }}
-
-            .draggable-text {{
-                position: absolute; width: 92%; left: 4%; text-align: center;
-                cursor: move; padding: 4px; border: 1px dashed transparent;
-                transition: border 0.2s ease, font-size 0.2s ease; word-wrap: break-word; outline: none;
-            }}
-
-            .draggable-text:hover {{ border: 1px dashed #00f0ff; background: rgba(0, 240, 255, 0.12); }}
-            .draggable-text:focus {{ border: 1px solid #e879f9; background: rgba(15, 23, 42, 0.75); cursor: text; }}
-
-            .text-header {{
-                color: #e879f9; font-size: {int(header_size * 0.23)}px; font-weight: 900;
-                text-shadow: 0 0 8px #000, 1px 1px 0 #000, -1px -1px 0 #000;
-                top: {int(pos_h * 0.22)}px;
-            }}
-
-            .text-body {{
-                color: #22d3ee; font-size: {int(body_size * 0.23)}px; font-weight: 800;
-                text-shadow: 0 0 8px #000, 1px 1px 0 #000, -1px -1px 0 #000;
-                top: {int(pos_b * 0.22)}px;
-            }}
-
-            .text-riwayat {{
-                color: #fef08a; font-size: {int(fr_size * 0.24)}px; font-weight: 700;
-                text-shadow: 0 0 6px #000, 1px 1px 0 #000; top: 340px;
-            }}
-
-            .hint-tag {{
-                position: absolute; top: 8px; left: 8px; background: rgba(15, 23, 42, 0.85);
-                color: #00f0ff; font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 15px;
-                border: 1px solid #00f0ff; pointer-events: none; z-index: 10;
-            }}
-        </style>
-    </head>
-    <body>
-        <div class="canvas-container" id="canvasContainer">
-            <div class="hint-tag">⚡ Drag / Double-Click Edit</div>
-            
-            <div class="draggable-text text-header" id="drag-header" contenteditable="true" spellcheck="false">
-                {header_text}
-            </div>
-
-            <div class="draggable-text text-body" id="drag-body" contenteditable="true" spellcheck="false">
-                {body_text}
-            </div>
-
-            {"<div class='draggable-text text-riwayat' id='drag-riwayat' contenteditable='true' spellcheck='false'>" + riwayat_text + "</div>" if riwayat_text else ""}
-        </div>
-
-        <script src="https://cdn.jsdelivr.net/npm/streamlit-component-lib@1.0.0/dist/streamlit-component-lib.js"></script>
-        <script>
-            function setupElement(elmnt, type) {{
-                if (!elmnt) return;
-                var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-                var isEditing = false;
-
-                elmnt.ondblclick = function() {{
-                    isEditing = true;
-                    elmnt.focus();
-                }};
-
-                elmnt.onblur = function() {{
-                    isEditing = false;
-                    sendData();
-                }};
-
-                elmnt.onmousedown = function(e) {{
-                    if (isEditing || document.activeElement === elmnt) return;
-                    e = e || window.event; e.preventDefault();
-                    pos3 = e.clientX; pos4 = e.clientY;
-                    document.onmouseup = closeDragElement;
-                    document.onmousemove = elementDrag;
-                }};
-
-                function elementDrag(e) {{
-                    e = e || window.event; e.preventDefault();
-                    pos1 = pos3 - e.clientX; pos2 = pos4 - e.clientY;
-                    pos3 = e.clientX; pos4 = e.clientY;
-                    elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
-                    elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
-                }}
-
-                function closeDragElement() {{
-                    document.onmouseup = null; document.onmousemove = null;
-                    sendData();
-                }}
-
-                // Ketika teks diubah (contenteditable)
-                elmnt.addEventListener('input', function() {{
-                    sendData();
-                }});
-
-                function sendData() {{
-                    var headerEl = document.getElementById('drag-header');
-                    var bodyEl = document.getElementById('drag-body');
-                    var riwayatEl = document.getElementById('drag-riwayat');
-                    
-                    var data = {{
-                        header: headerEl ? headerEl.innerText : '',
-                        body: bodyEl ? bodyEl.innerText : '',
-                        riwayat: riwayatEl ? riwayatEl.innerText : '',
-                        pos_h: Math.round(headerEl ? headerEl.offsetTop / 0.22 : {pos_h}),
-                        pos_b: Math.round(bodyEl ? bodyEl.offsetTop / 0.22 : {pos_b})
-                    }};
-                    // Kirim ke Python melalui Streamlit
-                    Streamlit.setComponentValue(data);
-                }}
-            }}
-
-            setupElement(document.getElementById('drag-header'), 'header');
-            setupElement(document.getElementById('drag-body'), 'body');
-            setupElement(document.getElementById('drag-riwayat'), 'riwayat');
-
-            // Kirim data awal saat komponen dimuat
-            setTimeout(function() {{
-                var headerEl = document.getElementById('drag-header');
-                var bodyEl = document.getElementById('drag-body');
-                var riwayatEl = document.getElementById('drag-riwayat');
-                var data = {{
-                    header: headerEl ? headerEl.innerText : '',
-                    body: bodyEl ? bodyEl.innerText : '',
-                    riwayat: riwayatEl ? riwayatEl.innerText : '',
-                    pos_h: Math.round(headerEl ? headerEl.offsetTop / 0.22 : {pos_h}),
-                    pos_b: Math.round(bodyEl ? bodyEl.offsetTop / 0.22 : {pos_b})
-                }};
-                Streamlit.setComponentValue(data);
-            }}, 100);
-        </script>
-    </body>
-    </html>
-    """
-    return html_code  # declare_component akan mengembalikan nilai dari setComponentValue
-
-# ==========================================
-# 4. CUSTOM CSS (tidak berubah)
+# 3. CUSTOM CSS
 # ==========================================
 custom_css = """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;800&display=swap');
+    @import url('[https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;800&display=swap](https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;800&display=swap)');
 
     .stApp {
         background-color: #0f172a !important;
@@ -393,13 +233,13 @@ custom_css = """
 st.markdown(custom_css, unsafe_allow_html=True)
 
 # ==========================================
-# 5. TOP BAR JAM REALTIME
+# 4. TOP BAR JAM REALTIME
 # ==========================================
 top_bar_html = """
 <!DOCTYPE html>
 <html>
 <head>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <link href="[https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&family=JetBrains+Mono:wght@700&display=swap](https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&family=JetBrains+Mono:wght@700&display=swap)" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #0f172a; font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -446,7 +286,7 @@ top_bar_html = """
 components.html(top_bar_html, height=50)
 
 # ==========================================
-# 6. HEADER & INPUT CONTROL
+# 5. HEADER & INPUT CONTROL
 # ==========================================
 st.markdown("""
 <div class="header-box">
@@ -477,7 +317,122 @@ if btn_generate:
             st.success("✅ Manager AI Berhasil Meracik 5 Part Content Queue!")
 
 # ==========================================
-# 7. MAIN CONTENT QUEUE ENGINE (dengan canvas interaktif)
+# 6. COMPACT CANVAS ENGINE
+# ==========================================
+def render_compact_interactive_canvas(header_text, body_text, riwayat_text="", header_size=76, body_size=68, fr_size=44, pos_h=380, pos_b=880):
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <link href="[https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&display=swap](https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&display=swap)" rel="stylesheet">
+        <style>
+            * {{ box-sizing: border-box; margin: 0; padding: 0; user-select: none; }}
+            body {{ background: #0f172a; display: flex; justify-content: center; align-items: center; padding: 6px; font-family: 'Montserrat', sans-serif; }}
+            
+            .canvas-container {{
+                position: relative; width: 240px; height: 426px;
+                background: linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.6) 100%),
+                            radial-gradient(circle at 50% 30%, #f59e0b 0%, #d97706 40%, #0f172a 100%);
+                background-size: cover; background-position: center;
+                border-radius: 14px; border: 2px solid #00f0ff;
+                box-shadow: 0 0 20px rgba(0, 240, 255, 0.45); overflow: hidden;
+            }}
+
+            .draggable-text {{
+                position: absolute; width: 92%; left: 4%; text-align: center;
+                cursor: move; padding: 4px; border: 1px dashed transparent;
+                transition: border 0.2s ease, font-size 0.2s ease; word-wrap: break-word; outline: none;
+            }}
+
+            .draggable-text:hover {{ border: 1px dashed #00f0ff; background: rgba(0, 240, 255, 0.12); }}
+            .draggable-text:focus {{ border: 1px solid #e879f9; background: rgba(15, 23, 42, 0.75); cursor: text; }}
+
+            .text-header {{
+                color: #e879f9; font-size: {int(header_size * 0.23)}px; font-weight: 900;
+                text-shadow: 0 0 8px #000, 1px 1px 0 #000, -1px -1px 0 #000;
+                top: {int(pos_h * 0.22)}px;
+            }}
+
+            .text-body {{
+                color: #22d3ee; font-size: {int(body_size * 0.23)}px; font-weight: 800;
+                text-shadow: 0 0 8px #000, 1px 1px 0 #000, -1px -1px 0 #000;
+                top: {int(pos_b * 0.22)}px;
+            }}
+
+            .text-riwayat {{
+                color: #fef08a; font-size: {int(fr_size * 0.24)}px; font-weight: 700;
+                text-shadow: 0 0 6px #000, 1px 1px 0 #000; top: 340px;
+            }}
+
+            .hint-tag {{
+                position: absolute; top: 8px; left: 8px; background: rgba(15, 23, 42, 0.85);
+                color: #00f0ff; font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 15px;
+                border: 1px solid #00f0ff; pointer-events: none; z-index: 10;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="canvas-container">
+            <div class="hint-tag">⚡ Double-Click Edit / Drag Teks Presisi</div>
+            
+            <div class="draggable-text text-header" id="drag-header" contenteditable="true" spellcheck="false">
+                {header_text}
+            </div>
+
+            <div class="draggable-text text-body" id="drag-body" contenteditable="true" spellcheck="false">
+                {body_text}
+            </div>
+
+            {"<div class='draggable-text text-riwayat' id='drag-riwayat' contenteditable='true' spellcheck='false'>Riwayat<br>" + riwayat_text + "</div>" if riwayat_text else ""}
+        </div>
+
+        <script>
+            function setupInteractiveText(elmnt) {{
+                if (!elmnt) return;
+                var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+                var isEditing = false;
+
+                elmnt.ondblclick = function() {{
+                    isEditing = true;
+                    elmnt.focus();
+                }};
+
+                elmnt.onblur = function() {{
+                    isEditing = false;
+                }};
+
+                elmnt.onmousedown = function(e) {{
+                    if (isEditing || document.activeElement === elmnt) return;
+                    e = e || window.event; e.preventDefault();
+                    pos3 = e.clientX; pos4 = e.clientY;
+                    document.onmouseup = closeDragElement;
+                    document.onmousemove = elementDrag;
+                }};
+
+                function elementDrag(e) {{
+                    e = e || window.event; e.preventDefault();
+                    pos1 = pos3 - e.clientX; pos2 = pos4 - e.clientY;
+                    pos3 = e.clientX; pos4 = e.clientY;
+                    elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+                    elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+                }}
+
+                function closeDragElement() {{
+                    document.onmouseup = null; document.onmousemove = null;
+                }}
+            }}
+
+            setupInteractiveText(document.getElementById("drag-header"));
+            setupInteractiveText(document.getElementById("drag-body"));
+            setupInteractiveText(document.getElementById("drag-riwayat"));
+        </script>
+    </body>
+    </html>
+    """
+    components.html(html_code, height=450)
+
+# ==========================================
+# 7. MAIN CONTENT QUEUE ENGINE
 # ==========================================
 if st.session_state.get("parts_data"):
     parts_data = st.session_state["parts_data"]
@@ -518,44 +473,50 @@ if st.session_state.get("parts_data"):
             
             st.markdown(f"#### 📌 Menyesuaikan {s['title']}")
             
-            # =========== CANVAS INTERAKTIF ===========
-            # Ambil nilai ukuran font dari font_setting atau default
-            font_setting = s.get('font_setting', {})
-            header_size = font_setting.get('header', 76)
-            body_size = font_setting.get('body', 68 if s_idx != 2 else 52)
-            fr_size = font_setting.get('riwayat', 44)
-            pos_h = font_setting.get('y_header', 380 if s_idx != 2 else 360)
-            pos_b = font_setting.get('y_body', 880 if s_idx != 2 else 760)
+            # FORM NASKAH TEKS (DATA BINDING MUTLAK)
+            s['header'] = st.text_input(f"Header S{s_idx+1}", value=s.get('header', ''), key=f"h_{p_num}_{s_idx}")
+            s['isi'] = st.text_area(f"Isi S{s_idx+1}", value=s.get('isi', ''), key=f"b_{p_num}_{s_idx}", height=85)
             
-            # Panggil komponen dan tangkap data yang dikirim dari JS
-            canvas_data = interactive_canvas(
+            if 'riwayat' in s or s_idx == 2:
+                s['riwayat'] = st.text_input(f"Riwayat Hadits S{s_idx+1}", value=s.get('riwayat', ''), key=f"r_{p_num}_{s_idx}")
+
+            # CONTROL FONT SIZE & COORDINATE POSITIONING (LENGKAP DENGAN CONTROL ANGKANYA)
+            st.markdown("##### 📏 Ukuran Font & Presisi Posisi Y-Offset")
+            c_f1, c_f2 = st.columns(2)
+            with c_f1:
+                fh = st.number_input(f"Size Header S{s_idx+1}", min_value=30, max_value=120, value=s.get('font_setting', {}).get('header', 76), step=2, key=f"fh_{p_num}_{s_idx}")
+                pos_h = st.number_input(f"Posisi Y Header S{s_idx+1}", min_value=100, max_value=1200, value=s.get('font_setting', {}).get('y_header', 360 if s_idx==2 else 380), step=10, key=f"yh_{p_num}_{s_idx}")
+            with c_f2:
+                fb = st.number_input(f"Size Body S{s_idx+1}", min_value=25, max_value=100, value=s.get('font_setting', {}).get('body', 68 if s_idx != 2 else 52), step=2, key=f"fb_{p_num}_{s_idx}")
+                pos_b = st.number_input(f"Posisi Y Body S{s_idx+1}", min_value=200, max_value=1600, value=s.get('font_setting', {}).get('y_body', 760 if s_idx==2 else 880), step=10, key=f"yb_{p_num}_{s_idx}")
+            
+            fr = 44
+            if s_idx == 2:
+                fr = st.number_input(f"Size Riwayat S{s_idx+1}", min_value=20, max_value=80, value=s.get('font_setting', {}).get('riwayat', 44), step=2, key=f"fr_{p_num}_{s_idx}")
+
+            # OVERRIDE S['FONT_SETTING'] DENGAN INPUT EDITING TERBARU
+            s['font_setting'] = {
+                "header": fh,
+                "body": fb,
+                "riwayat": fr,
+                "y_header": pos_h,
+                "y_body": pos_b
+            }
+
+            # 1. CANVAS INTERAKTIF PREVIEW
+            st.markdown("##### 🎨 Interactive Canvas Editor (Drag & Double-Click Preview)")
+            render_compact_interactive_canvas(
                 header_text=s.get('header', ''),
                 body_text=s.get('isi', ''),
-                riwayat_text=s.get('riwayat', '') if s_idx == 2 else "",
-                header_size=header_size,
-                body_size=body_size,
-                fr_size=fr_size,
+                riwayat_text=s.get('riwayat', '') if selected_edit_idx==2 else "",
+                header_size=fh,
+                body_size=fb,
+                fr_size=fr,
                 pos_h=pos_h,
-                pos_b=pos_b,
-                key=f"canvas_{p_num}_{s_idx}"
+                pos_b=pos_b
             )
 
-            # Jika ada data dari canvas, update session_state dan part data
-            if canvas_data:
-                # Update teks
-                s['header'] = canvas_data.get('header', s['header'])
-                s['isi'] = canvas_data.get('body', s['isi'])
-                if s_idx == 2:
-                    s['riwayat'] = canvas_data.get('riwayat', s.get('riwayat', ''))
-                # Update posisi
-                if 'font_setting' not in s:
-                    s['font_setting'] = {}
-                s['font_setting']['y_header'] = canvas_data.get('pos_h', s['font_setting'].get('y_header', pos_h))
-                s['font_setting']['y_body'] = canvas_data.get('pos_b', s['font_setting'].get('y_body', pos_b))
-                # Simpan ke session_state agar persist
-                st.session_state["parts_data"][idx_part] = part
-
-            # =========== TOMBOL APPLY ===========
+            # 2. TOMBOL APPLY CHANGES & RENDER VISUAL
             st.markdown('<div class="btn-apply">', unsafe_allow_html=True)
             btn_apply = st.button(f"⚡ Apply Changes & Render Visual (Slide {s_idx+1})", key=f"btn_apply_{p_num}_{s_idx}", use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
@@ -565,6 +526,7 @@ if st.session_state.get("parts_data"):
                     from render_engine import render_single_slide_image, fetch_bright_aesthetic_background
                     preview_bg = fetch_bright_aesthetic_background(pexels_key=PEXELS_KEY)
                     
+                    # RENDER PILLOW PAKSA MEMBACA S DATA SUNTINGAN TERBARU KAK DONNY
                     rendered_img = render_single_slide_image(
                         preview_bg, s, 
                         is_slide_3=(s_idx==2), 
@@ -580,7 +542,7 @@ if st.session_state.get("parts_data"):
                 except Exception as e_ren:
                     st.error(f"⚠️ Gagal merender visual: {e_ren}")
 
-            # =========== TAMPILKAN HASIL RENDER ===========
+            # 3. DIRECT JPG RESULT (GAMBAR YANG AKAN DIDOWNLOAD)
             if cache_key in st.session_state["rendered_slide_cache"]:
                 st.markdown("##### 📱 Direct JPG Render Preview (Visual Hasil Download)")
                 st.image(
