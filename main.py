@@ -239,7 +239,199 @@ custom_css = """
 st.markdown(custom_css, unsafe_allow_html=True)
 
 # ==========================================
-# 4. TOP BAR JAM REALTIME
+# 4. STICKY FLOATING BULAN SABIT BERPIJAR & MINI SPOTIFY AUDIO ENGINE
+# ==========================================
+audio_floating_html = """
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="[https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@700&display=swap](https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@700&display=swap)" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: transparent; font-family: 'Plus Jakarta Sans', sans-serif; overflow: visible; }
+        
+        /* STICKY FLOATING CONTAINER */
+        .moon-player-container {
+            position: fixed; top: 12px; right: 20px; z-index: 999999;
+            display: flex; flex-direction: column; align-items: flex-end;
+        }
+
+        /* BULAN SABIT BERPIJAR BUTTON */
+        .moon-btn {
+            width: 52px; height: 52px; border-radius: 50%;
+            background: #0f172a; border: 2px solid #fef08a;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative; box-shadow: 0 0 10px rgba(254, 240, 138, 0.2);
+        }
+
+        .moon-icon {
+            font-size: 26px; line-height: 1; transition: all 0.4s ease;
+            filter: drop-shadow(0 0 2px rgba(254, 240, 138, 0.5));
+        }
+
+        /* MODE ON: CAHAYA BERPIJAR TERANG MNERANGI SEKITAR */
+        .moon-btn.active {
+            background: radial-gradient(circle, #fef08a 0%, #ca8a04 100%);
+            border-color: #ffffff;
+            box-shadow: 0 0 25px #fef08a, 0 0 50px rgba(254, 240, 138, 0.8), 0 0 80px rgba(234, 179, 8, 0.6);
+            transform: scale(1.08) rotate(-10deg);
+        }
+
+        .moon-btn.active .moon-icon {
+            color: #0f172a; transform: scale(1.1);
+            filter: drop-shadow(0 0 8px #ffffff);
+        }
+
+        /* MODE OFF: REDUP HALUS */
+        .moon-btn.off {
+            opacity: 0.65; border-color: #64748b;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+
+        /* MINI SPOTIFY-STYLE CONTROLLER DRAWER */
+        .spotify-card {
+            position: absolute; top: 62px; right: 0; width: 310px;
+            background: rgba(15, 23, 42, 0.94); backdrop-filter: blur(16px);
+            border: 1px solid rgba(254, 240, 138, 0.4); border-radius: 18px;
+            padding: 16px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba(234, 179, 8, 0.2);
+            display: none; flex-direction: column; gap: 12px; transition: all 0.3s ease;
+        }
+
+        .spotify-card.show { display: flex; animation: fadeInSlide 0.35s ease forwards; }
+
+        @keyframes fadeInSlide {
+            from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .song-title { color: #fef08a; font-size: 13px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .song-artist { color: #94a3b8; font-size: 11px; font-weight: 600; margin-top: 2px; }
+
+        .player-controls { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 4px; }
+        .control-btn { background: none; border: none; color: #fef08a; font-size: 18px; cursor: pointer; transition: transform 0.2s; }
+        .control-btn:hover { transform: scale(1.2); color: #00f0ff; }
+        .play-main-btn {
+            width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+            color: #0f172a; display: flex; justify-content: center; align-items: center; font-size: 16px; font-weight: 800; cursor: pointer;
+            box-shadow: 0 0 12px rgba(234, 179, 8, 0.5); transition: all 0.2s ease;
+        }
+        .play-main-btn:hover { transform: scale(1.1); box-shadow: 0 0 20px #00f0ff; }
+
+        .progress-bar-bg { width: 100%; height: 4px; background: rgba(255,255,255,0.15); border-radius: 4px; overflow: hidden; cursor: pointer; }
+        .progress-fill { width: 30%; height: 100%; background: #00f0ff; border-radius: 4px; transition: width 0.2s linear; }
+    </style>
+</head>
+<body>
+    <div class="moon-player-container">
+        <!-- TOMBOL BULAN SABIT STICKY -->
+        <div class="moon-btn off" id="moon-toggle" onclick="togglePlayState()" title="Klik untuk Memutar Audio Suasana Ruang Teduh">
+            <span class="moon-icon">🌙</span>
+        </div>
+
+        <!-- SPOTIFY MINI DRAWER -->
+        <div class="spotify-card" id="spotify-drawer">
+            <div>
+                <div class="song-title" id="song-name">Dengan Nafas-Mu</div>
+                <div class="song-artist" id="artist-name">Ungu - Indonesian Islamic Band Session</div>
+            </div>
+
+            <div class="progress-bar-bg" id="progress-container" onclick="seekAudio(event)">
+                <div class="progress-fill" id="progress-bar"></div>
+            </div>
+
+            <div class="player-controls">
+                <button class="control-btn" onclick="prevTrack()">⏮</button>
+                <div class="play-main-btn" id="play-btn-icon" onclick="togglePlayState()">▶</div>
+                <button class="control-btn" onclick="nextTrack()">⏭</button>
+            </div>
+        </div>
+    </div>
+
+    <audio id="bg-audio" loop>
+        <source src="[https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=islamic-background-112677.mp3](https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=islamic-background-112677.mp3)" type="audio/mpeg">
+    </audio>
+
+    <script>
+        const playlist = [
+            { title: "Dengan Nafas-Mu", artist: "Ungu - Special Ruang Teduh", src: "[https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=islamic-background-112677.mp3](https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=islamic-background-112677.mp3)" },
+            { title: "Cenhar Hati Penyejuk Batin", artist: "Letto / Acoustic Session", src: "[https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a70f3b.mp3?filename=meditation-islamic-10499.mp3](https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a70f3b.mp3?filename=meditation-islamic-10499.mp3)" },
+            { title: "Tuhan", artist: "Gigi - Instrument Penyejuk Jiwa", src: "[https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=spiritual-breath-15634.mp3](https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=spiritual-breath-15634.mp3)" }
+        ];
+
+        let currentIdx = 0;
+        const audio = document.getElementById("bg-audio");
+        const moonBtn = document.getElementById("moon-toggle");
+        const drawer = document.getElementById("spotify-drawer");
+        const playBtnIcon = document.getElementById("play-btn-icon");
+        const songName = document.getElementById("song-name");
+        const artistName = document.getElementById("artist-name");
+        const progressBar = document.getElementById("progress-bar");
+
+        moonBtn.addEventListener("mouseenter", () => drawer.classList.add("show"));
+        document.addEventListener("click", (e) => {
+            if (!document.querySelector(".moon-player-container").contains(e.target)) {
+                drawer.classList.remove("show");
+            }
+        });
+
+        function loadTrack(idx) {
+            currentIdx = idx;
+            audio.src = playlist[currentIdx].src;
+            songName.textContent = playlist[currentIdx].title;
+            artistName.textContent = playlist[currentIdx].artist;
+        }
+
+        function togglePlayState() {
+            if (audio.paused) {
+                audio.play();
+                moonBtn.classList.remove("off");
+                moonBtn.classList.add("active");
+                playBtnIcon.textContent = "❚❚";
+            } else {
+                audio.pause();
+                moonBtn.classList.remove("active");
+                moonBtn.classList.add("off");
+                playBtnIcon.textContent = "▶";
+            }
+        }
+
+        function nextTrack() {
+            currentIdx = (currentIdx + 1) % playlist.length;
+            loadTrack(currentIdx);
+            audio.play();
+            moonBtn.classList.add("active");
+            playBtnIcon.textContent = "❚❚";
+        }
+
+        function prevTrack() {
+            currentIdx = (currentIdx - 1 + playlist.length) % playlist.length;
+            loadTrack(currentIdx);
+            audio.play();
+            moonBtn.classList.add("active");
+            playBtnIcon.textContent = "❚❚";
+        }
+
+        audio.addEventListener("timeupdate", () => {
+            if (audio.duration) {
+                const pct = (audio.currentTime / audio.duration) * 100;
+                progressBar.style.width = pct + "%";
+            }
+        });
+
+        function seekAudio(e) {
+            const rect = document.getElementById("progress-container").getBoundingClientRect();
+            const pos = (e.clientX - rect.left) / rect.width;
+            audio.currentTime = pos * audio.duration;
+        }
+    </script>
+</body>
+</html>
+"""
+components.html(audio_floating_html, height=70)
+
+# ==========================================
+# 5. TOP BAR JAM REALTIME
 # ==========================================
 top_bar_html = """
 <!DOCTYPE html>
@@ -292,7 +484,7 @@ top_bar_html = """
 components.html(top_bar_html, height=50)
 
 # ==========================================
-# 5. HEADER & INPUT CONTROL
+# 6. HEADER & INPUT CONTROL
 # ==========================================
 st.markdown("""
 <div class="header-box">
@@ -332,7 +524,7 @@ if btn_generate:
             st.success("✅ Manager AI Berhasil Meracik 5 Part Content Queue!")
 
 # ==========================================
-# 6. COMPACT CANVAS ENGINE
+# 7. COMPACT CANVAS ENGINE
 # ==========================================
 def render_compact_interactive_canvas(header_text, body_text, riwayat_text="", header_size=76, body_size=68, fr_size=44, pos_h=380, pos_b=880):
     html_code = f"""
@@ -447,7 +639,7 @@ def render_compact_interactive_canvas(header_text, body_text, riwayat_text="", h
     components.html(html_code, height=450)
 
 # ==========================================
-# 7. MAIN CONTENT QUEUE ENGINE
+# 8. MAIN CONTENT QUEUE ENGINE
 # ==========================================
 if st.session_state.get("parts_data"):
     parts_data = st.session_state["parts_data"]
@@ -538,9 +730,7 @@ if st.session_state.get("parts_data"):
                 except Exception as e_ren:
                     st.error(f"⚠️ Gagal merender visual: {e_ren}")
 
-            # ==========================================
-            # LAYOUT 2 KOLOM BERDAMPINGAN (CANVAS VS DIRECT RENDER)
-            # ==========================================
+            # LAYOUT 2 KOLOM BERDAMPINGAN
             col_canvas, col_render = st.columns(2)
 
             with col_canvas:
