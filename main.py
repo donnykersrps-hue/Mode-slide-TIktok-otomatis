@@ -3,6 +3,7 @@ import streamlit.components.v1 as components
 import pandas as pd
 import json
 import io
+import hashlib
 from datetime import datetime
 import google.generativeai as genai
 
@@ -310,11 +311,22 @@ if "carousel_previews" not in st.session_state:
     st.session_state["carousel_previews"] = {}
 if "rendered_slide_cache" not in st.session_state:
     st.session_state["rendered_slide_cache"] = {}
+if "topic_hash" not in st.session_state:
+    st.session_state["topic_hash"] = "default"
 
 if btn_generate:
     with st.spinner("👤 Manager AI (Gemini) sedang meracik naskah & jadwal 5 Part..."):
         ai_result = generate_5part_with_gemini(topic_input)
         if ai_result:
+            # PURGE OLD STATE KEYS FOR AUTO REFRESH
+            new_hash = hashlib.md5(f"{topic_input}_{datetime.now().timestamp()}".encode()).hexdigest()[:8]
+            st.session_state["topic_hash"] = new_hash
+            
+            # Hapus key lama agar form terlempar naskah baru
+            keys_to_clear = [k for k in st.session_state.keys() if k.startswith(("cap_", "h_", "b_", "r_"))]
+            for k in keys_to_clear:
+                del st.session_state[k]
+
             st.session_state["parts_data"] = ai_result
             st.session_state["active_topic"] = topic_input
             st.session_state["carousel_previews"] = {}
@@ -442,6 +454,7 @@ def render_compact_interactive_canvas(header_text, body_text, riwayat_text="", h
 if st.session_state.get("parts_data"):
     parts_data = st.session_state["parts_data"]
     active_topic = st.session_state.get("active_topic", topic_input)
+    t_hash = st.session_state.get("topic_hash", "default")
 
     st.markdown("---")
     st.markdown(f"### 🌿 CONTENT QUEUE TERATUR: `{active_topic}`")
@@ -460,7 +473,7 @@ if st.session_state.get("parts_data"):
 
         with st.expander(f"🛠️ Studio Editor Direct Canvas (Part {p_num})", expanded=True):
             st.markdown("**📝 Caption TikTok:**")
-            part['caption'] = st.text_area(f"Edit Caption Part {p_num}", value=part['caption'], key=f"cap_{p_num}", height=90)
+            part['caption'] = st.text_area(f"Edit Caption Part {p_num}", value=part['caption'], key=f"cap_{p_num}_{t_hash}", height=90)
             
             st.markdown("---")
             st.markdown("### 🎛️ Selectbox Editor Naskah & Direct Canvas Studio")
@@ -469,35 +482,35 @@ if st.session_state.get("parts_data"):
                 f"Pilih Slide yang Ingin Disunting (Part {p_num}):",
                 options=[0, 1, 2, 3, 4],
                 format_func=lambda x: f"Slide {x+1} - {part['slides'][x].get('header', 'Slide ' + str(x+1))}",
-                key=f"edit_slide_select_{p_num}"
+                key=f"edit_slide_select_{p_num}_{t_hash}"
             )
             
             s = part['slides'][selected_edit_idx]
             s_idx = selected_edit_idx
-            cache_key = f"{p_num}_{s_idx}"
+            cache_key = f"{p_num}_{s_idx}_{t_hash}"
             
             st.markdown(f"#### 📌 Menyesuaikan {s['title']}")
             
-            # FORM NASKAH TEKS (DATA BINDING MUTLAK)
-            s['header'] = st.text_input(f"Header S{s_idx+1}", value=s.get('header', ''), key=f"h_{p_num}_{s_idx}")
-            s['isi'] = st.text_area(f"Isi S{s_idx+1}", value=s.get('isi', ''), key=f"b_{p_num}_{s_idx}", height=85)
+            # FORM NASKAH TEKS (DYNAMIC KEYING PER TEMA)
+            s['header'] = st.text_input(f"Header S{s_idx+1}", value=s.get('header', ''), key=f"h_{p_num}_{s_idx}_{t_hash}")
+            s['isi'] = st.text_area(f"Isi S{s_idx+1}", value=s.get('isi', ''), key=f"b_{p_num}_{s_idx}_{t_hash}", height=85)
             
             if 'riwayat' in s or s_idx == 2:
-                s['riwayat'] = st.text_input(f"Riwayat Hadits S{s_idx+1}", value=s.get('riwayat', ''), key=f"r_{p_num}_{s_idx}")
+                s['riwayat'] = st.text_input(f"Riwayat Hadits S{s_idx+1}", value=s.get('riwayat', ''), key=f"r_{p_num}_{s_idx}_{t_hash}")
 
             # CONTROL FONT SIZE & COORDINATE POSITIONING
             st.markdown("##### 📏 Ukuran Font & Presisi Posisi Y-Offset")
             c_f1, c_f2 = st.columns(2)
             with c_f1:
-                fh = st.number_input(f"Size Header S{s_idx+1}", min_value=30, max_value=120, value=s.get('font_setting', {}).get('header', 76), step=2, key=f"fh_{p_num}_{s_idx}")
-                pos_h = st.number_input(f"Posisi Y Header S{s_idx+1}", min_value=100, max_value=1200, value=s.get('font_setting', {}).get('y_header', 360 if s_idx==2 else 380), step=10, key=f"yh_{p_num}_{s_idx}")
+                fh = st.number_input(f"Size Header S{s_idx+1}", min_value=30, max_value=120, value=s.get('font_setting', {}).get('header', 76), step=2, key=f"fh_{p_num}_{s_idx}_{t_hash}")
+                pos_h = st.number_input(f"Posisi Y Header S{s_idx+1}", min_value=100, max_value=1200, value=s.get('font_setting', {}).get('y_header', 360 if s_idx==2 else 380), step=10, key=f"yh_{p_num}_{s_idx}_{t_hash}")
             with c_f2:
-                fb = st.number_input(f"Size Body S{s_idx+1}", min_value=25, max_value=100, value=s.get('font_setting', {}).get('body', 68 if s_idx != 2 else 52), step=2, key=f"fb_{p_num}_{s_idx}")
-                pos_b = st.number_input(f"Posisi Y Body S{s_idx+1}", min_value=200, max_value=1600, value=s.get('font_setting', {}).get('y_body', 760 if s_idx==2 else 880), step=10, key=f"yb_{p_num}_{s_idx}")
+                fb = st.number_input(f"Size Body S{s_idx+1}", min_value=25, max_value=100, value=s.get('font_setting', {}).get('body', 68 if s_idx != 2 else 52), step=2, key=f"fb_{p_num}_{s_idx}_{t_hash}")
+                pos_b = st.number_input(f"Posisi Y Body S{s_idx+1}", min_value=200, max_value=1600, value=s.get('font_setting', {}).get('y_body', 760 if s_idx==2 else 880), step=10, key=f"yb_{p_num}_{s_idx}_{t_hash}")
             
             fr = 44
             if s_idx == 2:
-                fr = st.number_input(f"Size Riwayat S{s_idx+1}", min_value=20, max_value=80, value=s.get('font_setting', {}).get('riwayat', 44), step=2, key=f"fr_{p_num}_{s_idx}")
+                fr = st.number_input(f"Size Riwayat S{s_idx+1}", min_value=20, max_value=80, value=s.get('font_setting', {}).get('riwayat', 44), step=2, key=f"fr_{p_num}_{s_idx}_{t_hash}")
 
             # OVERRIDE S['FONT_SETTING'] DENGAN INPUT EDITING TERBARU
             s['font_setting'] = {
@@ -523,7 +536,7 @@ if st.session_state.get("parts_data"):
 
             # 2. TOMBOL APPLY CHANGES & RENDER VISUAL
             st.markdown('<div class="btn-apply">', unsafe_allow_html=True)
-            btn_apply = st.button(f"⚡ Apply Changes & Render Visual (Slide {s_idx+1})", key=f"btn_apply_{p_num}_{s_idx}", use_container_width=True)
+            btn_apply = st.button(f"⚡ Apply Changes & Render Visual (Slide {s_idx+1})", key=f"btn_apply_{p_num}_{s_idx}_{t_hash}", use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
 
             if btn_apply or cache_key not in st.session_state["rendered_slide_cache"]:
@@ -561,7 +574,7 @@ if st.session_state.get("parts_data"):
                     data=st.session_state["rendered_slide_cache"][cache_key]["bytes"],
                     file_name=f"RuangTeduh_Part{p_num}_Slide{s_idx+1}.jpg",
                     mime="image/jpeg",
-                    key=f"dl_single_{p_num}_{s_idx}",
+                    key=f"dl_single_{p_num}_{s_idx}_{t_hash}",
                     use_container_width=True
                 )
 
@@ -569,9 +582,9 @@ if st.session_state.get("parts_data"):
         st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
         c_v, c_s = st.columns(2)
         with c_v:
-            st.button(f"🎬 Render Video Part {p_num}", key=f"btn_vid_{p_num}", use_container_width=True)
+            st.button(f"🎬 Render Video Part {p_num}", key=f"btn_vid_{p_num}_{t_hash}", use_container_width=True)
         with c_s:
-            if st.button(f"📸 Render Full Carousel (ZIP 5 Slide) Part {p_num}", key=f"btn_slide_{p_num}", use_container_width=True):
+            if st.button(f"📸 Render Full Carousel (ZIP 5 Slide) Part {p_num}", key=f"btn_slide_{p_num}_{t_hash}", use_container_width=True):
                 try:
                     from render_engine import generate_carousel_pack
                     
@@ -605,7 +618,7 @@ if st.session_state.get("parts_data"):
                 data=preview_info["zip"],
                 file_name=f"RuangTeduh_Part_{p_num}_{datetime.now().strftime('%Y%m%d')}.zip",
                 mime="application/zip",
-                key=f"dl_zip_sync_{p_num}",
+                key=f"dl_zip_sync_{p_num}_{t_hash}",
                 use_container_width=True
             )
 
