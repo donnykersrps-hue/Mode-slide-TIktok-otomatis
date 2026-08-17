@@ -22,7 +22,6 @@ def remove_unsupported_symbols(text):
     """
     if not text:
         return ""
-    # Membersihkan karakter non-ASCII/Emoji agar tidak muncul kotak error
     clean_text = re.sub(r'[\U00010000-\U0010ffff]', '', text)
     clean_text = re.sub(r'[\u2600-\u27BF]', '', clean_text)
     clean_text = re.sub(r'[\u2300-\u23FF]', '', clean_text)
@@ -91,7 +90,7 @@ def draw_text_with_shadow(draw, position, text, font, text_color="#ffffff", shad
     draw.text((x, y), clean_str, font=font, fill=text_color, anchor="mm")
 
 # ==========================================
-# 3. CORE RENDER ENGINE (NO SYMBOLS & SLIDE 5 KUNING NEON)
+# 3. CORE RENDER ENGINE (SLIDE 3 HIJAU NEON & DYNAMIC NO-OVERLAP)
 # ==========================================
 def render_single_slide_image(bg_image, slide_data, is_slide_3=False, is_slide_5=False):
     canvas = bg_image.copy().resize((1080, 1920))
@@ -100,10 +99,11 @@ def render_single_slide_image(bg_image, slide_data, is_slide_3=False, is_slide_5
     font_settings = slide_data.get("font_setting", {})
     size_h = font_settings.get("header", 74)
     size_b = font_settings.get("body", 64 if not is_slide_3 else 50)
-    size_r = font_settings.get("riwayat", 42)
+    size_r = font_settings.get("riwayat", 44)
 
-    pos_h = font_settings.get("y_header", 320 if is_slide_3 else 350)
-    pos_b = font_settings.get("y_body", 680 if is_slide_3 else 750)
+    # Posisi Y khusus Slide 3 agak dinaikkan sedikit agar matan & riwayat punya ruang lega
+    pos_h = font_settings.get("y_header", 300 if is_slide_3 else 350)
+    pos_b = font_settings.get("y_body", 620 if is_slide_3 else 750)
 
     font_h = get_font(size_h)
     font_b = get_font(size_b)
@@ -125,20 +125,18 @@ def render_single_slide_image(bg_image, slide_data, is_slide_3=False, is_slide_5
     body_text = slide_data.get("isi", "")
     cta_text = slide_data.get("cta", "")
 
-    # Gabungkan teks perenungan & CTA di Slide 5 menjadi satu kesatuan teks utama berukuran besar
     if is_slide_5:
         if not cta_text:
             cta_text = "Tulis jawabanmu di komentar, ketuk simpan agar tidak hilang, dan tekan ikuti untuk menyimak sambungan penyejuk jiwa di part selanjutnya."
         
         full_slide5_text = f"{body_text}\n\n{cta_text}" if body_text else cta_text
-        font_s5 = get_font(60)
+        font_s5 = get_font(58)
         s5_lines = wrap_text(full_slide5_text, font_s5, 900, draw)
         
         curr_y = pos_b
         for line in s5_lines:
-            # Warna Kuning Neon #fef08a untuk Slide 5 Engagement Utama
             draw_text_with_shadow(draw, (540, curr_y), line, font_s5, text_color="#fef08a", shadow_color="#000000", shadow_offset=5)
-            curr_y += 60 + 18
+            curr_y += 58 + 18
     else:
         # Tampilan Slide 1, 2, 3, 4 Standar (Warna Cyan #38bdf8)
         if body_text:
@@ -148,11 +146,15 @@ def render_single_slide_image(bg_image, slide_data, is_slide_3=False, is_slide_5
                 draw_text_with_shadow(draw, (540, curr_y), line, font_b, text_color="#38bdf8", shadow_color="#000000", shadow_offset=4)
                 curr_y += size_b + 16
 
-            # Render khusus Riwayat Hadits di Slide 3
+            # RENDER RIWAYAT HADITS SLIDE 3 (WARNA HIJAU NEON #39ff14 & BEBAS OVERLAP)
             riwayat_text = slide_data.get("riwayat", "")
             if is_slide_3 and riwayat_text:
-                y_riwayat = curr_y + 45
-                draw_text_with_shadow(draw, (540, y_riwayat), f"Riwayat {riwayat_text}", font_r, text_color="#fef08a", shadow_color="#000000", shadow_offset=3)
+                # Beri jarak legatis 70px tepat di bawah baris akhir matan hadits
+                y_riwayat = curr_y + 70
+                riwayat_lines = wrap_text(f"Riwayat {riwayat_text}", font_r, 880, draw)
+                for r_line in riwayat_lines:
+                    draw_text_with_shadow(draw, (540, y_riwayat), r_line, font_r, text_color="#39ff14", shadow_color="#000000", shadow_offset=4)
+                    y_riwayat += size_r + 12
 
     return canvas
 
