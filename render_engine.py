@@ -1,11 +1,12 @@
 import os
 import io
+import re
 import zipfile
 import requests
 from PIL import Image, ImageDraw, ImageFont
 
 # ==========================================
-# 1. KONFIGURASI FONT & BACKGROUND DEFAULT
+# 1. KONFIGURASI FONT & CLEANER EMOJI/SIMBOL
 # ==========================================
 FONT_PATH_BOLD = "DejaVuSans-Bold.ttf"
 
@@ -14,6 +15,19 @@ def get_font(size):
         return ImageFont.truetype(FONT_PATH_BOLD, int(size))
     except Exception:
         return ImageFont.load_default()
+
+def remove_unsupported_symbols(text):
+    """
+    Menghapus emoji/simbol asing yang menyebabkan kotak error (□) pada Pillow
+    """
+    if not text:
+        return ""
+    # Membersihkan karakter non-ASCII/Emoji agar tidak muncul kotak error
+    clean_text = re.sub(r'[\U00010000-\U0010ffff]', '', text)
+    clean_text = re.sub(r'[\u2600-\u27BF]', '', clean_text)
+    clean_text = re.sub(r'[\u2300-\u23FF]', '', clean_text)
+    clean_text = re.sub(r'[\u2b50-\u2b55]', '', clean_text)
+    return clean_text.strip()
 
 def fetch_bright_aesthetic_background(pexels_key=""):
     if pexels_key:
@@ -66,14 +80,18 @@ def wrap_text(text, font, max_width, draw):
 
 def draw_text_with_shadow(draw, position, text, font, text_color="#ffffff", shadow_color="#000000", shadow_offset=4):
     x, y = position
+    clean_str = remove_unsupported_symbols(text)
+    if not clean_str:
+        return
+        
     for dx in [-shadow_offset, 0, shadow_offset]:
         for dy in [-shadow_offset, 0, shadow_offset]:
             if dx != 0 or dy != 0:
-                draw.text((x + dx, y + dy), text, font=font, fill=shadow_color, anchor="mm")
-    draw.text((x, y), text, font=font, fill=text_color, anchor="mm")
+                draw.text((x + dx, y + dy), clean_str, font=font, fill=shadow_color, anchor="mm")
+    draw.text((x, y), clean_str, font=font, fill=text_color, anchor="mm")
 
 # ==========================================
-# 3. CORE RENDER ENGINE (DYNAMIC SPACING & MAGENTA GLOW)
+# 3. CORE RENDER ENGINE (NO SYMBOLS & SLIDE 5 KUNING NEON)
 # ==========================================
 def render_single_slide_image(bg_image, slide_data, is_slide_3=False, is_slide_5=False):
     canvas = bg_image.copy().resize((1080, 1920))
@@ -85,57 +103,56 @@ def render_single_slide_image(bg_image, slide_data, is_slide_3=False, is_slide_5
     size_r = font_settings.get("riwayat", 42)
 
     pos_h = font_settings.get("y_header", 320 if is_slide_3 else 350)
-    pos_b = font_settings.get("y_body", 680 if is_slide_3 else 780)
+    pos_b = font_settings.get("y_body", 680 if is_slide_3 else 750)
 
     font_h = get_font(size_h)
     font_b = get_font(size_b)
     font_r = get_font(size_r)
 
-    # 1. RENDER HEADER (KEMBALI KE MAGENTA NEON ESTETIK)
+    # 1. RENDER HEADER (MAGENTA NEON #e879f9)
     header_text = slide_data.get("header", "").upper()
     if is_slide_5:
-        header_text = slide_data.get("header", "PENYEMAT KETENANGAN 🤍").upper()
+        header_text = slide_data.get("header", "PENYEMAT KETENANGAN").upper()
 
     if header_text:
         header_lines = wrap_text(header_text, font_h, 920, draw)
         curr_y = pos_h
         for line in header_lines:
-            # Warna Magenta Neon #e879f9 dengan Shadow Pekat
             draw_text_with_shadow(draw, (540, curr_y), line, font_h, text_color="#e879f9", shadow_color="#000000", shadow_offset=5)
-            curr_y += size_h + 12
+            curr_y += size_h + 14
 
-    # 2. RENDER ISI TEKS (BODY / HADITS / PERENUNGAN)
+    # 2. RENDER ISI TEKS & SLIDE 5 ENGAGEMENT UTAMA
     body_text = slide_data.get("isi", "")
-    curr_y_body_end = pos_b
-
-    if body_text:
-        body_lines = wrap_text(body_text, font_b, 900, draw)
-        curr_y = pos_b
-        color_body = "#38bdf8" if not is_slide_5 else "#f8fafc"
-        for line in body_lines:
-            draw_text_with_shadow(draw, (540, curr_y), line, font_b, text_color=color_body, shadow_color="#000000", shadow_offset=4)
-            curr_y += size_b + 16
-        curr_y_body_end = curr_y
-
-    # 3. RENDER SUB-TEKS / RIWAYAT (SLIDE 3) DAN CTA (SLIDE 5) SECARA DINAMIS
-    riwayat_text = slide_data.get("riwayat", "")
     cta_text = slide_data.get("cta", "")
 
-    if is_slide_5 and not cta_text:
-        cta_text = "Tulis jawabanmu di komentar 💬, ketuk 📌 simpan agar tidak hilang, dan tekan ikuti (follow) untuk menyimak sambungan penyejuk jiwa di part selanjutnya ✨"
+    # Gabungkan teks perenungan & CTA di Slide 5 menjadi satu kesatuan teks utama berukuran besar
+    if is_slide_5:
+        if not cta_text:
+            cta_text = "Tulis jawabanmu di komentar, ketuk simpan agar tidak hilang, dan tekan ikuti untuk menyimak sambungan penyejuk jiwa di part selanjutnya."
+        
+        full_slide5_text = f"{body_text}\n\n{cta_text}" if body_text else cta_text
+        font_s5 = get_font(60)
+        s5_lines = wrap_text(full_slide5_text, font_s5, 900, draw)
+        
+        curr_y = pos_b
+        for line in s5_lines:
+            # Warna Kuning Neon #fef08a untuk Slide 5 Engagement Utama
+            draw_text_with_shadow(draw, (540, curr_y), line, font_s5, text_color="#fef08a", shadow_color="#000000", shadow_offset=5)
+            curr_y += 60 + 18
+    else:
+        # Tampilan Slide 1, 2, 3, 4 Standar (Warna Cyan #38bdf8)
+        if body_text:
+            body_lines = wrap_text(body_text, font_b, 900, draw)
+            curr_y = pos_b
+            for line in body_lines:
+                draw_text_with_shadow(draw, (540, curr_y), line, font_b, text_color="#38bdf8", shadow_color="#000000", shadow_offset=4)
+                curr_y += size_b + 16
 
-    # SLIDE 3: Riwayat Hadits diletakkan mengalir tepat di bawah matan (tidak terlalu bawah)
-    if is_slide_3 and riwayat_text:
-        y_riwayat = curr_y_body_end + 45
-        draw_text_with_shadow(draw, (540, y_riwayat), f"Riwayat {riwayat_text}", font_r, text_color="#fef08a", shadow_color="#000000", shadow_offset=3)
-    
-    # SLIDE 5: CTA diletakkan mengalir tepat di bawah kalimat perenungan (bebas bentrok/menumpuk)
-    elif is_slide_5 and cta_text:
-        cta_lines = wrap_text(cta_text, font_r, 880, draw)
-        curr_y_cta = curr_y_body_end + 50
-        for line in cta_lines:
-            draw_text_with_shadow(draw, (540, curr_y_cta), line, font_r, text_color="#fef08a", shadow_color="#000000", shadow_offset=3)
-            curr_y_cta += size_r + 10
+            # Render khusus Riwayat Hadits di Slide 3
+            riwayat_text = slide_data.get("riwayat", "")
+            if is_slide_3 and riwayat_text:
+                y_riwayat = curr_y + 45
+                draw_text_with_shadow(draw, (540, y_riwayat), f"Riwayat {riwayat_text}", font_r, text_color="#fef08a", shadow_color="#000000", shadow_offset=3)
 
     return canvas
 
