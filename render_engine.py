@@ -29,9 +29,13 @@ def remove_unsupported_symbols(text):
     return clean_text.strip()
 
 def fetch_bright_aesthetic_background(pexels_key=""):
+    """
+    Mengambil background CERAH & MENYENANGKAN dari Pexels API (Warm Sunlight, Bright Nature, Peaceful Sky)
+    """
     if pexels_key:
         headers = {"Authorization": pexels_key}
-        url = "https://api.pexels.com/v1/search?query=aesthetic+nature+warm+light&per_page=15&orientation=portrait"
+        # Query dikunci khusus untuk pemandangan cerah, hangat, bernuansa cahaya matahari (No Dark Theme)
+        url = "https://api.pexels.com/v1/search?query=bright+nature+sunlight+warm+sky+aesthetic&per_page=20&orientation=portrait"
         try:
             res = requests.get(url, headers=headers, timeout=5)
             if res.status_code == 200:
@@ -47,12 +51,14 @@ def fetch_bright_aesthetic_background(pexels_key=""):
         except Exception:
             pass
 
-    base = Image.new("RGB", (1080, 1920), color="#0f172a")
+    # Fallback Gradient CERAH & HANGAT (Warm Golden Sky Gradient) jika Pexels offline
+    base = Image.new("RGB", (1080, 1920), color="#fef3c7")
     draw = ImageDraw.Draw(base)
     for y in range(1920):
-        r = int(15 + (y / 1920) * 35)
-        g = int(23 + (y / 1920) * 45)
-        b = int(42 + (y / 1920) * 60)
+        # Gradasi dari Oranye Muda Warm Sunrise ke Biru Langit Cerah
+        r = int(251 - (y / 1920) * 110)
+        g = int(191 - (y / 1920) * 40)
+        b = int(36 + (y / 1920) * 180)
         draw.line([(0, y), (1080, y)], fill=(r, g, b))
     return base
 
@@ -77,7 +83,10 @@ def wrap_text(text, font, max_width, draw):
     lines.append(current_line)
     return lines
 
-def draw_text_with_shadow(draw, position, text, font, text_color="#ffffff", shadow_color="#000000", shadow_offset=4):
+def draw_text_with_shadow(draw, position, text, font, text_color="#ffffff", shadow_color="#000000", shadow_offset=5):
+    """
+    Shadow pekat 8 arah agar teks berukuran cerah tetap 100% terbaca tajam di atas background terang
+    """
     x, y = position
     clean_str = remove_unsupported_symbols(text)
     if not clean_str:
@@ -90,10 +99,15 @@ def draw_text_with_shadow(draw, position, text, font, text_color="#ffffff", shad
     draw.text((x, y), clean_str, font=font, fill=text_color, anchor="mm")
 
 # ==========================================
-# 3. CORE RENDER ENGINE (SLIDE 3 HIJAU NEON & DYNAMIC NO-OVERLAP)
+# 3. CORE RENDER ENGINE (BRIGHT BACKGROUND & HIJAU NEON SLIDE 3)
 # ==========================================
 def render_single_slide_image(bg_image, slide_data, is_slide_3=False, is_slide_5=False):
     canvas = bg_image.copy().resize((1080, 1920))
+    
+    # Beri sedikit sentuhan Soft Dark Overlay (25% opacity) agar background cerah tidak "memakan" huruf
+    overlay = Image.new("RGBA", (1080, 1920), (15, 23, 42, 60))
+    canvas.paste(overlay, (0, 0), overlay)
+    
     draw = ImageDraw.Draw(canvas)
 
     font_settings = slide_data.get("font_setting", {})
@@ -101,7 +115,6 @@ def render_single_slide_image(bg_image, slide_data, is_slide_3=False, is_slide_5
     size_b = font_settings.get("body", 64 if not is_slide_3 else 50)
     size_r = font_settings.get("riwayat", 44)
 
-    # Posisi Y khusus Slide 3 agak dinaikkan sedikit agar matan & riwayat punya ruang lega
     pos_h = font_settings.get("y_header", 300 if is_slide_3 else 350)
     pos_b = font_settings.get("y_body", 620 if is_slide_3 else 750)
 
@@ -118,7 +131,7 @@ def render_single_slide_image(bg_image, slide_data, is_slide_3=False, is_slide_5
         header_lines = wrap_text(header_text, font_h, 920, draw)
         curr_y = pos_h
         for line in header_lines:
-            draw_text_with_shadow(draw, (540, curr_y), line, font_h, text_color="#e879f9", shadow_color="#000000", shadow_offset=5)
+            draw_text_with_shadow(draw, (540, curr_y), line, font_h, text_color="#e879f9", shadow_color="#000000", shadow_offset=6)
             curr_y += size_h + 14
 
     # 2. RENDER ISI TEKS & SLIDE 5 ENGAGEMENT UTAMA
@@ -135,7 +148,8 @@ def render_single_slide_image(bg_image, slide_data, is_slide_3=False, is_slide_5
         
         curr_y = pos_b
         for line in s5_lines:
-            draw_text_with_shadow(draw, (540, curr_y), line, font_s5, text_color="#fef08a", shadow_color="#000000", shadow_offset=5)
+            # Kuning Neon Mencolok #fef08a untuk Slide 5
+            draw_text_with_shadow(draw, (540, curr_y), line, font_s5, text_color="#fef08a", shadow_color="#000000", shadow_offset=6)
             curr_y += 58 + 18
     else:
         # Tampilan Slide 1, 2, 3, 4 Standar (Warna Cyan #38bdf8)
@@ -143,17 +157,16 @@ def render_single_slide_image(bg_image, slide_data, is_slide_3=False, is_slide_5
             body_lines = wrap_text(body_text, font_b, 900, draw)
             curr_y = pos_b
             for line in body_lines:
-                draw_text_with_shadow(draw, (540, curr_y), line, font_b, text_color="#38bdf8", shadow_color="#000000", shadow_offset=4)
+                draw_text_with_shadow(draw, (540, curr_y), line, font_b, text_color="#38bdf8", shadow_color="#000000", shadow_offset=5)
                 curr_y += size_b + 16
 
             # RENDER RIWAYAT HADITS SLIDE 3 (WARNA HIJAU NEON #39ff14 & BEBAS OVERLAP)
             riwayat_text = slide_data.get("riwayat", "")
             if is_slide_3 and riwayat_text:
-                # Beri jarak legatis 70px tepat di bawah baris akhir matan hadits
                 y_riwayat = curr_y + 70
                 riwayat_lines = wrap_text(f"Riwayat {riwayat_text}", font_r, 880, draw)
                 for r_line in riwayat_lines:
-                    draw_text_with_shadow(draw, (540, y_riwayat), r_line, font_r, text_color="#39ff14", shadow_color="#000000", shadow_offset=4)
+                    draw_text_with_shadow(draw, (540, y_riwayat), r_line, font_r, text_color="#39ff14", shadow_color="#000000", shadow_offset=5)
                     y_riwayat += size_r + 12
 
     return canvas
