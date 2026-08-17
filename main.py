@@ -23,7 +23,7 @@ if GEMINI_KEY:
     genai.configure(api_key=GEMINI_KEY)
 
 # ==========================================
-# 2. GEMINI AI BRAIN ENGINE
+# 2. GEMINI AI BRAIN ENGINE (HIGH ENGAGEMENT & NO META-LABELING)
 # ==========================================
 def generate_5part_with_gemini(topic_name):
     if not GEMINI_KEY:
@@ -41,7 +41,12 @@ def generate_5part_with_gemini(topic_name):
     - SLIDE 2 (KONTEKS): Relevansi masalah batin/kehidupan sehari-hari.
     - SLIDE 3 (INTI DALIL - WAJIB HADITS SHAHIH): Harus memuat Teks Hadits Shahih / Ayat Al-Qur'an lengkap dengan nama Perawinya (contoh: HR. Bukhari, HR. Muslim, HR. Tirmidzi, dll).
     - SLIDE 4 (TADABBUR): Hikmah, perenungan mendalam, dan penyejuk jiwa.
-    - SLIDE 5 (CLOSING & CTA): Ajakan simpan/lanjut part + CTA produk Al-Qur'an/buku di keranjang kuning.
+    - SLIDE 5 (CLOSING & CTA HIGH ENGAGEMENT): 
+      * DILARANG KERAS menggunakan kata "Slide 5", "Slide Terakhir", "Akhir Part", atau sejenisnya!
+      * Header harus memikat batin (Contoh: "PENYEMAT KETENANGAN 🤍", "HARAPAN & DO'A 🌿").
+      * Isi teks berupa perenungan mendalam yang menyentuh jiwa dan memancing respon batin.
+      * Wajib memuat Call To Action (CTA) 4-Pilar Algoritma untuk meledakkan engagement: memancing komentar (Comment Rate), mengajak simpan agar tidak hilang (Save Rate), menekan ikuti/follow (Follow Rate), dan ajakan menyimak sambungan di "part selanjutnya" secara natural.
+      * Contoh CTA Slide 5: "Tulis jawabanmu di komentar 💬, ketuk 📌 simpan agar tidak hilang, dan tekan ikuti (follow) untuk menyimak sambungan penyejuk jiwa di part selanjutnya ✨"
 
     Format Wajib Output: Berikan HANYA JSON MURNI tanpa format markdown ```json ... ```, dengan struktur objek array berisi 5 item seperti contoh berikut:
     [
@@ -56,7 +61,7 @@ def generate_5part_with_gemini(topic_name):
           {{"title": "SLIDE 2 (KONTEKS)", "header": "HEADER KONTEKS ✨", "isi": "Teks penjelasan batin..."}},
           {{"title": "SLIDE 3 (DALIL SHAHIH)", "header": "LANDASAN HADITS 🤲", "isi": "Matan/Arti Hadits Shahih relevan...", "riwayat": "(HR. Bukhari / Muslim / Tirmidzi)"}},
           {{"title": "SLIDE 4 (TADABBUR)", "header": "HEADER TADABBUR 🤍", "isi": "Teks hikmah mendalam..."}},
-          {{"title": "SLIDE 5 (CLOSING)", "header": "HEADER CLOSING 🔗", "isi": "Teks ajakan lanjut ke Part berikutnya...", "cta": "(Sebutkan produk Al-Qur'an/buku di keranjang kuning✨)"}}
+          {{"title": "SLIDE 5 (CLOSING & CTA)", "header": "PENYEMAT KETENANGAN 🤍", "isi": "Teks perenungan batin...", "cta": "Tulis jawabanmu di komentar 💬, ketuk 📌 simpan agar tidak hilang, dan tekan ikuti (follow) untuk menyimak sambungan penyejuk jiwa di part selanjutnya ✨"}}
         ]
       }}
     ]
@@ -480,7 +485,7 @@ if st.session_state.get("parts_data"):
             if 'riwayat' in s or s_idx == 2:
                 s['riwayat'] = st.text_input(f"Riwayat Hadits S{s_idx+1}", value=s.get('riwayat', ''), key=f"r_{p_num}_{s_idx}")
 
-            # CONTROL FONT SIZE & COORDINATE POSITIONING (LENGKAP DENGAN CONTROL ANGKANYA)
+            # CONTROL FONT SIZE & COORDINATE POSITIONING
             st.markdown("##### 📏 Ukuran Font & Presisi Posisi Y-Offset")
             c_f1, c_f2 = st.columns(2)
             with c_f1:
@@ -526,7 +531,7 @@ if st.session_state.get("parts_data"):
                     from render_engine import render_single_slide_image, fetch_bright_aesthetic_background
                     preview_bg = fetch_bright_aesthetic_background(pexels_key=PEXELS_KEY)
                     
-                    # RENDER PILLOW PAKSA MEMBACA S DATA SUNTINGAN TERBARU KAK DONNY
+                    # RENDER PILLOW PAKSA MEMBACA DATA SUNTINGAN TERBARU KAK DONNY
                     rendered_img = render_single_slide_image(
                         preview_bg, s, 
                         is_slide_3=(s_idx==2), 
