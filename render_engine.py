@@ -30,12 +30,12 @@ def remove_unsupported_symbols(text):
 
 def fetch_bright_aesthetic_background(pexels_key=""):
     """
-    Mengambil background CERAH & MENYENANGKAN dari Pexels API (Warm Sunlight, Bright Nature, Peaceful Sky)
+    Mengambil background CERAH LAUTAN & PEGUNUNGAN PAGI (Morning Ocean, Mountain Grassland, Sunrise Sky)
     """
     if pexels_key:
         headers = {"Authorization": pexels_key}
-        # Query dikunci khusus untuk pemandangan cerah, hangat, bernuansa cahaya matahari (No Dark Theme)
-        url = "https://api.pexels.com/v1/search?query=bright+nature+sunlight+warm+sky+aesthetic&per_page=20&orientation=portrait"
+        # Query khusus pemandangan lautan & pegunungan rumput di pagi hari
+        url = "https://api.pexels.com/v1/search?query=morning+ocean+mountain+grassland+sunrise+nature+aesthetic&per_page=30&orientation=portrait"
         try:
             res = requests.get(url, headers=headers, timeout=5)
             if res.status_code == 200:
@@ -51,14 +51,14 @@ def fetch_bright_aesthetic_background(pexels_key=""):
         except Exception:
             pass
 
-    # Fallback Gradient CERAH & HANGAT (Warm Golden Sky Gradient) jika Pexels offline
-    base = Image.new("RGB", (1080, 1920), color="#fef3c7")
+    # Fallback Gradient Pagi Hari (Pesisir Pantai / Pegunungan Pagi) jika Pexels offline
+    base = Image.new("RGB", (1080, 1920), color="#e0f2fe")
     draw = ImageDraw.Draw(base)
     for y in range(1920):
-        # Gradasi dari Oranye Muda Warm Sunrise ke Biru Langit Cerah
-        r = int(251 - (y / 1920) * 110)
-        g = int(191 - (y / 1920) * 40)
-        b = int(36 + (y / 1920) * 180)
+        # Gradasi Pagi: Biru Langit Cerah ke Hijau Segar Pesisir
+        r = int(186 - (y / 1920) * 80)
+        g = int(230 - (y / 1920) * 40)
+        b = int(253 - (y / 1920) * 90)
         draw.line([(0, y), (1080, y)], fill=(r, g, b))
     return base
 
@@ -99,12 +99,12 @@ def draw_text_with_shadow(draw, position, text, font, text_color="#ffffff", shad
     draw.text((x, y), clean_str, font=font, fill=text_color, anchor="mm")
 
 # ==========================================
-# 3. CORE RENDER ENGINE (BRIGHT BACKGROUND & HIJAU NEON SLIDE 3)
+# 3. CORE RENDER ENGINE (SLIDE 3 HIJAU NEON & SLIDE 5 KUNING NEON)
 # ==========================================
 def render_single_slide_image(bg_image, slide_data, is_slide_3=False, is_slide_5=False):
     canvas = bg_image.copy().resize((1080, 1920))
     
-    # Beri sedikit sentuhan Soft Dark Overlay (25% opacity) agar background cerah tidak "memakan" huruf
+    # Beri sentuhan Soft Dark Overlay (25% opacity) agar background cerah tidak "memakan" huruf
     overlay = Image.new("RGBA", (1080, 1920), (15, 23, 42, 60))
     canvas.paste(overlay, (0, 0), overlay)
     
