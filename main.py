@@ -318,11 +318,9 @@ if btn_generate:
     with st.spinner("👤 Manager AI (Gemini) sedang meracik naskah & jadwal 5 Part..."):
         ai_result = generate_5part_with_gemini(topic_input)
         if ai_result:
-            # PURGE OLD STATE KEYS FOR AUTO REFRESH
             new_hash = hashlib.md5(f"{topic_input}_{datetime.now().timestamp()}".encode()).hexdigest()[:8]
             st.session_state["topic_hash"] = new_hash
             
-            # Hapus key lama agar form terlempar naskah baru
             keys_to_clear = [k for k in st.session_state.keys() if k.startswith(("cap_", "h_", "b_", "r_"))]
             for k in keys_to_clear:
                 del st.session_state[k]
@@ -491,7 +489,7 @@ if st.session_state.get("parts_data"):
             
             st.markdown(f"#### 📌 Menyesuaikan {s['title']}")
             
-            # FORM NASKAH TEKS (DYNAMIC KEYING PER TEMA)
+            # FORM NASKAH TEKS
             s['header'] = st.text_input(f"Header S{s_idx+1}", value=s.get('header', ''), key=f"h_{p_num}_{s_idx}_{t_hash}")
             s['isi'] = st.text_area(f"Isi S{s_idx+1}", value=s.get('isi', ''), key=f"b_{p_num}_{s_idx}_{t_hash}", height=85)
             
@@ -521,36 +519,16 @@ if st.session_state.get("parts_data"):
                 "y_body": pos_b
             }
 
-            # 1. CANVAS INTERAKTIF PREVIEW
-            st.markdown("##### 🎨 Interactive Canvas Editor (Drag & Double-Click Preview)")
-            render_compact_interactive_canvas(
-                header_text=s.get('header', ''),
-                body_text=s.get('isi', ''),
-                riwayat_text=s.get('riwayat', '') if selected_edit_idx==2 else "",
-                header_size=fh,
-                body_size=fb,
-                fr_size=fr,
-                pos_h=pos_h,
-                pos_b=pos_b
-            )
-
-            # 2. TOMBOL APPLY CHANGES & RENDER VISUAL
-            st.markdown('<div class="btn-apply">', unsafe_allow_html=True)
-            btn_apply = st.button(f"⚡ Apply Changes & Render Visual (Slide {s_idx+1})", key=f"btn_apply_{p_num}_{s_idx}_{t_hash}", use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-
-            if btn_apply or cache_key not in st.session_state["rendered_slide_cache"]:
+            # AUTO RENDER PILLOW ENGINE SEBELUM DITAMPILKAN
+            if cache_key not in st.session_state["rendered_slide_cache"]:
                 try:
                     from render_engine import render_single_slide_image, fetch_bright_aesthetic_background
                     preview_bg = fetch_bright_aesthetic_background(pexels_key=PEXELS_KEY)
-                    
-                    # RENDER PILLOW PAKSA MEMBACA DATA SUNTINGAN TERBARU KAK DONNY
                     rendered_img = render_single_slide_image(
                         preview_bg, s, 
                         is_slide_3=(s_idx==2), 
                         is_slide_5=(s_idx==4)
                     )
-                    
                     img_byte_arr = io.BytesIO()
                     rendered_img.save(img_byte_arr, format='JPEG', quality=98)
                     st.session_state["rendered_slide_cache"][cache_key] = {
@@ -560,23 +538,63 @@ if st.session_state.get("parts_data"):
                 except Exception as e_ren:
                     st.error(f"⚠️ Gagal merender visual: {e_ren}")
 
-            # 3. DIRECT JPG RESULT (GAMBAR YANG AKAN DIDOWNLOAD)
-            if cache_key in st.session_state["rendered_slide_cache"]:
-                st.markdown("##### 📱 Direct JPG Render Preview (Visual Hasil Download)")
-                st.image(
-                    st.session_state["rendered_slide_cache"][cache_key]["img"],
-                    caption=f"Hasil Gambar JPG Slide {s_idx+1} (100% Identik Dengan File Download)",
-                    width=260
+            # ==========================================
+            # LAYOUT 2 KOLOM BERDAMPINGAN (CANVAS VS DIRECT RENDER)
+            # ==========================================
+            col_canvas, col_render = st.columns(2)
+
+            with col_canvas:
+                st.markdown("##### 🎨 Interactive Canvas Editor")
+                render_compact_interactive_canvas(
+                    header_text=s.get('header', ''),
+                    body_text=s.get('isi', ''),
+                    riwayat_text=s.get('riwayat', '') if selected_edit_idx==2 else "",
+                    header_size=fh,
+                    body_size=fb,
+                    fr_size=fr,
+                    pos_h=pos_h,
+                    pos_b=pos_b
                 )
 
-                st.download_button(
-                    label=f"💾 Download Gambar Slide {s_idx+1} Ini (.jpg)",
-                    data=st.session_state["rendered_slide_cache"][cache_key]["bytes"],
-                    file_name=f"RuangTeduh_Part{p_num}_Slide{s_idx+1}.jpg",
-                    mime="image/jpeg",
-                    key=f"dl_single_{p_num}_{s_idx}_{t_hash}",
-                    use_container_width=True
-                )
+                st.markdown('<div class="btn-apply">', unsafe_allow_html=True)
+                btn_apply = st.button(f"⚡ Apply Changes & Render Visual (Slide {s_idx+1})", key=f"btn_apply_{p_num}_{s_idx}_{t_hash}", use_container_width=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+
+                if btn_apply:
+                    try:
+                        from render_engine import render_single_slide_image, fetch_bright_aesthetic_background
+                        preview_bg = fetch_bright_aesthetic_background(pexels_key=PEXELS_KEY)
+                        rendered_img = render_single_slide_image(
+                            preview_bg, s, 
+                            is_slide_3=(s_idx==2), 
+                            is_slide_5=(s_idx==4)
+                        )
+                        img_byte_arr = io.BytesIO()
+                        rendered_img.save(img_byte_arr, format='JPEG', quality=98)
+                        st.session_state["rendered_slide_cache"][cache_key] = {
+                            "img": rendered_img,
+                            "bytes": img_byte_arr.getvalue()
+                        }
+                    except Exception as e_ren:
+                        st.error(f"⚠️ Gagal merender visual: {e_ren}")
+
+            with col_render:
+                st.markdown("##### 📱 Direct JPG Render Preview")
+                if cache_key in st.session_state["rendered_slide_cache"]:
+                    st.image(
+                        st.session_state["rendered_slide_cache"][cache_key]["img"],
+                        caption=f"Hasil Gambar JPG Slide {s_idx+1} (100% Identik)",
+                        width=250
+                    )
+
+                    st.download_button(
+                        label=f"💾 Download Gambar Slide {s_idx+1} (.jpg)",
+                        data=st.session_state["rendered_slide_cache"][cache_key]["bytes"],
+                        file_name=f"RuangTeduh_Part{p_num}_Slide{s_idx+1}.jpg",
+                        mime="image/jpeg",
+                        key=f"dl_single_{p_num}_{s_idx}_{t_hash}",
+                        use_container_width=True
+                    )
 
         # AREA TOMBOL RENDER MASAL FULL PACK 5 SLIDE
         st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
