@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import pandas as pd
 import json
 import io
@@ -90,7 +89,7 @@ def generate_5part_with_gemini(topic_name):
 # ==========================================
 custom_css = """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;800&display=swap');
+    @import url('[https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;800&display=swap](https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;800&display=swap)');
 
     .stApp {
         background-color: #0f172a !important;
@@ -98,8 +97,7 @@ custom_css = """
         font-family: 'Plus Jakarta Sans', sans-serif !important;
     }
 
-    /* MENIHILKAN BOUNDARY IFRAME AGAR CAHAYA BERPIJAR NATURAL MENYATU DENGAN LAYAR */
-    iframe[title*="st.html"] {
+    iframe {
         background: transparent !important;
         border: none !important;
     }
@@ -245,47 +243,32 @@ custom_css = """
 st.markdown(custom_css, unsafe_allow_html=True)
 
 # ==========================================
-# 4. STICKY BULAN SABIT BERPIJAR & SPOTIFY AUDIO ENGINE (DIPERBAIKI)
+# 4. STICKY BULAN SABIT BERPIJAR & SPOTIFY AUDIO ENGINE
 # ==========================================
 audio_floating_html = """
 <!DOCTYPE html>
 <html>
 <head>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="[https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&display=swap](https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&display=swap)" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { background: transparent !important; font-family: 'Plus Jakarta Sans', sans-serif; overflow: visible; }
         
         .moon-player-container {
-            position: fixed;
-            top: 10px;
-            right: 25px;
-            z-index: 999999;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            pointer-events: none; /* biar klik tembus ke bawah kecuali tombol */
+            position: fixed; top: 10px; right: 25px; z-index: 999999;
+            display: flex; flex-direction: column; align-items: flex-end;
         }
 
         .moon-btn {
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: rgba(15, 23, 42, 0.9);
-            border: 2px solid #fef08a;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 56px; height: 56px; border-radius: 50%;
+            background: rgba(15, 23, 42, 0.9); border: 2px solid #fef08a;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
-            pointer-events: auto; /* tombol bisa diklik */
         }
 
         .moon-icon {
-            font-size: 28px;
-            line-height: 1;
-            transition: all 0.5s ease;
+            font-size: 28px; line-height: 1; transition: all 0.5s ease;
             filter: drop-shadow(0 0 4px rgba(254, 240, 138, 0.6));
         }
 
@@ -297,120 +280,51 @@ audio_floating_html = """
         }
 
         .moon-btn.active .moon-icon {
-            color: #0f172a;
-            transform: scale(1.15);
+            color: #0f172a; transform: scale(1.15);
             filter: drop-shadow(0 0 10px #ffffff);
         }
 
         .moon-btn.off {
-            opacity: 0.7;
-            border-color: #64748b;
+            opacity: 0.7; border-color: #64748b;
             box-shadow: 0 0 8px rgba(0,0,0,0.4);
         }
 
         .spotify-card {
-            position: absolute;
-            top: 68px;
-            right: 0;
-            width: 310px;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(254, 240, 138, 0.4);
-            border-radius: 18px;
-            padding: 16px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 30px rgba(234, 179, 8, 0.25);
-            display: none;
-            flex-direction: column;
-            gap: 12px;
-            transition: all 0.3s ease;
-            pointer-events: auto;
+            position: absolute; top: 68px; right: 0; width: 310px;
+            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px);
+            border: 1px solid rgba(254, 240, 138, 0.4); border-radius: 18px;
+            padding: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 30px rgba(234, 179, 8, 0.25);
+            display: none; flex-direction: column; gap: 12px; transition: all 0.3s ease;
         }
 
-        .spotify-card.show {
-            display: flex;
-            animation: fadeInSlide 0.3s ease forwards;
-        }
+        .spotify-card.show { display: flex; animation: fadeInSlide 0.3s ease forwards; }
 
         @keyframes fadeInSlide {
             from { opacity: 0; transform: translateY(-8px) scale(0.96); }
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        .song-title {
-            color: #fef08a;
-            font-size: 13px;
-            font-weight: 800;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .song-artist {
-            color: #94a3b8;
-            font-size: 11px;
-            font-weight: 600;
-            margin-top: 2px;
-        }
+        .song-title { color: #fef08a; font-size: 13px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .song-artist { color: #94a3b8; font-size: 11px; font-weight: 600; margin-top: 2px; }
 
-        .player-controls {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 18px;
-            margin-top: 4px;
-        }
-        .control-btn {
-            background: none;
-            border: none;
-            color: #fef08a;
-            font-size: 18px;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        .control-btn:hover {
-            transform: scale(1.25);
-            color: #00f0ff;
-        }
+        .player-controls { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 4px; }
+        .control-btn { background: none; border: none; color: #fef08a; font-size: 18px; cursor: pointer; transition: transform 0.2s; }
+        .control-btn:hover { transform: scale(1.25); color: #00f0ff; }
         
         .play-main-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #fef08a 0%, #ca8a04 100%);
-            color: #0f172a;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 16px;
-            font-weight: 800;
-            cursor: pointer;
-            box-shadow: 0 0 15px rgba(254, 240, 138, 0.6);
-            transition: all 0.2s ease;
+            width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #fef08a 0%, #ca8a04 100%);
+            color: #0f172a; display: flex; justify-content: center; align-items: center; font-size: 16px; font-weight: 800; cursor: pointer;
+            box-shadow: 0 0 15px rgba(254, 240, 138, 0.6); transition: all 0.2s ease;
         }
-        .play-main-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 25px #00f0ff;
-        }
+        .play-main-btn:hover { transform: scale(1.1); box-shadow: 0 0 25px #00f0ff; }
 
-        .progress-bar-bg {
-            width: 100%;
-            height: 5px;
-            background: rgba(255,255,255,0.15);
-            border-radius: 4px;
-            overflow: hidden;
-            cursor: pointer;
-        }
-        .progress-fill {
-            width: 0%;
-            height: 100%;
-            background: #00f0ff;
-            border-radius: 4px;
-            transition: width 0.1s linear;
-        }
+        .progress-bar-bg { width: 100%; height: 5px; background: rgba(255,255,255,0.15); border-radius: 4px; overflow: hidden; cursor: pointer; }
+        .progress-fill { width: 0%; height: 100%; background: #00f0ff; border-radius: 4px; transition: width 0.1s linear; }
     </style>
 </head>
 <body>
     <div class="moon-player-container">
-        <div class="moon-btn off" id="moon-toggle" title="Klik untuk Memutar Audio Suasana Ruang Teduh">
+        <div class="moon-btn off" id="moon-toggle" onclick="togglePlayState()" title="Klik untuk Memutar Audio Suasana Ruang Teduh">
             <span class="moon-icon">🌙</span>
         </div>
 
@@ -433,14 +347,14 @@ audio_floating_html = """
     </div>
 
     <audio id="bg-audio" preload="auto">
-        <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3" type="audio/mpeg">
+        <source src="[https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3](https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3)" type="audio/mpeg">
     </audio>
 
     <script>
         const playlist = [
-            { title: "Dengan Nafas-Mu", artist: "Ungu - Special Ruang Teduh", src: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3" },
-            { title: "Cahaya Hati Penyejuk Batin", artist: "Letto - Islamic Session", src: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a70f3b.mp3" },
-            { title: "Tuhan Penenteram Jiwa", artist: "Gigi - Instrument Classic", src: "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3" }
+            { title: "Dengan Nafas-Mu", artist: "Ungu - Special Ruang Teduh", src: "[https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3](https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3)" },
+            { title: "Cahaya Hati Penyejuk Batin", artist: "Letto - Islamic Session", src: "[https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a70f3b.mp3](https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a70f3b.mp3)" },
+            { title: "Tuhan Penenteram Jiwa", artist: "Gigi - Instrument Classic", src: "[https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3](https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3)" }
         ];
 
         let currentIdx = 0;
@@ -452,7 +366,6 @@ audio_floating_html = """
         const artistName = document.getElementById("artist-name");
         const progressBar = document.getElementById("progress-bar");
 
-        // Hover untuk tampilkan drawer
         moonBtn.addEventListener("mouseenter", () => drawer.classList.add("show"));
         document.addEventListener("click", (e) => {
             if (!document.querySelector(".moon-player-container").contains(e.target)) {
@@ -468,53 +381,36 @@ audio_floating_html = """
             audio.load();
         }
 
-        function setPlayState(playing) {
-            if (playing) {
-                moonBtn.classList.remove("off");
-                moonBtn.classList.add("active");
-                playBtnIcon.textContent = "❚❚";
+        function togglePlayState() {
+            if (audio.paused) {
+                var playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(_ => {
+                        moonBtn.classList.remove("off");
+                        moonBtn.classList.add("active");
+                        playBtnIcon.textContent = "❚❚";
+                    }).catch(error => {
+                        console.log("Playback error: ", error);
+                    });
+                }
             } else {
+                audio.pause();
                 moonBtn.classList.remove("active");
                 moonBtn.classList.add("off");
                 playBtnIcon.textContent = "▶";
             }
         }
 
-        function togglePlayState() {
-            if (audio.paused) {
-                var playPromise = audio.play();
-                if (playPromise !== undefined) {
-                    playPromise.then(() => {
-                        setPlayState(true);
-                    }).catch(error => {
-                        console.log("Playback error: ", error);
-                        setPlayState(false);
-                    });
-                }
-            } else {
-                audio.pause();
-                setPlayState(false);
-            }
-        }
-
         function nextTrack() {
             currentIdx = (currentIdx + 1) % playlist.length;
             loadTrack(currentIdx);
-            if (!audio.paused) {
-                audio.play().then(() => setPlayState(true)).catch(() => setPlayState(false));
-            } else {
-                setPlayState(false);
-            }
+            togglePlayState();
         }
 
         function prevTrack() {
             currentIdx = (currentIdx - 1 + playlist.length) % playlist.length;
             loadTrack(currentIdx);
-            if (!audio.paused) {
-                audio.play().then(() => setPlayState(true)).catch(() => setPlayState(false));
-            } else {
-                setPlayState(false);
-            }
+            togglePlayState();
         }
 
         audio.addEventListener("timeupdate", () => {
@@ -529,38 +425,11 @@ audio_floating_html = """
             const pos = (e.clientX - rect.left) / rect.width;
             audio.currentTime = pos * audio.duration;
         }
-
-        // ===== AUTOPLAY & FALLBACK =====
-        function attemptAutoPlay() {
-            audio.play().then(() => {
-                setPlayState(true);
-                console.log("Autoplay berhasil.");
-            }).catch(err => {
-                console.log("Autoplay diblokir, menunggu interaksi pengguna.");
-                setPlayState(false);
-                // Pasang listener sekali klik di dokumen untuk memulai
-                document.addEventListener("click", function firstClick() {
-                    audio.play().then(() => {
-                        setPlayState(true);
-                        document.removeEventListener("click", firstClick);
-                    }).catch(() => {});
-                });
-            });
-        }
-
-        // Jalankan autoplay saat halaman dimuat
-        window.addEventListener("load", function() {
-            loadTrack(0); // muat lagu pertama
-            attemptAutoPlay();
-        });
-
-        // Sinkronisasi saat tombol bulan diklik
-        moonBtn.addEventListener("click", togglePlayState);
     </script>
 </body>
 </html>
 """
-components.html(audio_floating_html, height=80)
+st.html(audio_floating_html)
 
 # ==========================================
 # 5. TOP BAR JAM REALTIME
@@ -569,7 +438,7 @@ top_bar_html = """
 <!DOCTYPE html>
 <html>
 <head>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <link href="[https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&family=JetBrains+Mono:wght@700&display=swap](https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&family=JetBrains+Mono:wght@700&display=swap)" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #0f172a; font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -613,7 +482,7 @@ top_bar_html = """
 </body>
 </html>
 """
-components.html(top_bar_html, height=50)
+st.html(top_bar_html)
 
 # ==========================================
 # 6. HEADER & INPUT CONTROL
@@ -663,7 +532,7 @@ def render_compact_interactive_canvas(header_text, body_text, riwayat_text="", h
     <!DOCTYPE html>
     <html>
     <head>
-        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
+        <link href="[https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&display=swap](https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&display=swap)" rel="stylesheet">
         <style>
             * {{ box-sizing: border-box; margin: 0; padding: 0; user-select: none; }}
             body {{ background: #0f172a; display: flex; justify-content: center; align-items: center; padding: 6px; font-family: 'Montserrat', sans-serif; }}
@@ -768,7 +637,7 @@ def render_compact_interactive_canvas(header_text, body_text, riwayat_text="", h
     </body>
     </html>
     """
-    components.html(html_code, height=450)
+    st.html(html_code)
 
 # ==========================================
 # 8. MAIN CONTENT QUEUE ENGINE
@@ -879,7 +748,7 @@ if st.session_state.get("parts_data"):
                 )
 
                 st.markdown('<div class="btn-apply">', unsafe_allow_html=True)
-                btn_apply = st.button(f"⚡ Apply Changes & Render Visual (Slide {s_idx+1})", key=f"btn_apply_{p_num}_{s_idx}_{t_hash}", use_container_width=True)
+                btn_apply = st.button(f"⚡ Apply Changes & Render Visual (Slide {s_idx+1})", key=f"btn_apply_{p_num}_{s_idx}_{t_hash}", width="stretch")
                 st.markdown('</div>', unsafe_allow_html=True)
 
                 if btn_apply:
@@ -915,16 +784,16 @@ if st.session_state.get("parts_data"):
                         file_name=f"RuangTeduh_Part{p_num}_Slide{s_idx+1}.jpg",
                         mime="image/jpeg",
                         key=f"dl_single_{p_num}_{s_idx}_{t_hash}",
-                        use_container_width=True
+                        width="stretch"
                     )
 
         # AREA TOMBOL RENDER MASAL FULL PACK 5 SLIDE
         st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
         c_v, c_s = st.columns(2)
         with c_v:
-            st.button(f"🎬 Render Video Part {p_num}", key=f"btn_vid_{p_num}_{t_hash}", use_container_width=True)
+            st.button(f"🎬 Render Video Part {p_num}", key=f"btn_vid_{p_num}_{t_hash}", width="stretch")
         with c_s:
-            if st.button(f"📸 Render Full Carousel (ZIP 5 Slide) Part {p_num}", key=f"btn_slide_{p_num}_{t_hash}", use_container_width=True):
+            if st.button(f"📸 Render Full Carousel (ZIP 5 Slide) Part {p_num}", key=f"btn_slide_{p_num}_{t_hash}", width="stretch"):
                 try:
                     from render_engine import generate_carousel_pack
                     
@@ -951,7 +820,7 @@ if st.session_state.get("parts_data"):
             
             for idx, img in enumerate(preview_info["images"]):
                 with cols[idx]:
-                    st.image(img, caption=f"Slide {idx+1}", use_container_width=True)
+                    st.image(img, caption=f"Slide {idx+1}", width="stretch")
             
             st.download_button(
                 label=f"💾 Download 5 Slide HD (ZIP) Ter-Sync Edit - Part {p_num}",
@@ -959,7 +828,7 @@ if st.session_state.get("parts_data"):
                 file_name=f"RuangTeduh_Part_{p_num}_{datetime.now().strftime('%Y%m%d')}.zip",
                 mime="application/zip",
                 key=f"dl_zip_sync_{p_num}_{t_hash}",
-                use_container_width=True
+                width="stretch"
             )
 
         st.markdown("<div style='margin-bottom: 24px;'></div>", unsafe_allow_html=True)
