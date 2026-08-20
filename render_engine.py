@@ -97,7 +97,7 @@ def draw_text_with_shadow(draw, position, text, font, text_color="#ffffff", shad
     draw.text((x, y), clean_str, font=font, fill=text_color, anchor="mm")
 
 # ==========================================
-# 3. CORE RENDER ENGINE (RACIKAN BARU METODE PET)
+# 3. CORE RENDER ENGINE (REVISE: PART LABEL & DYNAMIC HEADER)
 # ==========================================
 def render_single_slide_image(bg_image, slide_data, is_slide_3=False, is_slide_5=False):
     canvas = bg_image.copy().resize((1080, 1920))
@@ -109,18 +109,25 @@ def render_single_slide_image(bg_image, slide_data, is_slide_3=False, is_slide_5
     draw = ImageDraw.Draw(canvas)
 
     font_settings = slide_data.get("font_setting", {})
-    size_h = font_settings.get("header", 74)
+    size_h = font_settings.get("header", 70)
     size_b = font_settings.get("body", 60 if not is_slide_3 else 48)
     size_r = font_settings.get("riwayat", 42)
 
-    pos_h = font_settings.get("y_header", 300 if is_slide_3 else 350)
-    pos_b = font_settings.get("y_body", 600 if is_slide_3 else 720)
+    pos_h = font_settings.get("y_header", 320 if is_slide_3 else 360)
+    pos_b = font_settings.get("y_body", 620 if is_slide_3 else 720)
 
     font_h = get_font(size_h)
     font_b = get_font(size_b)
     font_r = get_font(size_r)
 
-    # 1. RENDER HEADER (MAGENTA NEON #e879f9)
+    # 1. RENDER LABEL PART (HIJAU NEON #39ff14 - EYE CATCHER ATAS)
+    part_label = slide_data.get("part_label", "").upper()
+    if part_label:
+        font_part = get_font(48)
+        # Posisi di atas Header Utama
+        draw_text_with_shadow(draw, (540, pos_h - 80), part_label, font_part, text_color="#39ff14", shadow_color="#000000", shadow_offset=6)
+
+    # 2. RENDER HEADER KONTEKS DINAMIS (MAGENTA NEON #e879f9)
     header_text = slide_data.get("header", "").upper()
     if is_slide_5:
         header_text = slide_data.get("header", "PENYEMAT KETENANGAN").upper()
@@ -132,17 +139,16 @@ def render_single_slide_image(bg_image, slide_data, is_slide_3=False, is_slide_5
             draw_text_with_shadow(draw, (540, curr_y), line, font_h, text_color="#e879f9", shadow_color="#000000", shadow_offset=6)
             curr_y += size_h + 14
 
-    # 2. RENDER ISI TEKS & SLIDE 5 (STRATEGI PANGKAS COOLDOWN)
+    # 3. RENDER ISI TEKS & SLIDE 5 ENGAGEMENT
     body_text = slide_data.get("isi", "")
     cta_text = slide_data.get("cta", "")
 
     if is_slide_5:
-        # PANGKAS COOLDOWN:CTA menyertakan jembatan ke part selanjutnya
         if not cta_text:
             cta_text = "Tulis jawabanmu di komentar, ketuk simpan agar tidak hilang, dan tekan ikuti untuk menyimak sambungan penyejuk jiwa di part selanjutnya."
         
         full_slide5_text = f"{body_text}\n\n{cta_text}" if body_text else cta_text
-        font_s5 = get_font(52)  # Ukuran sedikit disesuaikan agar tidak padat & mata tidak lelah
+        font_s5 = get_font(52)
         s5_lines = wrap_text(full_slide5_text, font_s5, 900, draw)
         
         curr_y = pos_b
@@ -159,7 +165,7 @@ def render_single_slide_image(bg_image, slide_data, is_slide_3=False, is_slide_5
                 draw_text_with_shadow(draw, (540, curr_y), line, font_b, text_color="#38bdf8", shadow_color="#000000", shadow_offset=5)
                 curr_y += size_b + 16
 
-            # RENDER RIWAYAT HADITS SLIDE 3 (HIJAU NEON #39ff14 & ANTI-OVERLAP)
+            # RENDER RIWAYAT HADITS SLIDE 3 (HIJAU NEON #39ff14 & BEBAS OVERLAP)
             riwayat_text = slide_data.get("riwayat", "")
             if is_slide_3 and riwayat_text:
                 y_riwayat = curr_y + 60
