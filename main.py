@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import pandas as pd
 import json
 import io
@@ -286,61 +285,38 @@ audio_floating_html = """
 </body>
 </html>
 """
-components.html(audio_floating_html, height=80)
+st.html(audio_floating_html)
 
 # ==========================================
-# 5. TOP BAR JAM REALTIME (FIXED REALTIME TICKING)
+# 5. TOP BAR JAM REALTIME
 # ==========================================
 top_bar_html = """
 <!DOCTYPE html>
 <html>
 <head>
-    <link href="[https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&family=JetBrains+Mono:wght@700&display=swap](https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&family=JetBrains+Mono:wght@700&display=swap)" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: #0f172a; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; }
-        .top-bar {
-            width: 100%; height: 46px; background: rgba(15, 23, 42, 0.95);
-            border-bottom: 1px solid rgba(234, 179, 8, 0.35);
-            display: flex; align-items: center; justify-content: space-between; padding: 0 16px;
-        }
-        .clock-card {
-            display: flex; align-items: center; gap: 8px; background: rgba(30, 41, 59, 0.85);
-            border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 8px; padding: 4px 12px;
-        }
-        .clock-time { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: #fef08a; }
-        .clock-date { font-size: 11px; color: #94a3b8; border-left: 1px solid rgba(255, 255, 255, 0.15); padding-left: 8px; }
-        .status-badge {
-            background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3);
-            font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px;
-        }
+        body { background-color: #0f172a; font-family: sans-serif; }
+        .top-bar { width: 100%; height: 46px; background: rgba(15, 23, 42, 0.95); border-bottom: 1px solid rgba(234, 179, 8, 0.35); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+        .clock-time { font-family: monospace; font-size: 14px; font-weight: 700; color: #fef08a; }
+        .status-badge { background: rgba(34, 197, 94, 0.15); color: #4ade80; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; }
     </style>
 </head>
 <body>
     <div class="top-bar">
-        <div class="clock-card">
-            <span class="clock-time" id="digital-clock">00:00:00 WIB</span>
-            <span class="clock-date" id="digital-date">Loading...</span>
-        </div>
+        <span class="clock-time" id="digital-clock">00:00:00 WIB</span>
         <div class="status-badge">⚡ SUPER CREATOR: ACTIVE</div>
     </div>
     <script>
         function updateClock() {
             const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            document.getElementById('digital-clock').textContent = hours + ':' + minutes + ':' + seconds + ' WIB';
-            const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
-            document.getElementById('digital-date').textContent = now.toLocaleDateString('id-ID', options);
+            document.getElementById('digital-clock').textContent = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0') + ' WIB';
         }
-        setInterval(updateClock, 1000); 
-        updateClock();
+        setInterval(updateClock, 1000); updateClock();
     </script>
 </body>
 </html>
 """
-components.html(top_bar_html, height=50)
+st.html(top_bar_html)
 
 # ==========================================
 # 6. HEADER & INPUT CONTROL
@@ -440,7 +416,7 @@ def render_compact_interactive_canvas(header_text, body_text, part_label="", riw
     </body>
     </html>
     """
-    components.html(html_code, height=450)
+    st.html(html_code)
 
 # ==========================================
 # 8. MAIN CONTENT QUEUE ENGINE
@@ -502,4 +478,140 @@ if st.session_state.get("parts_data"):
                 fh = st.number_input(f"Size Header S{s_idx+1}", min_value=30, max_value=120, value=s.get('font_setting', {}).get('header', 70), step=2, key=f"fh_{p_num}_{s_idx}_{t_hash}")
                 pos_h = st.number_input(f"Posisi Y Header S{s_idx+1}", min_value=100, max_value=1200, value=s.get('font_setting', {}).get('y_header', 320 if s_idx==2 else 360), step=10, key=f"yh_{p_num}_{s_idx}_{t_hash}")
             with c_f2:
-                fb = st.number_input(f"Size Body S{s_idx+1}", min_value=25, max_value=100, value=s.get('font_setting', {}).get('body', 60 if s_idx != 2 else 48), step=2, key=f"fb_{p_num}_{s_
+                fb = st.number_input(f"Size Body S{s_idx+1}", min_value=25, max_value=100, value=s.get('font_setting', {}).get('body', 60 if s_idx != 2 else 48), step=2, key=f"fb_{p_num}_{s_idx}_{t_hash}")
+                pos_b = st.number_input(f"Posisi Y Body S{s_idx+1}", min_value=200, max_value=1600, value=s.get('font_setting', {}).get('y_body', 620 if s_idx==2 else 720), step=10, key=f"yb_{p_num}_{s_idx}_{t_hash}")
+            
+            fr = 42
+            if s_idx == 2:
+                fr = st.number_input(f"Size Riwayat S{s_idx+1}", min_value=20, max_value=80, value=s.get('font_setting', {}).get('riwayat', 42), step=2, key=f"fr_{p_num}_{s_idx}_{t_hash}")
+
+            # OVERRIDE S['FONT_SETTING']
+            s['font_setting'] = {
+                "header": fh,
+                "body": fb,
+                "riwayat": fr,
+                "y_header": pos_h,
+                "y_body": pos_b
+            }
+
+            # AUTO RENDER PILLOW ENGINE
+            if cache_key not in st.session_state["rendered_slide_cache"]:
+                try:
+                    from render_engine import render_single_slide_image, fetch_bright_aesthetic_background
+                    preview_bg = fetch_bright_aesthetic_background(pexels_key=PEXELS_KEY)
+                    rendered_img = render_single_slide_image(
+                        preview_bg, s, 
+                        is_slide_3=(s_idx==2), 
+                        is_slide_5=(s_idx==4)
+                    )
+                    img_byte_arr = io.BytesIO()
+                    rendered_img.save(img_byte_arr, format='JPEG', quality=98)
+                    st.session_state["rendered_slide_cache"][cache_key] = {
+                        "img": rendered_img,
+                        "bytes": img_byte_arr.getvalue()
+                    }
+                except Exception as e_ren:
+                    st.error(f"⚠️ Gagal merender visual: {e_ren}")
+
+            # LAYOUT 2 KOLOM BERDAMPINGAN
+            col_canvas, col_render = st.columns(2)
+
+            with col_canvas:
+                st.markdown("##### 🎨 Interactive Canvas Editor")
+                render_compact_interactive_canvas(
+                    header_text=s.get('header', ''),
+                    body_text=s.get('isi', ''),
+                    part_label=s.get('part_label', ''),
+                    riwayat_text=s.get('riwayat', '') if selected_edit_idx==2 else "",
+                    header_size=fh,
+                    body_size=fb,
+                    fr_size=fr,
+                    pos_h=pos_h,
+                    pos_b=pos_b
+                )
+
+                st.markdown('<div class="btn-apply">', unsafe_allow_html=True)
+                btn_apply = st.button(f"⚡ Apply Changes & Render Visual (Slide {s_idx+1})", key=f"btn_apply_{p_num}_{s_idx}_{t_hash}", width="stretch")
+                st.markdown('</div>', unsafe_allow_html=True)
+
+                if btn_apply:
+                    try:
+                        from render_engine import render_single_slide_image, fetch_bright_aesthetic_background
+                        preview_bg = fetch_bright_aesthetic_background(pexels_key=PEXELS_KEY)
+                        rendered_img = render_single_slide_image(
+                            preview_bg, s, 
+                            is_slide_3=(s_idx==2), 
+                            is_slide_5=(s_idx==4)
+                        )
+                        img_byte_arr = io.BytesIO()
+                        rendered_img.save(img_byte_arr, format='JPEG', quality=98)
+                        st.session_state["rendered_slide_cache"][cache_key] = {
+                            "img": rendered_img,
+                            "bytes": img_byte_arr.getvalue()
+                        }
+                    except Exception as e_ren:
+                        st.error(f"⚠️ Gagal merender visual: {e_ren}")
+
+            with col_render:
+                st.markdown("##### 📱 Direct JPG Render Preview")
+                if cache_key in st.session_state["rendered_slide_cache"]:
+                    st.image(
+                        st.session_state["rendered_slide_cache"][cache_key]["img"],
+                        caption=f"Hasil Gambar JPG Slide {s_idx+1} (100% Identik)",
+                        width=250
+                    )
+
+                    st.download_button(
+                        label=f"💾 Download Gambar Slide {s_idx+1} (.jpg)",
+                        data=st.session_state["rendered_slide_cache"][cache_key]["bytes"],
+                        file_name=f"RuangTeduh_Part{p_num}_Slide{s_idx+1}.jpg",
+                        mime="image/jpeg",
+                        key=f"dl_single_{p_num}_{s_idx}_{t_hash}",
+                        width="stretch"
+                    )
+
+        # AREA TOMBOL RENDER MASAL FULL PACK 5 SLIDE
+        st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+        c_v, c_s = st.columns(2)
+        with c_v:
+            st.button(f"🎬 Render Video Part {p_num}", key=f"btn_vid_{p_num}_{t_hash}", width="stretch")
+        with c_s:
+            if st.button(f"📸 Render Full Carousel (ZIP 5 Slide) Part {p_num}", key=f"btn_slide_{p_num}_{t_hash}", width="stretch"):
+                try:
+                    from render_engine import generate_carousel_pack
+                    
+                    with st.spinner(f"🎨 Merender 5 Gambar Carousel HD Sinkron Part {p_num}..."):
+                        images, zip_data = generate_carousel_pack(
+                            part.get('slides', []), 
+                            pexels_key=PEXELS_KEY
+                        )
+                        st.session_state["carousel_previews"][p_num] = {
+                            "images": images,
+                            "zip": zip_data
+                        }
+                    st.success(f"✅ Render Carousel Part {p_num} Selesai & Ter-Sinkronisasi Perfect!")
+                except Exception as e:
+                    st.error(f"⚠️ Gagal merender carousel: {e}")
+
+        # GALERI & TOMBOL DOWNLOAD ZIP SINKRON
+        if p_num in st.session_state.get("carousel_previews", {}):
+            preview_info = st.session_state["carousel_previews"][p_num]
+            st.markdown(f"#### 🎨 Galeri Lengkap Hasil Render Part {p_num}:")
+            
+            c1, c2, c3, c4, c5 = st.columns(5)
+            cols = [c1, c2, c3, c4, c5]
+            
+            for idx, img in enumerate(preview_info["images"]):
+                with cols[idx]:
+                    st.image(img, caption=f"Slide {idx+1}", width="stretch")
+            
+            st.download_button(
+                label=f"💾 Download 5 Slide HD (ZIP) Ter-Sync Edit - Part {p_num}",
+                data=preview_info["zip"],
+                file_name=f"RuangTeduh_Part_{p_num}_{datetime.now().strftime('%Y%m%d')}.zip",
+                mime="application/zip",
+                key=f"dl_zip_sync_{p_num}_{t_hash}",
+                width="stretch"
+            )
+
+        st.markdown("<div style='margin-bottom: 24px;'></div>", unsafe_allow_html=True)
